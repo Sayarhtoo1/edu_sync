@@ -1,0 +1,225 @@
+{
+  "tables": [
+    {
+      "name": "announcements",
+      "sql": "CREATE TABLE public.announcements (\n  id serial NOT NULL,\n  school_id integer NOT NULL,\n  title text NOT NULL,\n  content text NOT NULL,\n  created_by_user_id uuid NULL,\n  created_at timestamp with time zone NULL DEFAULT now(),\n  updated_at timestamp with time zone NULL DEFAULT now(),\n  target_role text NULL,\n  target_class_id integer NULL,\n  CONSTRAINT announcements_pkey PRIMARY KEY (id),\n  CONSTRAINT announcements_created_by_user_id_fkey FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL,\n  CONSTRAINT announcements_school_id_fkey FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE,\n  CONSTRAINT announcements_target_class_id_fkey FOREIGN KEY (target_class_id) REFERENCES classes(id) ON DELETE SET NULL,\n  CONSTRAINT announcements_target_role_check CHECK ((target_role = ANY (ARRAY['All'::text, 'Teachers'::text, 'Parents'::text, 'SpecificClass'::text])))\n);"
+    },
+    {
+      "name": "attendance",
+      "sql": "CREATE TABLE public.attendance (\n  id serial NOT NULL,\n  student_id integer NOT NULL,\n  class_id integer NOT NULL,\n  date date NOT NULL,\n  is_present boolean NOT NULL DEFAULT false,\n  marked_by_teacher_id uuid NULL,\n  created_at timestamp with time zone NULL DEFAULT now(),\n  updated_at timestamp with time zone NULL DEFAULT now(),\n  CONSTRAINT attendance_pkey PRIMARY KEY (id),\n  CONSTRAINT attendance_student_id_class_id_date_key UNIQUE (student_id, class_id, date),\n  CONSTRAINT attendance_class_id_fkey FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE,\n  CONSTRAINT attendance_marked_by_teacher_id_fkey FOREIGN KEY (marked_by_teacher_id) REFERENCES users(id) ON DELETE SET NULL,\n  CONSTRAINT attendance_student_id_fkey FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE\n);"
+    },
+    {
+      "name": "classes",
+      "sql": "CREATE TABLE public.classes (\n  id serial NOT NULL,\n  school_id integer NOT NULL,\n  name text NOT NULL,\n  teacher_id uuid NULL,\n  created_at timestamp with time zone NULL DEFAULT now(),\n  updated_at timestamp with time zone NULL DEFAULT now(),\n  CONSTRAINT classes_pkey PRIMARY KEY (id),\n  CONSTRAINT classes_school_id_fkey FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE,\n  CONSTRAINT classes_teacher_id_fkey FOREIGN KEY (teacher_id) REFERENCES users(id) ON DELETE SET NULL\n);"
+    },
+    {
+      "name": "finance_entries",
+      "sql": "CREATE TABLE public.finance_entries (\n  id serial NOT NULL,\n  school_id integer NOT NULL,\n  entry_type text NOT NULL,\n  description text NOT NULL,\n  amount numeric(10,2) NOT NULL,\n  date date NOT NULL,\n  created_by_user_id uuid NULL,\n  notes text NULL,\n  created_at timestamp with time zone NULL DEFAULT now(),\n  updated_at timestamp with time zone NULL DEFAULT now(),\n  CONSTRAINT finance_entries_pkey PRIMARY KEY (id),\n  CONSTRAINT finance_entries_created_by_user_id_fkey FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL,\n  CONSTRAINT finance_entries_school_id_fkey FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE,\n  CONSTRAINT finance_entries_entry_type_check CHECK ((entry_type = ANY (ARRAY['Income'::text, 'Expense'::text])))\n);"
+    },
+    {
+      "name": "lesson_plans",
+      "sql": "CREATE TABLE public.lesson_plans (\n  id serial NOT NULL,\n  class_id integer NOT NULL,\n  teacher_id uuid NOT NULL,\n  title text NOT NULL,\n  description text NULL,\n  date date NOT NULL,\n  document_url text NULL,\n  created_at timestamp with time zone NULL DEFAULT now(),\n  updated_at timestamp with time zone NULL DEFAULT now(),\n  CONSTRAINT lesson_plans_pkey PRIMARY KEY (id),\n  CONSTRAINT lesson_plans_class_id_fkey FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE,\n  CONSTRAINT lesson_plans_teacher_id_fkey FOREIGN KEY (teacher_id) REFERENCES users(id) ON DELETE CASCADE\n);"
+    },
+    {
+      "name": "parent_student_relations",
+      "sql": "CREATE TABLE public.parent_student_relations (\n  id serial NOT NULL,\n  parent_id uuid NOT NULL,\n  student_id integer NOT NULL,\n  relation_type text NULL,\n  created_at timestamp with time zone NULL DEFAULT now(),\n  CONSTRAINT parent_student_relations_pkey PRIMARY KEY (id),\n  CONSTRAINT parent_student_relations_parent_id_student_id_key UNIQUE (parent_id, student_id),\n  CONSTRAINT parent_student_relations_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES users(id) ON DELETE CASCADE,\n  CONSTRAINT parent_student_relations_student_id_fkey FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE\n);"
+    },
+    {
+      "name": "schools",
+      "sql": "CREATE TABLE public.schools (\n  id serial NOT NULL,\n  name text NOT NULL,\n  logo_url text NULL,\n  academic_year character varying(20) NULL,\n  theme character varying(50) NULL,\n  contact_info text NULL,\n  created_at timestamp with time zone NULL DEFAULT now(),\n  updated_at timestamp with time zone NULL DEFAULT now(),\n  CONSTRAINT schools_pkey PRIMARY KEY (id)\n);"
+    },
+    {
+      "name": "students",
+      "sql": "CREATE TABLE public.students (\n  id serial NOT NULL,\n  school_id integer NOT NULL,\n  class_id integer NULL,\n  full_name text NOT NULL,\n  profile_photo_url text NULL,\n  date_of_birth date NULL,\n  created_at timestamp with time zone NULL DEFAULT now(),\n  updated_at timestamp with time zone NULL DEFAULT now(),\n  CONSTRAINT students_pkey PRIMARY KEY (id),\n  CONSTRAINT students_class_id_fkey FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE SET NULL,\n  CONSTRAINT students_school_id_fkey FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE\n);"
+    },
+    {
+      "name": "timetables",
+      "sql": "CREATE TABLE public.timetables (\n  id serial NOT NULL,\n  class_id integer NOT NULL,\n  day_of_week character varying(10) NOT NULL,\n  start_time time without time zone NOT NULL,\n  end_time time without time zone NOT NULL,\n  subject_name text NOT NULL,\n  teacher_id uuid NULL,\n  created_at timestamp with time zone NULL DEFAULT now(),\n  updated_at timestamp with time zone NULL DEFAULT now(),\n  CONSTRAINT timetables_pkey PRIMARY KEY (id),\n  CONSTRAINT timetables_class_id_fkey FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE,\n  CONSTRAINT timetables_teacher_id_fkey FOREIGN KEY (teacher_id) REFERENCES users(id) ON DELETE SET NULL,\n  CONSTRAINT timetables_day_of_week_check CHECK (((day_of_week)::text = ANY ((ARRAY['Monday'::character varying, 'Tuesday'::character varying, 'Wednesday'::character varying, 'Thursday'::character varying, 'Friday'::character varying, 'Saturday'::character varying, 'Sunday'::character varying])::text[])))\n);"
+    },
+    {
+      "name": "user_settings",
+      "sql": "CREATE TABLE public.user_settings (\n  user_id uuid NOT NULL,\n  language character varying(10) NULL DEFAULT 'English'::character varying,\n  theme character varying(50) NULL DEFAULT 'green-orange'::character varying,\n  notifications_enabled boolean NULL DEFAULT true,\n  updated_at timestamp with time zone NULL DEFAULT now(),\n  CONSTRAINT user_settings_pkey PRIMARY KEY (user_id),\n  CONSTRAINT user_settings_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE\n);"
+    },
+    {
+      "name": "users",
+      "sql": "CREATE TABLE public.users (\n  id uuid NOT NULL,\n  full_name text NULL,\n  role text NOT NULL,\n  profile_photo_url text NULL,\n  school_id integer NULL,\n  created_at timestamp with time zone NULL DEFAULT now(),\n  updated_at timestamp with time zone NULL DEFAULT now(),\n  email character varying NULL,\n  CONSTRAINT users_pkey PRIMARY KEY (id),\n  CONSTRAINT users_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE,\n  CONSTRAINT users_role_check CHECK ((role = ANY (ARRAY['Admin'::text, 'Teacher'::text, 'Parent'::text])))\n);"
+    }
+  ],
+  "policies": [
+    {
+      "name": "Users can view their own data",
+      "action": "SELECT",
+      "roles": "public",
+      "definition": "(auth.uid() = id)"
+    },
+    {
+      "name": "Users can update their own data",
+      "action": "UPDATE",
+      "roles": "public",
+      "definition": "(auth.uid() = id)",
+      "check": "(auth.uid() = id)"
+    },
+    {
+      "name": "Authenticated users can view schools",
+      "action": "SELECT",
+      "roles": "authenticated",
+      "definition": "true"
+    },
+    {
+      "name": "School admins can insert their school",
+      "action": "INSERT",
+      "roles": "public",
+      "definition": null,
+      "check": "(EXISTS ( SELECT 1 FROM users WHERE ((users.id = auth.uid()) AND (users.role = 'Admin'::text))))"
+    },
+    {
+      "name": "School admins can update their school",
+      "action": "UPDATE",
+      "roles": "public",
+      "definition": "(EXISTS ( SELECT 1 FROM users WHERE ((users.id = auth.uid()) AND (users.role = 'Admin'::text) AND (users.school_id = schools.id))))",
+      "check": "(EXISTS ( SELECT 1 FROM users WHERE ((users.id = auth.uid()) AND (users.role = 'Admin'::text) AND (users.school_id = schools.id))))"
+    },
+    {
+      "name": "School members can view classes",
+      "action": "SELECT",
+      "roles": "public",
+      "definition": "(EXISTS ( SELECT 1 FROM users WHERE ((users.id = auth.uid()) AND (users.school_id = classes.school_id))))"
+    },
+    {
+      "name": "School admins/teachers can manage classes",
+      "action": "ALL",
+      "roles": "public",
+      "definition": "(EXISTS ( SELECT 1 FROM users WHERE ((users.id = auth.uid()) AND (users.school_id = classes.school_id) AND ((users.role = 'Admin'::text) OR (users.role = 'Teacher'::text)))))",
+      "check": "(EXISTS ( SELECT 1 FROM users WHERE ((users.id = auth.uid()) AND (users.school_id = classes.school_id) AND ((users.role = 'Admin'::text) OR (users.role = 'Teacher'::text)))))"
+    },
+    {
+      "name": "School admins/teachers can manage students",
+      "action": "ALL",
+      "roles": "public",
+      "definition": "(EXISTS ( SELECT 1 FROM users WHERE ((users.id = auth.uid()) AND (users.school_id = students.school_id) AND ((users.role = 'Admin'::text) OR (users.role = 'Teacher'::text)))))",
+      "check": "(EXISTS ( SELECT 1 FROM users WHERE ((users.id = auth.uid()) AND (users.school_id = students.school_id) AND ((users.role = 'Admin'::text) OR (users.role = 'Teacher'::text)))))"
+    },
+    {
+      "name": "Parents can view their own student links",
+      "action": "SELECT",
+      "roles": "public",
+      "definition": "(auth.uid() = parent_id)"
+    },
+    {
+      "name": "Admins can manage parent-student links",
+      "action": "ALL",
+      "roles": "public",
+      "definition": "(EXISTS ( SELECT 1 FROM (users u JOIN students s ON ((u.school_id = s.school_id))) WHERE ((u.id = auth.uid()) AND (u.role = 'Admin'::text) AND (s.id = parent_student_relations.student_id))))"
+    },
+{
+      "name": "Parents can view their linked students",
+      "action": "SELECT",
+      "roles": "public",
+      "definition": "(EXISTS ( SELECT 1 FROM parent_student_relations psr WHERE ((psr.student_id = students.id) AND (psr.parent_id = auth.uid()))))"
+    },
+    {
+      "name": "Teachers can manage attendance for their classes",
+      "action": "ALL",
+      "roles": "public",
+      "definition": "(EXISTS ( SELECT 1 FROM (users u JOIN classes c ON (((u.id = c.teacher_id) OR (u.role = 'Admin'::text)))) WHERE ((u.id = auth.uid()) AND (c.id = attendance.class_id) AND (u.school_id = c.school_id))))",
+      "check": "(EXISTS ( SELECT 1 FROM (users u JOIN classes c ON (((u.id = c.teacher_id) OR (u.role = 'Admin'::text)))) WHERE ((u.id = auth.uid()) AND (c.id = attendance.class_id) AND (u.school_id = c.school_id))))"
+    },
+    {
+      "name": "Parents can view their child's attendance",
+      "action": "SELECT",
+      "roles": "public",
+      "definition": "(EXISTS ( SELECT 1 FROM parent_student_relations psr WHERE ((psr.student_id = attendance.student_id) AND (psr.parent_id = auth.uid()))))"
+    },
+    {
+      "name": "Teachers can manage their lesson plans",
+      "action": "ALL",
+      "roles": "public",
+      "definition": "(auth.uid() = teacher_id)",
+      "check": "(auth.uid() = teacher_id)"
+    },
+    {
+      "name": "Admins can view all lesson plans in their school",
+      "action": "SELECT",
+      "roles": "public",
+      "definition": "(EXISTS ( SELECT 1 FROM (users u JOIN classes c ON ((u.school_id = c.school_id))) WHERE ((u.id = auth.uid()) AND (u.role = 'Admin'::text) AND (c.id = lesson_plans.class_id))))"
+    },
+    {
+      "name": "Parents can view lesson plans for their child's class",
+      "action": "SELECT",
+      "roles": "public",
+      "definition": "(EXISTS ( SELECT 1 FROM (students s JOIN parent_student_relations psr ON ((s.id = psr.student_id))) WHERE ((psr.parent_id = auth.uid()) AND (s.class_id = lesson_plans.class_id))))"
+    },
+    {
+      "name": "School members can view timetables",
+      "action": "SELECT",
+      "roles": "public",
+      "definition": "(EXISTS ( SELECT 1 FROM (users u JOIN classes c ON ((u.school_id = c.school_id))) WHERE ((u.id = auth.uid()) AND (c.id = timetables.class_id))))"
+    },
+    {
+      "name": "Admins can manage timetables",
+      "action": "ALL",
+      "roles": "public",
+      "definition": "(EXISTS ( SELECT 1 FROM (users u JOIN classes c ON ((u.school_id = c.school_id))) WHERE ((u.id = auth.uid()) AND (u.role = 'Admin'::text) AND (c.id = timetables.class_id))))",
+      "check": "(EXISTS ( SELECT 1 FROM (users u JOIN classes c ON ((u.school_id = c.school_id))) WHERE ((u.id = auth.uid()) AND (u.role = 'Admin'::text) AND (c.id = timetables.class_id))))"
+    },
+    {
+      "name": "Admins can manage finance entries for their school",
+      "action": "ALL",
+      "roles": "public",
+      "definition": "(EXISTS ( SELECT 1 FROM users WHERE ((users.id = auth.uid()) AND (users.role = 'Admin'::text) AND (users.school_id = finance_entries.school_id))))",
+      "check": "(EXISTS ( SELECT 1 FROM users WHERE ((users.id = auth.uid()) AND (users.role = 'Admin'::text) AND (users.school_id = finance_entries.school_id))))"
+    },
+    {
+      "name": "Users can manage their own settings",
+      "action": "ALL",
+      "roles": "public",
+      "definition": "(auth.uid() = user_id)",
+      "check": "(auth.uid() = user_id)"
+    },
+    {
+      "name": "Admins can manage announcements",
+      "action": "ALL",
+      "roles": "public",
+      "definition": "(EXISTS ( SELECT 1 FROM users WHERE ((users.id = auth.uid()) AND (users.role = 'Admin'::text) AND (users.school_id = announcements.school_id))))",
+      "check": "(EXISTS ( SELECT 1 FROM users WHERE ((users.id = auth.uid()) AND (users.role = 'Admin'::text) AND (users.school_id = announcements.school_id))))"
+    },
+    {
+      "name": "Targeted users can view announcements",
+      "action": "SELECT",
+      "roles": "public",
+      "definition": "((EXISTS ( SELECT 1 FROM users WHERE ((users.id = auth.uid()) AND (users.school_id = announcements.school_id)))) AND ((target_role = 'All'::text) OR ((target_role = 'Teachers'::text) AND (EXISTS ( SELECT 1 FROM users WHERE ((users.id = auth.uid()) AND (users.role = 'Teacher'::text))))) OR ((target_role = 'Parents'::text) AND (EXISTS ( SELECT 1 FROM users WHERE ((users.id = auth.uid()) AND (users.role = 'Parent'::text))))) OR ((target_role = 'SpecificClass'::text) AND (target_class_id IS NOT NULL) AND (EXISTS ( SELECT 1 FROM (students s JOIN parent_student_relations psr ON ((s.id = psr.student_id)) WHERE ((psr.parent_id = auth.uid()) AND (s.class_id = announcements.target_class_id)) UNION SELECT 1 FROM classes c WHERE ((c.teacher_id = auth.uid()) AND (c.id = announcements.target_class_id)))))))"
+    },
+    {
+      "name": "Admins can view all users in their school",
+      "action": "SELECT",
+      "roles": "authenticated",
+      "definition": "(EXISTS ( SELECT 1 FROM users admin_user WHERE ((admin_user.id = auth.uid()) AND (admin_user.role = 'Admin'::text) AND (admin_user.school_id = users.school_id))))"
+    }
+  ],
+  "functions": [
+ {
+      "name": "handle_new_public_user_settings",
+      "schema": "public",
+      "arguments": [],
+      "return_type": "trigger",
+      "language": "plpgsql",
+      "definition": "BEGIN\n  INSERT INTO public.user_settings (user_id)\n  VALUES (new.id);\n  RETURN new;\nEND;"
+    },
+    {
+      "name": "trigger_set_timestamp",
+      "schema": "public",
+      "arguments": [],
+      "return_type": "trigger",
+      "language": "plpgsql",
+      "definition": "BEGIN\n  NEW.updated_at = NOW();\n  RETURN NEW;\nEND;"
+    },
+    {
+      "name": "handle_new_user",
+      "schema": "public",
+      "arguments": [],
+      "return_type": "trigger",
+      "language": "plpgsql",
+      "definition": "BEGIN\n  INSERT INTO public.users (id, email, full_name, role, school_id, profile_photo_url)\n  VALUES (\n    new.id,\n    new.email, \n    new.raw_user_meta_data->>'full_name',\n    COALESCE(new.raw_user_meta_data->>'role', 'Parent'),\n    (new.raw_user_meta_data->>'school_id')::INT,\n    new.raw_user_meta_data->>'profile_photo_url'\n  );\n  RETURN new;\nEND;"
+    }
+  ]
+}
