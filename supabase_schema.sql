@@ -151,7 +151,7 @@ CREATE TABLE public.attendance (
     student_id INT NOT NULL REFERENCES public.students(id) ON DELETE CASCADE,
     class_id INT NOT NULL REFERENCES public.classes(id) ON DELETE CASCADE,
     date DATE NOT NULL,
-    is_present BOOLEAN NOT NULL DEFAULT FALSE,
+    status TEXT NOT NULL CHECK (status IN ('Present', 'Absent', 'Late', 'Holiday')) DEFAULT 'Present', -- Added status column
     marked_by_teacher_id UUID REFERENCES public.users(id) ON DELETE SET NULL, -- Teacher who marked attendance
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
@@ -186,6 +186,7 @@ CREATE TABLE public.lesson_plans (
     id SERIAL PRIMARY KEY,
     class_id INT NOT NULL REFERENCES public.classes(id) ON DELETE CASCADE,
     teacher_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE, -- Teacher who created it
+    subject_name TEXT NOT NULL, -- Added subject_name field
     title TEXT NOT NULL,
     description TEXT,
     date DATE NOT NULL,

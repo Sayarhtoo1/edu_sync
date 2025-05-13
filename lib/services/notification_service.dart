@@ -27,6 +27,15 @@ class NotificationService extends ChangeNotifier {
     const InitializationSettings initializationSettings =
         InitializationSettings(android: initializationSettingsAndroid);
     await _flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
+    // Request notification permission on Android 13+
+    final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
+        _flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+    if (androidImplementation != null) {
+      final bool? granted = await androidImplementation.requestNotificationsPermission();
+      print("Notification permission granted: $granted");
+    }
   }
 
   Future<void> showNotification(
@@ -105,17 +114,13 @@ class NotificationService extends ChangeNotifier {
                 if (lastSeen == null || newAnnouncement.createdAt.isAfter(lastSeen)) {
                   print("Setting hasNewAnnouncements to true for user role: $currentUserRole");
                   _setHasNewAnnouncements(true);
-                  // Optionally show an immediate local notification if the app is in the foreground
-                  // This might be too intrusive for admins who see all announcements.
-                  // Consider only setting the flag for admins and letting them check the screen.
-                  if (currentUserRole != 'Admin') { // Example: only show immediate pop-up for non-admins
-                      // await showNotification(
-                      //   newAnnouncement.id, 
-                      //   "New Announcement: ${newAnnouncement.title}", 
-                      //   newAnnouncement.content.length > 50 ? "${newAnnouncement.content.substring(0,50)}..." : newAnnouncement.content, 
-                      //   "announcement_${newAnnouncement.id}"
-                      // );
-                  }
+                  // Show an immediate local notification
+                  await showNotification(
+                    newAnnouncement.id, 
+                    "New Announcement: ${newAnnouncement.title}", 
+                    newAnnouncement.content.length > 50 ? "${newAnnouncement.content.substring(0,50)}..." : newAnnouncement.content, 
+                    "announcement_${newAnnouncement.id}"
+                  );
                 }
               }
                         })

@@ -10,9 +10,10 @@ class FinanceService {
   Future<List<Income>> getIncomeRecords(int schoolId) async {
     try {
       final response = await _supabaseClient
-          .from('income') // Assuming table name is 'income'
+          .from('finance_entries') // Using the finance_entries table
           .select()
           .eq('school_id', schoolId)
+          .eq('entry_type', 'Income') // Filter by entry_type = Income
           .order('date', ascending: false);
       return response.map((data) => Income.fromMap(data)).toList();
     } catch (e) {
@@ -23,9 +24,13 @@ class FinanceService {
 
   Future<Income?> createIncomeRecord(Income income) async {
     try {
+      // Create a map with income data and add entry_type
+      final dataMap = income.toMap()..remove('id');
+      dataMap['entry_type'] = 'Income'; // Add entry_type field
+      
       final response = await _supabaseClient
-          .from('income')
-          .insert(income.toMap()..remove('id'))
+          .from('finance_entries') // Using the finance_entries table
+          .insert(dataMap)
           .select()
           .single();
       return Income.fromMap(response);
@@ -41,10 +46,16 @@ class FinanceService {
         print('Error: Income ID is null, cannot update.');
         return false;
       }
+      
+      // Create a map with income data and add entry_type
+      final dataMap = income.toMap()..remove('id');
+      dataMap['entry_type'] = 'Income'; // Add entry_type field
+      
       await _supabaseClient
-          .from('income')
-          .update(income.toMap()..remove('id')) // Don't update ID
-          .eq('id', income.id!); // Use null-check operator
+          .from('finance_entries') // Using the finance_entries table
+          .update(dataMap)
+          .eq('id', income.id!)
+          .eq('entry_type', 'Income'); // Ensure we're updating an Income record
       return true;
     } catch (e) {
       print('Error updating income record: $e');
@@ -55,9 +66,10 @@ class FinanceService {
   Future<bool> deleteIncomeRecord(int incomeId) async {
     try {
       await _supabaseClient
-          .from('income') // Corrected table
+          .from('finance_entries') // Using the finance_entries table
           .delete()
-          .eq('id', incomeId); // Corrected parameter
+          .eq('id', incomeId)
+          .eq('entry_type', 'Income'); // Ensure we're deleting an Income record
       return true;
     } catch (e) {
       print('Error deleting income record: $e');
@@ -70,9 +82,10 @@ class FinanceService {
   Future<List<Expense>> getExpenseRecords(int schoolId) async {
     try {
       final response = await _supabaseClient
-          .from('expenses') // Assuming table name is 'expenses'
+          .from('finance_entries') // Using the finance_entries table
           .select()
           .eq('school_id', schoolId)
+          .eq('entry_type', 'Expense') // Filter by entry_type = Expense
           .order('date', ascending: false);
       return response.map((data) => Expense.fromMap(data)).toList();
     } catch (e) {
@@ -83,9 +96,13 @@ class FinanceService {
 
   Future<Expense?> createExpenseRecord(Expense expense) async {
     try {
+      // Create a map with expense data and add entry_type
+      final dataMap = expense.toMap()..remove('id');
+      dataMap['entry_type'] = 'Expense'; // Add entry_type field
+      
       final response = await _supabaseClient
-          .from('expenses')
-          .insert(expense.toMap()..remove('id'))
+          .from('finance_entries') // Using the finance_entries table
+          .insert(dataMap)
           .select()
           .single();
       return Expense.fromMap(response);
@@ -101,10 +118,16 @@ class FinanceService {
         print('Error: Expense ID is null, cannot update.');
         return false;
       }
+      
+      // Create a map with expense data and add entry_type
+      final dataMap = expense.toMap()..remove('id');
+      dataMap['entry_type'] = 'Expense'; // Add entry_type field
+      
       await _supabaseClient
-          .from('expenses')
-          .update(expense.toMap()..remove('id'))
-          .eq('id', expense.id!); // Use null-check operator
+          .from('finance_entries') // Using the finance_entries table
+          .update(dataMap)
+          .eq('id', expense.id!)
+          .eq('entry_type', 'Expense'); // Ensure we're updating an Expense record
       return true;
     } catch (e) {
       print('Error updating expense record: $e');
@@ -115,9 +138,10 @@ class FinanceService {
   Future<bool> deleteExpenseRecord(int expenseId) async {
     try {
       await _supabaseClient
-          .from('expenses')
+          .from('finance_entries') // Using the finance_entries table
           .delete()
-          .eq('id', expenseId);
+          .eq('id', expenseId)
+          .eq('entry_type', 'Expense'); // Ensure we're deleting an Expense record
       return true;
     } catch (e) {
       print('Error deleting expense record: $e');

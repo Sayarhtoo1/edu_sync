@@ -9,6 +9,9 @@ import 'package:edu_sync/services/class_service.dart'; // Import ClassService
 import 'package:edu_sync/services/custom_form_service.dart';
 import 'package:edu_sync/services/form_response_service.dart';
 import 'package:edu_sync/models/form_response.dart';
+import 'package:edu_sync/services/finance_service.dart'; // Added FinanceService import
+import 'package:edu_sync/models/income.dart'; // Added Income model import
+import 'package:edu_sync/models/expense.dart'; // Added Expense model import
 // import 'package:edu_sync/models/student.dart' as app_student; // No longer aliased
 import 'package:edu_sync/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
@@ -102,6 +105,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   final ClassService _classService = ClassService(); // Added ClassService
   final CustomFormService _customFormService = CustomFormService();
   final FormResponseService _formResponseService = FormResponseService();
+  final FinanceService _financeService = FinanceService(); // Added FinanceService instance
 
   bool _isLoading = true; // Single loading state for simplicity initially
 
@@ -114,6 +118,11 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   // Data for recent activity
   List<ActivityLogItem> _activityLogs = [];
   String? _adminProfilePhotoUrl;
+
+  // State variables for financial summary
+  double _totalIncome = 0.0;
+  double _totalExpenses = 0.0;
+  double _netBalance = 0.0;
 
 
   @override
@@ -140,6 +149,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
 
     if (currentSchool != null) {
       try {
+        // Load financial summary
+        await _loadFinancialSummary(currentSchool.id);
+
         // Fetch counts for summary cards
         final teachers = await _authService.getUsersByRole('Teacher', currentSchool.id);
         final parents = await _authService.getUsersByRole('Parent', currentSchool.id);
@@ -266,6 +278,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                       const SizedBox(height: 24),
                       _buildSummaryItemsGrid(context, textTheme, l10n),
                       const SizedBox(height: 24),
+                      _buildFinancialSummarySection(context, textTheme, l10n), // Added Financial Summary Section
+                      const SizedBox(height: 24),
                       _buildQuickActionsSection(context, textTheme, l10n), // Added Quick Actions
                       const SizedBox(height: 24),
                       _buildChartsRow(context, textTheme, l10n),
@@ -277,6 +291,29 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
               ),
             ),
     );
+  }
+
+  Future<void> _loadFinancialSummary(int schoolId) async {
+    if (!mounted) return;
+    try {
+      final List<Income> incomeRecords = await _financeService.getIncomeRecords(schoolId);
+      final List<Expense> expenseRecords = await _financeService.getExpenseRecords(schoolId);
+
+      double currentTotalIncome = incomeRecords.fold(0.0, (sum, item) => sum + item.amount);
+      double currentTotalExpenses = expenseRecords.fold(0.0, (sum, item) => sum + item.amount);
+      double currentNetBalance = currentTotalIncome - currentTotalExpenses;
+
+      if (mounted) {
+        setState(() {
+          _totalIncome = currentTotalIncome;
+          _totalExpenses = currentTotalExpenses;
+          _netBalance = currentNetBalance;
+        });
+      }
+    } catch (e) {
+      print("Error loading financial summary: $e");
+      // Optionally show a snackbar or handle error in UI
+    }
   }
 
   Widget _buildGreetingRow(BuildContext context, TextTheme textTheme, AppLocalizations l10n) {
@@ -380,6 +417,67 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       );
     });
   }
+
+  Widget _buildFinancialSummarySection(BuildContext context, TextTheme textTheme, AppLocalizations l10n) {
+    final NumberFormat currencyFormat = NumberFormat.currency(locale: l10n.localeName, symbol: ''); // Adjust symbol as needed, or use l10n for currency symbol
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: cardBackgroundColor,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.financialSummaryTitle, // "Financial Summary"
+              style: textTheme.titleLarge?.copyWith(color: textDarkGrey, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 16),
+            _buildFinancialDetailRow(
+              l10n.totalIncomeLabel, // "Total Income:"
+              currencyFormat.format(_totalIncome),
+              iconColorEarnings, // Green
+              textTheme,
+            ),
+            const SizedBox(height: 8),
+            _buildFinancialDetailRow(
+              l10n.totalExpensesLabel, // "Total Expenses:"
+              currencyFormat.format(_totalExpenses),
+              iconColorParents, // Orange/Red for expenses
+              textTheme,
+            ),
+            const Divider(height: 24, thickness: 1),
+            _buildFinancialDetailRow(
+              l10n.netBalanceLabel, // "Net Balance:"
+              currencyFormat.format(_netBalance),
+              _netBalance >= 0 ? iconColorEarnings : iconColorParents, // Green if positive, Red/Orange if negative
+              textTheme,
+              isBold: true,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFinancialDetailRow(String label, String value, Color valueColor, TextTheme textTheme, {bool isBold = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: textTheme.bodyMedium?.copyWith(color: textLightGrey, fontWeight: isBold ? FontWeight.w600 : FontWeight.normal),
+        ),
+        Text(
+          value,
+          style: textTheme.bodyLarge?.copyWith(color: valueColor, fontWeight: isBold ? FontWeight.bold : FontWeight.w600),
+        ),
+      ],
+    );
+  }
+
 
   Widget _buildChartsRow(BuildContext context, TextTheme textTheme, AppLocalizations l10n) {
     // Placeholder for charts

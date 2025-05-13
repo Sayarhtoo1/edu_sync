@@ -151,7 +151,7 @@ class _AttendanceMarkingScreenState extends State<AttendanceMarkingScreen> {
         studentId: studentId,
         classId: _selectedClass!.id!, // _selectedClass.id is int?
         date: _selectedDate,
-        isPresent: status == 'Present' || status == 'Late', 
+        // isPresent is removed, status is now the source of truth
         status: status, 
         markedByTeacherId: _currentUserId!, 
       ));
