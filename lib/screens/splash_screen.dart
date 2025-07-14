@@ -1,3 +1,4 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart'; // Import Provider
 import 'package:edu_sync/services/auth_service.dart';
@@ -18,6 +19,7 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   final AuthService _authService = AuthService();
+  final Connectivity _connectivity = Connectivity();
 
   @override
   void initState() {
@@ -29,50 +31,65 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _initializeApp() async {
-    // Initialize Local Database (Floor) - Placeholder for now
-    // final database = await $FloorAppDatabase.databaseBuilder('app_database.db').build();
-    // Provider.of<AppDatabase>(context, listen: false).init(database); // Example
-
-    // Fetch school data if user is logged in
-    // Use listen: false here as we are in a method called from initState context (via addPostFrameCallback)
-    // and the navigation logic will handle UI changes based on the result.
     final schoolProvider = Provider.of<SchoolProvider>(context, listen: false);
-    final currentUser = _authService.getCurrentUser();
+    final connectivityResult = await _connectivity.checkConnectivity();
 
-    if (currentUser != null) {
-      await schoolProvider.fetchCurrentSchool(); // Fetch school details
+    if (connectivityResult == ConnectivityResult.none) {
+      // Offline mode
+      final role = await _authService.getUserRole();
+      if (role != null) {
+        // User is logged in and role is cached, navigate to the correct dashboard
+        if (role == 'Admin') {
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const AdminPanelScreen()));
+        } else if (role == 'Teacher') {
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const TeacherDashboardScreen()));
+        } else if (role == 'Parent') {
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const ParentDashboardScreen()));
+        } else {
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
+        }
+      } else {
+        // User is not logged in or role is not cached, navigate to login screen
+        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
+      }
     } else {
-      schoolProvider.clearSchool();
-    }
-    
-    // Simulate loading time - can be removed if fetchCurrentSchool handles its own loading state display
-    // await Future.delayed(const Duration(seconds: 1)); // Reduced delay
+      // Online mode
+      final currentUser = _authService.getCurrentUser();
 
-    if (!mounted) return; 
-
-    final freshCurrentUser = _authService.getCurrentUser(); 
-    if (freshCurrentUser == null) {
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
-    } else {
-      final role = _authService.getUserRole(); 
-      final schoolId = schoolProvider.currentSchool?.id; // Get schoolId from provider
-      final notificationService = Provider.of<NotificationService>(context, listen: false);
-
-      if (role != null && schoolId != null) {
-        // Subscribe to announcements after role and schoolId are confirmed
-        notificationService.subscribeToAnnouncements(schoolId, freshCurrentUser.id, role);
+      if (currentUser != null) {
+        await schoolProvider.fetchCurrentSchool(); // Fetch school details
+      } else {
+        schoolProvider.clearSchool();
       }
 
-      if (role == 'Admin') {
-        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const AdminPanelScreen()));
-      } else if (role == 'Teacher') {
-        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const TeacherDashboardScreen()));
-      } else if (role == 'Parent') {
-        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const ParentDashboardScreen()));
-      } else {
-        print("Unknown role or role not in metadata: $role. Navigating to Login.");
-        notificationService.unsubscribeFromAnnouncements(); // Unsubscribe if navigating to login
+      if (!mounted) return;
+
+      final freshCurrentUser = _authService.getCurrentUser();
+      if (freshCurrentUser == null) {
         Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
+      } else {
+        final role = await _authService.getUserRole();
+        if (!mounted) return;
+
+        final schoolId = schoolProvider.currentSchool?.id; // Get schoolId from provider
+        final notificationService = Provider.of<NotificationService>(context, listen: false);
+
+        if (role != null && schoolId != null) {
+          // Subscribe to announcements after role and schoolId are confirmed
+          notificationService.subscribeToAnnouncements(schoolId, freshCurrentUser.id, role);
+        }
+
+        if (role == 'Admin') {
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const AdminPanelScreen()));
+        } else if (role == 'Teacher') {
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const TeacherDashboardScreen()));
+        } else if (role == 'Parent') {
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const ParentDashboardScreen()));
+        } else {
+          print("Unknown role or role not in metadata: $role. Navigating to Login.");
+          notificationService.unsubscribeFromAnnouncements(); // Unsubscribe if navigating to login
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
+        }
       }
     }
   }

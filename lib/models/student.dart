@@ -1,11 +1,6 @@
-import 'package:floor/floor.dart';
-
-@entity
 class Student {
-  @primaryKey
   final int id; // Assuming student ID itself remains int
   final int schoolId;
-  @ColumnInfo(name: 'class_id') 
   final int? classId; // Corrected to int?
   final String fullName;
   final String? profilePhotoUrl;
@@ -63,6 +58,7 @@ class Student {
       fullName: fullName ?? this.fullName,
       profilePhotoUrl: profilePhotoUrl ?? this.profilePhotoUrl,
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,
+      gender: gender ?? this.gender,
     );
   }
 }

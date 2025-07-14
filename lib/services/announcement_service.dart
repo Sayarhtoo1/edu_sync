@@ -1,24 +1,34 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/announcement.dart';
-// For user role and class info
+import 'cache_service.dart';
 
 class AnnouncementService {
   final SupabaseClient _supabaseClient = Supabase.instance.client;
+  final CacheService _cacheService = CacheService();
 
-  // Fetch announcements relevant to the current user (school_id, role, class_id if applicable)
-  // RLS policies on the 'announcements' table will handle filtering.
   Future<List<Announcement>> getAnnouncements(int schoolId) async {
-    try {
-      final response = await _supabaseClient
-          .from('announcements')
-          .select()
-          .eq('school_id', schoolId) // Basic filter, RLS will do the rest
-          .order('created_at', ascending: false);
-      
-      return response.map((data) => Announcement.fromMap(data)).toList();
-    } catch (e) {
-      print('Error fetching announcements: $e');
-      return [];
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      // Offline: Fetch from cache
+      return await _cacheService.getAnnouncements(schoolId);
+    } else {
+      // Online: Fetch from Supabase and update cache
+      try {
+        final response = await _supabaseClient
+            .from('announcements')
+            .select()
+            .eq('school_id', schoolId)
+            .order('created_at', ascending: false);
+
+        final announcements = response.map((data) => Announcement.fromMap(data)).toList();
+        await _cacheService.saveAnnouncements(schoolId, announcements);
+        return announcements;
+      } catch (e) {
+        print('Error fetching announcements: $e');
+        // If fetching from Supabase fails, try to get from cache
+        return await _cacheService.getAnnouncements(schoolId);
+      }
     }
   }
 

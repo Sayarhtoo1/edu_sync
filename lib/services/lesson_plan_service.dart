@@ -1,27 +1,37 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/lesson_plan.dart';
+import 'cache_service.dart';
 
 class LessonPlanService {
   final SupabaseClient _supabaseClient = Supabase.instance.client;
+  final CacheService _cacheService = CacheService();
 
   // Fetch lesson plans for a specific class and teacher
   Future<List<LessonPlan>> getLessonPlans({required int classId, String? teacherId, String? subjectName}) async { // Corrected to int
-    try {
-      // Chain order directly. If conditional filters were needed between select and order,
-      // query would need to be of a more generic PostgrestBuilder type or dynamic.
-      final response = await _supabaseClient
-          .from('lesson_plans') // Assuming table name is 'lesson_plans'
-          .select()
-          .eq('class_id', classId)
-          // Example of how conditional filters would be added if teacherId/subjectName were in this table:
-          // .if(teacherId != null, (q) => q.eq('teacher_id', teacherId)) 
-          // .if(subjectName != null, (q) => q.eq('subject_name', subjectName))
-          .order('date', ascending: false);
-      
-      return response.map((data) => LessonPlan.fromMap(data)).toList();
-    } catch (e) {
-      print('Error fetching lesson plans: $e');
-      return [];
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      return await _cacheService.getLessonPlans(classId);
+    } else {
+      try {
+        // Chain order directly. If conditional filters were needed between select and order,
+        // query would need to be of a more generic PostgrestBuilder type or dynamic.
+        final response = await _supabaseClient
+            .from('lesson_plans') // Assuming table name is 'lesson_plans'
+            .select()
+            .eq('class_id', classId)
+            // Example of how conditional filters would be added if teacherId/subjectName were in this table:
+            // .if(teacherId != null, (q) => q.eq('teacher_id', teacherId))
+            // .if(subjectName != null, (q) => q.eq('subject_name', subjectName))
+            .order('date', ascending: false);
+
+        final lessonPlans = response.map((data) => LessonPlan.fromMap(data)).toList();
+        await _cacheService.saveLessonPlans(classId, lessonPlans);
+        return lessonPlans;
+      } catch (e) {
+        print('Error fetching lesson plans: $e');
+        return await _cacheService.getLessonPlans(classId);
+      }
     }
   }
 

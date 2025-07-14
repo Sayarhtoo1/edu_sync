@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:edu_sync/models/class.dart' as app_class;
+import 'package:edu_sync/models/school_class.dart' as app_class;
 import 'package:edu_sync/models/user.dart' as app_user;
 import 'package:edu_sync/services/class_service.dart';
 import 'package:edu_sync/services/auth_service.dart'; // To fetch teachers
@@ -8,7 +8,7 @@ import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
 import 'package:uuid/uuid.dart'; // For generating UUIDs
 
 class AddEditClassScreen extends StatefulWidget {
-  final app_class.Class? classDetails;
+  final app_class.SchoolClass? classDetails;
   final int schoolId;
 
   const AddEditClassScreen({super.key, this.classDetails, required this.schoolId});
@@ -66,7 +66,7 @@ class _AddEditClassScreenState extends State<AddEditClassScreen> {
     setState(() { _isLoading = true; _errorMessage = ''; });
 
     try {
-      final classData = app_class.Class(
+      final classData = app_class.SchoolClass(
         id: _isEditing ? widget.classDetails!.id : null, // ID is int?, null for new
         name: _nameController.text,
         teacherId: _selectedTeacherId, 

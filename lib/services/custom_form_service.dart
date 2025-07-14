@@ -1,10 +1,13 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/custom_form.dart';
 import '../models/form_field_item.dart';
 import 'package:intl/intl.dart'; // Import DateFormat
+import 'cache_service.dart';
 
 class CustomFormService {
   final SupabaseClient _supabaseClient = Supabase.instance.client;
+  final CacheService _cacheService = CacheService();
 
   // Create a new custom form and its fields in a transaction
   Future<CustomForm?> createCustomForm(CustomForm form, List<FormFieldItem> fields) async {
@@ -72,16 +75,23 @@ class CustomFormService {
   }
 
   Future<List<CustomForm>> getCustomFormsForSchool(int schoolId) async {
-    try {
-      final response = await _supabaseClient
-          .from('custom_forms')
-          .select()
-          .eq('school_id', schoolId)
-          .order('title', ascending: true);
-      return response.map((data) => CustomForm.fromMap(data)).toList();
-    } catch (e) {
-      print('Error fetching custom forms for school $schoolId: $e');
-      return [];
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      return await _cacheService.getCustomFormsForSchool(schoolId);
+    } else {
+      try {
+        final response = await _supabaseClient
+            .from('custom_forms')
+            .select()
+            .eq('school_id', schoolId)
+            .order('title', ascending: true);
+        final forms = response.map((data) => CustomForm.fromMap(data)).toList();
+        await _cacheService.saveCustomFormsForSchool(schoolId, forms);
+        return forms;
+      } catch (e) {
+        print('Error fetching custom forms for school $schoolId: $e');
+        return await _cacheService.getCustomFormsForSchool(schoolId);
+      }
     }
   }
 
@@ -131,16 +141,23 @@ class CustomFormService {
   }
 
   Future<List<FormFieldItem>> getFormFields(String formId) async {
-    try {
-      final response = await _supabaseClient
-          .from('form_fields')
-          .select()
-          .eq('form_id', formId)
-          .order('id'); // Or some other order if needed (e.g., a sequence/order column)
-      return response.map((data) => FormFieldItem.fromMap(data)).toList();
-    } catch (e) {
-      print('Error fetching form fields for form $formId: $e');
-      return [];
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      return await _cacheService.getFormFields(formId);
+    } else {
+      try {
+        final response = await _supabaseClient
+            .from('form_fields')
+            .select()
+            .eq('form_id', formId)
+            .order('id'); // Or some other order if needed (e.g., a sequence/order column)
+        final fields = response.map((data) => FormFieldItem.fromMap(data)).toList();
+        await _cacheService.saveFormFields(formId, fields);
+        return fields;
+      } catch (e) {
+        print('Error fetching form fields for form $formId: $e');
+        return await _cacheService.getFormFields(formId);
+      }
     }
   }
 

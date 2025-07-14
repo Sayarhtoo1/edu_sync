@@ -63,19 +63,23 @@ class AppLocalizationsMy extends AppLocalizations {
   String get classes => 'အတန်းများ';
 
   @override
-  String get error_user_not_found => 'အမှားအယွင်း - အသုံးပြုသူကို ရှာမတွေ့ပါ။ ကျေးဇူးပြု၍ ပြန်လည်ဝင်ရောက်ပါ။';
+  String get error_user_not_found =>
+      'အမှားအယွင်း - အသုံးပြုသူကို ရှာမတွေ့ပါ။ ကျေးဇူးပြု၍ ပြန်လည်ဝင်ရောက်ပါ။';
 
   @override
-  String get error_school_not_selected_or_found => 'အမှားအယွင်း - ကျောင်းကို ရွေးချယ်ထားခြင်း သို့မဟုတ် ရှာမတွေ့ပါ။ သင်၏အကောင့်နှင့် ကျောင်းတစ်ခု ချိတ်ဆက်ထားကြောင်း သေချာပါစေ။';
+  String get error_school_not_selected_or_found =>
+      'အမှားအယွင်း - ကျောင်းကို ရွေးချယ်ထားခြင်း သို့မဟုတ် ရှာမတွေ့ပါ။ သင်၏အကောင့်နှင့် ကျောင်းတစ်ခု ချိတ်ဆက်ထားကြောင်း သေချာပါစေ။';
 
   @override
-  String get error_fetching_timetable => 'အချိန်ဇယား ရယူရာတွင် အမှားအယွင်းဖြစ်ပွားခဲ့သည်။';
+  String get error_fetching_timetable =>
+      'အချိန်ဇယား ရယူရာတွင် အမှားအယွင်းဖြစ်ပွားခဲ့သည်။';
 
   @override
   String get my_timetable_title => 'ကျွန်ုပ်၏ အချိန်ဇယား';
 
   @override
-  String get no_timetable_entries_found => 'အချိန်ဇယား ထည့်သွင်းမှုများ မတွေ့ပါ။';
+  String get no_timetable_entries_found =>
+      'အချိန်ဇယား ထည့်သွင်းမှုများ မတွေ့ပါ။';
 
   @override
   String get monday => 'တနင်္လာ';
@@ -132,10 +136,12 @@ class AppLocalizationsMy extends AppLocalizations {
   String get saveAttendanceButton => 'တက်ရောက်မှု သိမ်းဆည်းရန်';
 
   @override
-  String get classTeacherInfoMissing => 'အတန်း သို့မဟုတ် ဆရာ/မ အချက်အလက် မပြည့်စုံပါ။';
+  String get classTeacherInfoMissing =>
+      'အတန်း သို့မဟုတ် ဆရာ/မ အချက်အလက် မပြည့်စုံပါ။';
 
   @override
-  String get attendanceSavedSuccess => 'တက်ရောက်မှုကို အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ။';
+  String get attendanceSavedSuccess =>
+      'တက်ရောက်မှုကို အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ။';
 
   @override
   String get attendanceSaveFailed => 'တက်ရောက်မှု သိမ်းဆည်းခြင်း မအောင်မြင်ပါ။';
@@ -153,7 +159,8 @@ class AppLocalizationsMy extends AppLocalizations {
   String get manageLessonPlansTitle => 'သင်ခန်းစာ အစီအစဉ်များ စီမံရန်';
 
   @override
-  String get pleaseSelectClassToViewLessonPlans => 'သင်ခန်းစာ အစီအစဉ်များ ကြည့်ရန် အတန်းတစ်ခု ရွေးပါ။';
+  String get pleaseSelectClassToViewLessonPlans =>
+      'သင်ခန်းစာ အစီအစဉ်များ ကြည့်ရန် အတန်းတစ်ခု ရွေးပါ။';
 
   @override
   String get noLessonPlansFound => 'ဤအတန်းအတွက် သင်ခန်းစာ အစီအစဉ်များ မတွေ့ပါ။';
@@ -165,7 +172,8 @@ class AppLocalizationsMy extends AppLocalizations {
   String get confirmDeleteTitle => 'ဖျက်ရန် အတည်ပြုပါ';
 
   @override
-  String get confirmDeleteLessonPlanText => 'ဤသင်ခန်းစာ အစီအစဉ်ကို ဖျက်ရန် သေချာပါသလား။';
+  String get confirmDeleteLessonPlanText =>
+      'ဤသင်ခန်းစာ အစီအစဉ်ကို ဖျက်ရန် သေချာပါသလား။';
 
   @override
   String get cancel => 'မလုပ်တော့ပါ';
@@ -174,13 +182,15 @@ class AppLocalizationsMy extends AppLocalizations {
   String get delete => 'ဖျက်မည်';
 
   @override
-  String get errorDeletingLessonPlan => 'သင်ခန်းစာ အစီအစဉ် ဖျက်ရာတွင် အမှားအယွင်းဖြစ်ပွားခဲ့သည်။';
+  String get errorDeletingLessonPlan =>
+      'သင်ခန်းစာ အစီအစဉ် ဖျက်ရာတွင် အမှားအယွင်းဖြစ်ပွားခဲ့သည်။';
 
   @override
   String get date => 'ရက်စွဲ';
 
   @override
-  String get addEditLessonPlanNotImplemented => 'သင်ခန်းစာ အစီအစဉ် ထည့်/ပြင်ရန် မျက်နှာပြင်ကို မပြုလုပ်ရသေးပါ။';
+  String get addEditLessonPlanNotImplemented =>
+      'သင်ခန်းစာ အစီအစဉ် ထည့်/ပြင်ရန် မျက်နှာပြင်ကို မပြုလုပ်ရသေးပါ။';
 
   @override
   String get editClassTitle => 'အတန်း ပြင်ရန်';
@@ -210,7 +220,8 @@ class AppLocalizationsMy extends AppLocalizations {
   String get addClassButton => 'အတန်းသစ် ထည့်ရန်';
 
   @override
-  String get failedToLoadTeachersError => 'ဆရာ/မများ စာရင်း ရယူခြင်း မအောင်မြင်ပါ။';
+  String get failedToLoadTeachersError =>
+      'ဆရာ/မများ စာရင်း ရယူခြင်း မအောင်မြင်ပါ။';
 
   @override
   String get errorOccurredPrefix => 'အမှားအယွင်း ဖြစ်ပွားခဲ့သည်';
@@ -264,19 +275,24 @@ class AppLocalizationsMy extends AppLocalizations {
   String get addTeacherButton => 'ဆရာ/မ အသစ်ထည့်ရန်';
 
   @override
-  String get passwordRequiredForNewTeacherError => 'ဆရာ/မ အသစ်အတွက် စကားဝှက် လိုအပ်ပါသည်။';
+  String get passwordRequiredForNewTeacherError =>
+      'ဆရာ/မ အသစ်အတွက် စကားဝှက် လိုအပ်ပါသည်။';
 
   @override
-  String get newTeacherCreationDisabledError => 'ဆရာ/မ အသစ်ပြုလုပ်ခြင်းကို ခေတ္တပိတ်ထားသည်။ Supabase dashboard (သို့) Edge Function ကို အသုံးပြုပါ။';
+  String get newTeacherCreationDisabledError =>
+      'ဆရာ/မ အသစ်ပြုလုပ်ခြင်းကို ခေတ္တပိတ်ထားသည်။ Supabase dashboard (သို့) Edge Function ကို အသုံးပြုပါ။';
 
   @override
-  String get profilePhotoUploadFailedError => 'ပရိုဖိုင်ဓာတ်ပုံ တင်ခြင်း မအောင်မြင်ပါ။';
+  String get profilePhotoUploadFailedError =>
+      'ပရိုဖိုင်ဓာတ်ပုံ တင်ခြင်း မအောင်မြင်ပါ။';
 
   @override
-  String get failedToUpdateTeacherError => 'ဆရာ/မ အချက်အလက် ပြင်ဆင်ခြင်း မအောင်မြင်ပါ။';
+  String get failedToUpdateTeacherError =>
+      'ဆရာ/မ အချက်အလက် ပြင်ဆင်ခြင်း မအောင်မြင်ပါ။';
 
   @override
-  String get failedToCreateTeacherError => 'ဆရာ/မ အသစ်ပြုလုပ်ခြင်း မအောင်မြင်ပါ။';
+  String get failedToCreateTeacherError =>
+      'ဆရာ/မ အသစ်ပြုလုပ်ခြင်း မအောင်မြင်ပါ။';
 
   @override
   String get editParentTitle => 'မိဘ အချက်အလက် ပြင်ရန်';
@@ -291,13 +307,16 @@ class AppLocalizationsMy extends AppLocalizations {
   String get addParentButton => 'မိဘ အသစ်ထည့်ရန်';
 
   @override
-  String get passwordRequiredForNewParentError => 'မိဘ အသစ်အတွက် စကားဝှက် လိုအပ်ပါသည်။';
+  String get passwordRequiredForNewParentError =>
+      'မိဘ အသစ်အတွက် စကားဝှက် လိုအပ်ပါသည်။';
 
   @override
-  String get newParentCreationDisabledError => 'မိဘ အသစ်ပြုလုပ်ခြင်းကို ခေတ္တပိတ်ထားသည်။ Supabase dashboard (သို့) Edge Function ကို အသုံးပြုပါ။';
+  String get newParentCreationDisabledError =>
+      'မိဘ အသစ်ပြုလုပ်ခြင်းကို ခေတ္တပိတ်ထားသည်။ Supabase dashboard (သို့) Edge Function ကို အသုံးပြုပါ။';
 
   @override
-  String get failedToUpdateParentError => 'မိဘ အချက်အလက် ပြင်ဆင်ခြင်း မအောင်မြင်ပါ။';
+  String get failedToUpdateParentError =>
+      'မိဘ အချက်အလက် ပြင်ဆင်ခြင်း မအောင်မြင်ပါ။';
 
   @override
   String get failedToCreateParentError => 'မိဘ အသစ်ပြုလုပ်ခြင်း မအောင်မြင်ပါ။';
@@ -327,13 +346,16 @@ class AppLocalizationsMy extends AppLocalizations {
   String get addStudentButton => 'ကျောင်းသားသစ် ထည့်ရန်';
 
   @override
-  String get failedToLoadClassesError => 'အတန်းများ စာရင်း ရယူခြင်း မအောင်မြင်ပါ။';
+  String get failedToLoadClassesError =>
+      'အတန်းများ စာရင်း ရယူခြင်း မအောင်မြင်ပါ။';
 
   @override
-  String get failedToUpdateStudentError => 'ကျောင်းသား အချက်အလက် ပြင်ဆင်ခြင်း မအောင်မြင်ပါ။';
+  String get failedToUpdateStudentError =>
+      'ကျောင်းသား အချက်အလက် ပြင်ဆင်ခြင်း မအောင်မြင်ပါ။';
 
   @override
-  String get failedToCreateStudentError => 'ကျောင်းသားသစ် ပြုလုပ်ခြင်း မအောင်မြင်ပါ။';
+  String get failedToCreateStudentError =>
+      'ကျောင်းသားသစ် ပြုလုပ်ခြင်း မအောင်မြင်ပါ။';
 
   @override
   String get editTimetableEntryTitle => 'အချိန်ဇယား ပြင်ရန်';
@@ -369,16 +391,20 @@ class AppLocalizationsMy extends AppLocalizations {
   String get addEntryButton => 'ထည့်ရန်';
 
   @override
-  String get fillAllFieldsError => 'ကျေးဇူးပြု၍ အချိန်၊ နေ့၊ အတန်း၊ နှင့် ဆရာ/မ အပါအဝင် အကွက်အားလုံးကို ဖြည့်ပါ။';
+  String get fillAllFieldsError =>
+      'ကျေးဇူးပြု၍ အချိန်၊ နေ့၊ အတန်း၊ နှင့် ဆရာ/မ အပါအဝင် အကွက်အားလုံးကို ဖြည့်ပါ။';
 
   @override
-  String get endTimeAfterStartTimeError => 'ပြီးဆုံးချိန်သည် စတင်ချိန်ထက် နောက်ကျရပါမည်။';
+  String get endTimeAfterStartTimeError =>
+      'ပြီးဆုံးချိန်သည် စတင်ချိန်ထက် နောက်ကျရပါမည်။';
 
   @override
-  String get failedToSaveTimetableEntryError => 'အချိန်ဇယား သိမ်းဆည်းခြင်း မအောင်မြင်ပါ။';
+  String get failedToSaveTimetableEntryError =>
+      'အချိန်ဇယား သိမ်းဆည်းခြင်း မအောင်မြင်ပါ။';
 
   @override
-  String get failedToLoadTimetableDataError => 'အချိန်ဇယားအတွက် လိုအပ်သော အချက်အလက်များ ရယူခြင်း မအောင်မြင်ပါ။';
+  String get failedToLoadTimetableDataError =>
+      'အချိန်ဇယားအတွက် လိုအပ်သော အချက်အလက်များ ရယူခြင်း မအောင်မြင်ပါ။';
 
   @override
   String get financeManagementTitle => 'ဘဏ္ဍာရေး စီမံခန့်ခွဲမှု';
@@ -414,19 +440,24 @@ class AppLocalizationsMy extends AppLocalizations {
   String get noExpenseRecordsFound => 'အသုံးစရိတ် မှတ်တမ်းများ မတွေ့ပါ။';
 
   @override
-  String get confirmDeleteIncomeText => 'ဤဝင်ငွေ မှတ်တမ်းကို ဖျက်ရန် သေချာပါသလား။';
+  String get confirmDeleteIncomeText =>
+      'ဤဝင်ငွေ မှတ်တမ်းကို ဖျက်ရန် သေချာပါသလား။';
 
   @override
-  String get confirmDeleteExpenseText => 'ဤအသုံးစရိတ် မှတ်တမ်းကို ဖျက်ရန် သေချာပါသလား။';
+  String get confirmDeleteExpenseText =>
+      'ဤအသုံးစရိတ် မှတ်တမ်းကို ဖျက်ရန် သေချာပါသလား။';
 
   @override
-  String get errorDeletingIncome => 'ဝင်ငွေ မှတ်တမ်း ဖျက်ရာတွင် အမှားအယွင်းဖြစ်ပွားခဲ့သည်။';
+  String get errorDeletingIncome =>
+      'ဝင်ငွေ မှတ်တမ်း ဖျက်ရာတွင် အမှားအယွင်းဖြစ်ပွားခဲ့သည်။';
 
   @override
-  String get errorDeletingExpense => 'အသုံးစရိတ် မှတ်တမ်း ဖျက်ရာတွင် အမှားအယွင်းဖြစ်ပွားခဲ့သည်။';
+  String get errorDeletingExpense =>
+      'အသုံးစရိတ် မှတ်တမ်း ဖျက်ရာတွင် အမှားအယွင်းဖြစ်ပွားခဲ့သည်။';
 
   @override
-  String get addEditFinancialRecordNotImplemented => 'ဘဏ္ဍာရေး မှတ်တမ်း ထည့်/ပြင်ရန် မျက်နှာပြင်ကို မပြုလုပ်ရသေးပါ။';
+  String get addEditFinancialRecordNotImplemented =>
+      'ဘဏ္ဍာရေး မှတ်တမ်း ထည့်/ပြင်ရန် မျက်နှာပြင်ကို မပြုလုပ်ရသေးပါ။';
 
   @override
   String get editIncomeTitle => 'ဝင်ငွေ ပြင်ရန်';
@@ -453,7 +484,8 @@ class AppLocalizationsMy extends AppLocalizations {
   String get amountValidator => 'ကျေးဇူးပြု၍ ပမာဏ ထည့်ပါ။';
 
   @override
-  String get invalidAmountError => 'ကျေးဇူးပြု၍ မှန်ကန်သော ပမာဏ (အပေါင်းကိန်း) ထည့်ပါ။';
+  String get invalidAmountError =>
+      'ကျေးဇူးပြု၍ မှန်ကန်သော ပမာဏ (အပေါင်းကိန်း) ထည့်ပါ။';
 
   @override
   String get recordDateLabel => 'ရက်စွဲ';
@@ -469,6 +501,12 @@ class AppLocalizationsMy extends AppLocalizations {
 
   @override
   String get failedToSaveRecordError => 'မှတ်တမ်း သိမ်းဆည်းခြင်း မအောင်မြင်ပါ။';
+
+  @override
+  String get categoryLabel => 'အမျိုးအစား';
+
+  @override
+  String get categoryValidator => 'ကျေးဇူးပြု၍ အမျိုးအစားတစ်ခုထည့်ပါ။';
 
   @override
   String get announcementsTitle => 'ကြေညာချက်များ';
@@ -489,19 +527,23 @@ class AppLocalizationsMy extends AppLocalizations {
   String get selectChildHint => 'ကလေး ရွေးပါ';
 
   @override
-  String get pleaseSelectChild => 'တက်ရောက်မှု ကြည့်ရန် ကျေးဇူးပြု၍ ကလေးတစ်ဦး ရွေးပါ။';
+  String get pleaseSelectChild =>
+      'တက်ရောက်မှု ကြည့်ရန် ကျေးဇူးပြု၍ ကလေးတစ်ဦး ရွေးပါ။';
 
   @override
-  String get noAttendanceRecordsFound => 'ရွေးချယ်ထားသော ကလေးနှင့် လအတွက် တက်ရောက်မှု မှတ်တမ်းများ မတွေ့ပါ။';
+  String get noAttendanceRecordsFound =>
+      'ရွေးချယ်ထားသော ကလေးနှင့် လအတွက် တက်ရောက်မှု မှတ်တမ်းများ မတွေ့ပါ။';
 
   @override
   String get childScheduleTitle => 'ကလေး၏ အချိန်ဇယား';
 
   @override
-  String get childNotAssignedToClass => 'ကလေးသည် လက်ရှိတွင် အတန်းတစ်ခုခု၌ သတ်မှတ်ထားခြင်း မရှိပါ သို့မဟုတ် အချိန်ဇယား မရှိပါ။';
+  String get childNotAssignedToClass =>
+      'ကလေးသည် လက်ရှိတွင် အတန်းတစ်ခုခု၌ သတ်မှတ်ထားခြင်း မရှိပါ သို့မဟုတ် အချိန်ဇယား မရှိပါ။';
 
   @override
-  String get noScheduleFound => 'ရွေးချယ်ထားသော ကလေး၏ အတန်းအတွက် အချိန်ဇယား မတွေ့ပါ။';
+  String get noScheduleFound =>
+      'ရွေးချယ်ထားသော ကလေး၏ အတန်းအတွက် အချိန်ဇယား မတွေ့ပါ။';
 
   @override
   String get manageAnnouncementsTitle => 'ကြေညာချက်များ စီမံရန်';
@@ -510,16 +552,20 @@ class AppLocalizationsMy extends AppLocalizations {
   String get addAnnouncementTooltip => 'ကြေညာချက်အသစ် ထည့်ရန်';
 
   @override
-  String get confirmDeleteAnnouncementText => 'ဤကြေညာချက်ကို ဖျက်ရန် သေချာပါသလား။';
+  String get confirmDeleteAnnouncementText =>
+      'ဤကြေညာချက်ကို ဖျက်ရန် သေချာပါသလား။';
 
   @override
-  String get errorDeletingAnnouncement => 'ကြေညာချက် ဖျက်ရာတွင် အမှားအယွင်းဖြစ်ပွားခဲ့သည်။';
+  String get errorDeletingAnnouncement =>
+      'ကြေညာချက် ဖျက်ရာတွင် အမှားအယွင်းဖြစ်ပွားခဲ့သည်။';
 
   @override
-  String get actionRequiresSchoolAndAdminContext => 'လုပ်ဆောင်ချက်အတွက် ကျောင်းနှင့် အက်မင် အချက်အလက် လိုအပ်သည်။';
+  String get actionRequiresSchoolAndAdminContext =>
+      'လုပ်ဆောင်ချက်အတွက် ကျောင်းနှင့် အက်မင် အချက်အလက် လိုအပ်သည်။';
 
   @override
-  String get addEditAnnouncementNotImplemented => 'ကြေညာချက် ထည့်/ပြင်ရန် မျက်နှာပြင်ကို မပြုလုပ်ရသေးပါ။';
+  String get addEditAnnouncementNotImplemented =>
+      'ကြေညာချက် ထည့်/ပြင်ရန် မျက်နှာပြင်ကို မပြုလုပ်ရသေးပါ။';
 
   @override
   String get targetAudience => 'ပစ်မှတ် အုပ်စု';
@@ -534,10 +580,12 @@ class AppLocalizationsMy extends AppLocalizations {
   String get closeButtonLabel => 'ပိတ်မည်';
 
   @override
-  String get pleaseSelectClassForAnnouncement => 'ဤကြေညာချက်အတွက် အတန်းတစ်ခု ရွေးပါ။';
+  String get pleaseSelectClassForAnnouncement =>
+      'ဤကြေညာချက်အတွက် အတန်းတစ်ခု ရွေးပါ။';
 
   @override
-  String get failedToSaveAnnouncementError => 'ကြေညာချက် သိမ်းဆည်းခြင်း မအောင်မြင်ပါ။';
+  String get failedToSaveAnnouncementError =>
+      'ကြေညာချက် သိမ်းဆည်းခြင်း မအောင်မြင်ပါ။';
 
   @override
   String get editAnnouncementTitle => 'ကြေညာချက် ပြင်ရန်';
@@ -567,19 +615,23 @@ class AppLocalizationsMy extends AppLocalizations {
   String get manageAnnouncementsDrawerItem => 'ကြေညာချက်များ စီမံရန်';
 
   @override
-  String get classOrUserMissingError => 'တက်ရောက်မှု သိမ်းဆည်းရန် အတန်း သို့မဟုတ် အသုံးပြုသူ အချက်အလက် မပြည့်စုံပါ။';
+  String get classOrUserMissingError =>
+      'တက်ရောက်မှု သိမ်းဆည်းရန် အတန်း သို့မဟုတ် အသုံးပြုသူ အချက်အလက် မပြည့်စုံပါ။';
 
   @override
-  String get failedToLoadInitialData => 'အချက်အလက်များ စတင်ရယူခြင်း မအောင်မြင်ပါ။';
+  String get failedToLoadInitialData =>
+      'အချက်အလက်များ စတင်ရယူခြင်း မအောင်မြင်ပါ။';
 
   @override
-  String get failedToLoadSubjects => 'ရွေးချယ်ထားသော အတန်းအတွက် ဘာသာရပ်များ ရယူခြင်း မအောင်မြင်ပါ။';
+  String get failedToLoadSubjects =>
+      'ရွေးချယ်ထားသော အတန်းအတွက် ဘာသာရပ်များ ရယူခြင်း မအောင်မြင်ပါ။';
 
   @override
   String get fillAllRequiredFields => 'လိုအပ်သော အကွက်အားလုံးကို ဖြည့်ပါ။';
 
   @override
-  String get failedToSaveLessonPlanError => 'သင်ခန်းစာ အစီအစဉ် သိမ်းဆည်းခြင်း မအောင်မြင်ပါ။';
+  String get failedToSaveLessonPlanError =>
+      'သင်ခန်းစာ အစီအစဉ် သိမ်းဆည်းခြင်း မအောင်မြင်ပါ။';
 
   @override
   String get editLessonPlanTitle => 'သင်ခန်းစာ အစီအစဉ် ပြင်ရန်';
@@ -597,22 +649,27 @@ class AppLocalizationsMy extends AppLocalizations {
   String get subjectValidator => 'ကျေးဇူးပြု၍ ဘာသာရပ် ရွေးပါ။';
 
   @override
-  String get pleaseSelectClassFirstForSubjects => 'ဘာသာရပ်များ ကြည့်ရန် ကျေးဇူးပြု၍ အတန်းတစ်ခု ရွေးပါ။';
+  String get pleaseSelectClassFirstForSubjects =>
+      'ဘာသာရပ်များ ကြည့်ရန် ကျေးဇူးပြု၍ အတန်းတစ်ခု ရွေးပါ။';
 
   @override
-  String get noSubjectsFoundForClass => 'ရွေးချယ်ထားသော အတန်းအတွက် ဘာသာရပ်များ မတွေ့ပါ။ အချိန်ဇယား စစ်ဆေးပါ။';
+  String get noSubjectsFoundForClass =>
+      'ရွေးချယ်ထားသော အတန်းအတွက် ဘာသာရပ်များ မတွေ့ပါ။ အချိန်ဇယား စစ်ဆေးပါ။';
 
   @override
   String get manageDailyReportFormsTitle => 'နေ့စဉ် မှတ်တမ်းပုံစံများ စီမံရန်';
 
   @override
-  String get confirmDeleteCustomFormText => 'ဤပုံစံနှင့် သက်ဆိုင်သော တုံ့ပြန်မှုများအားလုံးကို ဖျက်ရန် သေချာပါသလား။ ဤလုပ်ဆောင်ချက်ကို နောက်ပြန်လှည့်၍မရပါ။';
+  String get confirmDeleteCustomFormText =>
+      'ဤပုံစံနှင့် သက်ဆိုင်သော တုံ့ပြန်မှုများအားလုံးကို ဖျက်ရန် သေချာပါသလား။ ဤလုပ်ဆောင်ချက်ကို နောက်ပြန်လှည့်၍မရပါ။';
 
   @override
-  String get errorDeletingCustomFormText => 'ပုံစံ ဖျက်ရာတွင် အမှားအယွင်းဖြစ်ပွားခဲ့သည်။';
+  String get errorDeletingCustomFormText =>
+      'ပုံစံ ဖျက်ရာတွင် အမှားအယွင်းဖြစ်ပွားခဲ့သည်။';
 
   @override
-  String get noCustomFormsFoundText => 'စိတ်ကြိုက်ပုံစံများ မတွေ့ပါ။ တစ်ခုပြုလုပ်ရန် \'+\' ကိုနှိပ်ပါ။';
+  String get noCustomFormsFoundText =>
+      'စိတ်ကြိုက်ပုံစံများ မတွေ့ပါ။ တစ်ခုပြုလုပ်ရန် \'+\' ကိုနှိပ်ပါ။';
 
   @override
   String get addCustomFormTooltip => 'မှတ်တမ်းပုံစံအသစ် ထည့်ရန်';
@@ -657,16 +714,19 @@ class AppLocalizationsMy extends AppLocalizations {
   String get addQuestionTooltip => 'မေးခွန်းအသစ် ထည့်ရန်';
 
   @override
-  String get noQuestionsAddedText => 'မေးခွန်းများ မထည့်ရသေးပါ။ \'+\' ကိုနှိပ်၍ ထည့်ပါ။';
+  String get noQuestionsAddedText =>
+      'မေးခွန်းများ မထည့်ရသေးပါ။ \'+\' ကိုနှိပ်၍ ထည့်ပါ။';
 
   @override
-  String get pleaseSelectActiveDatesError => 'ကျေးဇူးပြု၍ အသုံးပြုနိုင်မည့် ရက်အပိုင်းအခြားကို ရွေးပါ။';
+  String get pleaseSelectActiveDatesError =>
+      'ကျေးဇူးပြု၍ အသုံးပြုနိုင်မည့် ရက်အပိုင်းအခြားကို ရွေးပါ။';
 
   @override
   String get activeToDateError => 'နောက်ဆုံးရက်သည် စတင်ရက်ထက် နောက်ကျရပါမည်။';
 
   @override
-  String get addAtLeastOneQuestionError => 'ကျေးဇူးပြု၍ ပုံစံတွင် အနည်းဆုံး မေးခွန်းတစ်ခု ထည့်ပါ။';
+  String get addAtLeastOneQuestionError =>
+      'ကျေးဇူးပြု၍ ပုံစံတွင် အနည်းဆုံး မေးခွန်းတစ်ခု ထည့်ပါ။';
 
   @override
   String get failedToSaveFormError => 'ပုံစံ သိမ်းဆည်းခြင်း မအောင်မြင်ပါ။';
@@ -696,10 +756,12 @@ class AppLocalizationsMy extends AppLocalizations {
   String get optionsLabel => 'ရွေးချယ်စရာများ (တစ်ကြောင်းလျှင် တစ်ခု)';
 
   @override
-  String get optionsRequiredError => 'ဤမေးခွန်းအမျိုးအစားအတွက် ရွေးချယ်စရာများ လိုအပ်ပါသည်။';
+  String get optionsRequiredError =>
+      'ဤမေးခွန်းအမျိုးအစားအတွက် ရွေးချယ်စရာများ လိုအပ်ပါသည်။';
 
   @override
-  String get atLeastTwoOptionsError => 'ဤမေးခွန်းအမျိုးအစားအတွက် အနည်းဆုံး ရွေးချယ်စရာ နှစ်ခု လိုအပ်ပါသည်။';
+  String get atLeastTwoOptionsError =>
+      'ဤမေးခွန်းအမျိုးအစားအတွက် အနည်းဆုံး ရွေးချယ်စရာ နှစ်ခု လိုအပ်ပါသည်။';
 
   @override
   String get requiredLabel => 'မဖြစ်မနေ ဖြည့်ရန်';
@@ -723,10 +785,12 @@ class AppLocalizationsMy extends AppLocalizations {
   String get errorFetchingForms => 'ပုံစံများ ရယူရာတွင် အမှားဖြစ်ပွားသည်';
 
   @override
-  String get errorFetchingFormDetails => 'ပုံစံအသေးစိတ် ရယူရာတွင် အမှားဖြစ်ပွားသည်';
+  String get errorFetchingFormDetails =>
+      'ပုံစံအသေးစိတ် ရယူရာတွင် အမှားဖြစ်ပွားသည်';
 
   @override
-  String get reportSubmittedSuccessfully => 'မှတ်တမ်း အောင်မြင်စွာ တင်ပြီးပါပြီ!';
+  String get reportSubmittedSuccessfully =>
+      'မှတ်တမ်း အောင်မြင်စွာ တင်ပြီးပါပြီ!';
 
   @override
   String get failedToSubmitReport => 'မှတ်တမ်း တင်ခြင်း မအောင်မြင်ပါ';
@@ -753,7 +817,8 @@ class AppLocalizationsMy extends AppLocalizations {
   String get formLabel => 'ပုံစံ';
 
   @override
-  String get noActiveFormsForToday => 'ယနေ့အတွက် အသုံးပြုနိုင်သော ပုံစံများ မရှိပါ။';
+  String get noActiveFormsForToday =>
+      'ယနေ့အတွက် အသုံးပြုနိုင်သော ပုံစံများ မရှိပါ။';
 
   @override
   String get pleaseSelectForm => 'ကျေးဇူးပြု၍ ပုံစံတစ်ခု ရွေးပါ။';
@@ -762,19 +827,22 @@ class AppLocalizationsMy extends AppLocalizations {
   String get formHasNoQuestions => 'ဤပုံစံတွင် မေးခွန်းများ မရှိပါ။';
 
   @override
-  String get reportAlreadySubmitted => 'ဤပုံစံအတွက် ယနေ့ မှတ်တမ်းတင်ပြီးသား ဖြစ်သည်။';
+  String get reportAlreadySubmitted =>
+      'ဤပုံစံအတွက် ယနေ့ မှတ်တမ်းတင်ပြီးသား ဖြစ်သည်။';
 
   @override
   String get submitReportButton => 'မှတ်တမ်း တင်မည်';
 
   @override
-  String get pleaseEnterValidNumber => 'ကျေးဇူးပြု၍ မှန်ကန်သော ကိန်းဂဏန်းတစ်ခု ထည့်ပါ။';
+  String get pleaseEnterValidNumber =>
+      'ကျေးဇူးပြု၍ မှန်ကန်သော ကိန်းဂဏန်းတစ်ခု ထည့်ပါ။';
 
   @override
   String get fieldRequiredValidation => 'ဤအကွက်ကို ဖြည့်ရန် လိုအပ်သည်။';
 
   @override
-  String get noParentsAvailableToLink => 'ဤကျောင်းတွင် ချိတ်ဆက်ရန် မိဘများ မရှိပါ။';
+  String get noParentsAvailableToLink =>
+      'ဤကျောင်းတွင် ချိတ်ဆက်ရန် မိဘများ မရှိပါ။';
 
   @override
   String get linkParentsTitle => 'မိဘများ ချိတ်ဆက်ရန်:';
@@ -786,13 +854,16 @@ class AppLocalizationsMy extends AppLocalizations {
   String get viewFormResponsesTitle => 'ပုံစံ တုံ့ပြန်မှုများ ကြည့်ရန်';
 
   @override
-  String get noFormsAvailableToViewResponses => 'တုံ့ပြန်မှုများ ကြည့်ရန် ပုံစံများ မရှိပါ။';
+  String get noFormsAvailableToViewResponses =>
+      'တုံ့ပြန်မှုများ ကြည့်ရန် ပုံစံများ မရှိပါ။';
 
   @override
-  String get selectFormToViewResponses => 'တုံ့ပြန်မှုများ ကြည့်ရန် ပုံစံတစ်ခု ရွေးပါ';
+  String get selectFormToViewResponses =>
+      'တုံ့ပြန်မှုများ ကြည့်ရန် ပုံစံတစ်ခု ရွေးပါ';
 
   @override
-  String get noResponsesForThisForm => 'ဤပုံစံအတွက် တင်ထားသော တုံ့ပြန်မှုများ မရှိသေးပါ။';
+  String get noResponsesForThisForm =>
+      'ဤပုံစံအတွက် တင်ထားသော တုံ့ပြန်မှုများ မရှိသေးပါ။';
 
   @override
   String get responseFrom => 'ထံမှ တုံ့ပြန်ချက်';
@@ -840,7 +911,8 @@ class AppLocalizationsMy extends AppLocalizations {
   String get noRecentActivity => 'မကြာသေးမီက လုပ်ဆောင်ချက် မရှိပါ။';
 
   @override
-  String get error_school_or_user_not_found => 'ကျောင်း သို့မဟုတ် အသုံးပြုသူ အချက်အလက် ရှာမတွေ့ပါ။';
+  String get error_school_or_user_not_found =>
+      'ကျောင်း သို့မဟုတ် အသုံးပြုသူ အချက်အလက် ရှာမတွေ့ပါ။';
 
   @override
   String get selectGenderHint => 'ကျား/မ ရွေးပါ';
@@ -915,7 +987,8 @@ class AppLocalizationsMy extends AppLocalizations {
   String get fieldType_number => 'ဂဏန်း ထည့်သွင်းရန်';
 
   @override
-  String get optionsForMCQCheckboxLabel => 'ရွေးချယ်စရာများ (MCQ/Checkbox အတွက်၊ တစ်ကြောင်းလျှင် တစ်ခု)';
+  String get optionsForMCQCheckboxLabel =>
+      'ရွေးချယ်စရာများ (MCQ/Checkbox အတွက်၊ တစ်ကြောင်းလျှင် တစ်ခု)';
 
   @override
   String get addOptionButton => 'ရွေးချယ်စရာ ထည့်ရန်';
@@ -931,12 +1004,6 @@ class AppLocalizationsMy extends AppLocalizations {
 
   @override
   String get optionTextValidator => 'ရွေးချယ်စရာ စာသား လိုအပ်သည်';
-
-  @override
-  String get categoryLabel => 'အမျိုးအစား';
-
-  @override
-  String get categoryValidator => 'ကျေးဇူးပြု၍ အမျိုးအစား ရွေးပါ';
 
   @override
   String get saveButton => 'သိမ်းမည်';
@@ -1047,7 +1114,8 @@ class AppLocalizationsMy extends AppLocalizations {
   String get addTransactionButton => 'ငွေလွှဲပြောင်းမှု ထည့်ရန်';
 
   @override
-  String get confirmDeleteTransactionText => 'ဤငွေလွှဲပြောင်းမှုကို ဖျက်ရန် သေချာပါသလား။';
+  String get confirmDeleteTransactionText =>
+      'ဤငွေလွှဲပြောင်းမှုကို ဖျက်ရန် သေချာပါသလား။';
 
   @override
   String get manageCustomFormsTitle => 'စိတ်ကြိုက်ပုံစံများ စီမံရန်';
@@ -1080,25 +1148,30 @@ class AppLocalizationsMy extends AppLocalizations {
   String get manageStudentsTitle => 'ကျောင်းသားများ စီမံရန်';
 
   @override
-  String get confirmDeleteStudentText => 'ဤကျောင်းသားကို ဖျက်ရန် သေချာပါသလား။ ဤလုပ်ဆောင်ချက်ကို နောက်ပြန်လှည့်၍မရပါ။';
+  String get confirmDeleteStudentText =>
+      'ဤကျောင်းသားကို ဖျက်ရန် သေချာပါသလား။ ဤလုပ်ဆောင်ချက်ကို နောက်ပြန်လှည့်၍မရပါ။';
 
   @override
   String get manageTimetablesTitle => 'အချိန်ဇယားများ စီမံရန်';
 
   @override
-  String get selectClassToViewTimetableHint => 'အချိန်ဇယား ကြည့်ရန် အတန်း ရွေးပါ';
+  String get selectClassToViewTimetableHint =>
+      'အချိန်ဇယား ကြည့်ရန် အတန်း ရွေးပါ';
 
   @override
-  String get pleaseSelectClassToViewTimetableText => 'အချိန်ဇယား ကြည့်ရန် ကျေးဇူးပြု၍ အတန်းတစ်ခု ရွေးပါ။';
+  String get pleaseSelectClassToViewTimetableText =>
+      'အချိန်ဇယား ကြည့်ရန် ကျေးဇူးပြု၍ အတန်းတစ်ခု ရွေးပါ။';
 
   @override
-  String get noTimetableEntriesForText => 'အတွက် အချိန်ဇယား ထည့်သွင်းမှုများ မရှိပါ';
+  String get noTimetableEntriesForText =>
+      'အတွက် အချိန်ဇယား ထည့်သွင်းမှုများ မရှိပါ';
 
   @override
   String get addOneText => 'တစ်ခုထည့်ရန်!';
 
   @override
-  String get confirmDeleteTimetableEntryText => 'ဤအချိန်ဇယား ထည့်သွင်းမှုကို ဖျက်ရန် သေချာပါသလား။';
+  String get confirmDeleteTimetableEntryText =>
+      'ဤအချိန်ဇယား ထည့်သွင်းမှုကို ဖျက်ရန် သေချာပါသလား။';
 
   @override
   String get manageUsersTitle => 'အသုံးပြုသူများ စီမံရန်';
@@ -1116,13 +1189,15 @@ class AppLocalizationsMy extends AppLocalizations {
   String get forgotPasswordButtonLabel => 'စကားဝှက် မေ့နေပါသလား။';
 
   @override
-  String get registerNewSchoolButtonLabel => 'ကျောင်းအသစ် မှတ်ပုံတင်ရန် (အက်မင်)';
+  String get registerNewSchoolButtonLabel =>
+      'ကျောင်းအသစ် မှတ်ပုံတင်ရန် (အက်မင်)';
 
   @override
   String get adminFullNameLabel => 'အက်မင် အမည်အပြည့်အစုံ';
 
   @override
-  String get adminFullNameValidator => 'ကျေးဇူးပြု၍ အက်မင် အမည်အပြည့်အစုံ ထည့်ပါ။';
+  String get adminFullNameValidator =>
+      'ကျေးဇူးပြု၍ အက်မင် အမည်အပြည့်အစုံ ထည့်ပါ။';
 
   @override
   String get adminEmailLabel => 'အက်မင် အီးမေးလ်';
@@ -1200,25 +1275,31 @@ class AppLocalizationsMy extends AppLocalizations {
   String get parentDashboardTitle => 'မိဘ ဒက်ရှ်ဘုတ်';
 
   @override
-  String get parentDashboardWelcomeMessage => 'မိဘ၊ ကြိုဆိုပါတယ်။\nသင်၏ကလေး အချက်အလက်များနှင့် ကြေညာချက်များ ကြည့်ရန် အံဆွဲကို အသုံးပြုပါ။';
+  String get parentDashboardWelcomeMessage =>
+      'မိဘ၊ ကြိုဆိုပါတယ်။\nသင်၏ကလေး အချက်အလက်များနှင့် ကြေညာချက်များ ကြည့်ရန် အံဆွဲကို အသုံးပြုပါ။';
 
   @override
   String get teacherDashboardTitle => 'ဆရာ ဒက်ရှ်ဘုတ်';
 
   @override
-  String get teacherDashboardWelcomeMessage => 'ဆရာ/မ၊ ကြိုဆိုပါတယ်။\nသင်၏ကိရိယာများ အသုံးပြုရန် အံဆွဲကို အသုံးပြုပါ။';
+  String get teacherDashboardWelcomeMessage =>
+      'ဆရာ/မ၊ ကြိုဆိုပါတယ်။\nသင်၏ကိရိယာများ အသုံးပြုရန် အံဆွဲကို အသုံးပြုပါ။';
 
   @override
-  String get unknownUserRoleError => 'အသုံးပြုသူအခန်းကဏ္ဍကို မသိပါ။ ကျေးဇူးပြု၍ အကူအညီတောင်းပါ။';
+  String get unknownUserRoleError =>
+      'အသုံးပြုသူအခန်းကဏ္ဍကို မသိပါ။ ကျေးဇူးပြု၍ အကူအညီတောင်းပါ။';
 
   @override
-  String get loginFailedError => 'ဝင်ရောက်ခြင်း မအောင်မြင်ပါ။ သင်၏အီးမေးလ်နှင့် စကားဝှက်ကို စစ်ဆေးပါ။';
+  String get loginFailedError =>
+      'ဝင်ရောက်ခြင်း မအောင်မြင်ပါ။ သင်၏အီးမေးလ်နှင့် စကားဝှက်ကို စစ်ဆေးပါ။';
 
   @override
-  String get registrationSuccessMessage => 'ကျောင်းနှင့် အက်မင် အောင်မြင်စွာ မှတ်ပုံတင်ပြီးပါပြီ။ ကျေးဇူးပြု၍ ဝင်ရောက်ပါ။';
+  String get registrationSuccessMessage =>
+      'ကျောင်းနှင့် အက်မင် အောင်မြင်စွာ မှတ်ပုံတင်ပြီးပါပြီ။ ကျေးဇူးပြု၍ ဝင်ရောက်ပါ။';
 
   @override
-  String get failedToLinkAdminError => 'အရေးကြီး: အက်မင်ကို ကျောင်းအသစ်နှင့် ချိတ်ဆက်ရာတွင် မအောင်မြင်ပါ။ ကျေးဇူးပြု၍ အကူအညီတောင်းပါ။';
+  String get failedToLinkAdminError =>
+      'အရေးကြီး: အက်မင်ကို ကျောင်းအသစ်နှင့် ချိတ်ဆက်ရာတွင် မအောင်မြင်ပါ။ ကျေးဇူးပြု၍ အကူအညီတောင်းပါ။';
 
   @override
   String get teacherLabel => 'ဆရာ/မ';
@@ -1252,4 +1333,67 @@ class AppLocalizationsMy extends AppLocalizations {
 
   @override
   String get versionLabel => 'ဗားရှင်း';
+
+  @override
+  String get editManagerTitle => 'Edit Manager';
+
+  @override
+  String get addManagerTitle => 'Add Manager';
+
+  @override
+  String get updateManagerButton => 'Update Manager';
+
+  @override
+  String get addManagerButton => 'Add Manager';
+
+  @override
+  String get teacherTimetableAction => 'View Timetable';
+
+  @override
+  String get addStudent => 'Add Student';
+
+  @override
+  String get addParent => 'Add Parent';
+
+  @override
+  String get error_school_not_found => 'School not found.';
+
+  @override
+  String get error_invalid_number => 'Invalid number.';
+
+  @override
+  String get settingsSavedSuccessfully => 'Settings saved successfully.';
+
+  @override
+  String get errorSavingSettings => 'Error saving settings.';
+
+  @override
+  String get adminSettingsTitle => 'Admin Settings';
+
+  @override
+  String get hijriCalendarSettingsTitle => 'Hijri Calendar Settings';
+
+  @override
+  String get dayAdjustmentLabel => 'Day Adjustment';
+
+  @override
+  String get dayAdjustmentHint => 'e.g., -1, 0, 1';
+
+  @override
+  String get saveSettingsButton => 'Save Settings';
+
+  @override
+  String get managerDashboardTitle => 'Manager Dashboard';
+
+  @override
+  String get managerDashboardWelcomeMessage => 'Welcome, Manager!';
+
+  @override
+  String get unassignedClass => 'Unassigned';
+
+  @override
+  String get gallery => 'ဓာတ်ပုံများ';
+
+  @override
+  String get camera => 'ကင်မရာ';
 }

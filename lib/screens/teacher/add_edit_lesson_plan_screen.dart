@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:edu_sync/models/lesson_plan.dart';
-import 'package:edu_sync/models/class.dart' as app_class;
+import 'package:edu_sync/models/school_class.dart' as app_class;
 import 'package:edu_sync/services/lesson_plan_service.dart';
 import 'package:edu_sync/services/class_service.dart';
 import 'package:edu_sync/services/auth_service.dart'; // Import AuthService
@@ -40,10 +40,10 @@ class _AddEditLessonPlanScreenState extends State<AddEditLessonPlanScreen> {
   late TextEditingController _dateController;
   
   DateTime? _selectedDate;
-  app_class.Class? _selectedClass; // This will hold the selected Class object
+  app_class.SchoolClass? _selectedClass; // This will hold the selected Class object
   String? _selectedSubjectName; // From timetable entries for the class
 
-  List<app_class.Class> _availableClasses = [];
+  List<app_class.SchoolClass> _availableClasses = [];
   List<String> _availableSubjects = []; // Subjects for the selected class
 
   bool _isLoading = false;
@@ -66,32 +66,26 @@ class _AddEditLessonPlanScreenState extends State<AddEditLessonPlanScreen> {
   Future<void> _loadInitialScreenData() async {
     setState(() => _isLoadingInitialData = true);
     
-    final authService = AuthService(); 
-    String? currentUserRole = authService.getUserRole();
+    final authService = AuthService();
+    String? currentUserRole = await authService.getUserRole();
 
     try {
-      List<app_class.Class> allClassesInSchool = await _classService.getClassesBySchool(widget.schoolId);
+      List<app_class.SchoolClass> allClassesInSchool = await _classService.getClasses(widget.schoolId);
       
       if (currentUserRole == 'Admin') {
         _availableClasses = allClassesInSchool;
-      } else { 
+      } else {
         _availableClasses = allClassesInSchool.where((c) => c.teacherId == widget.teacherId).toList();
       }
 
       if (_availableClasses.isNotEmpty) {
-        app_class.Class? initialSelection;
+        app_class.SchoolClass? initialSelection;
         // widget.lessonPlan.classId is int, widget.initialClassId is int?
         // Class.id is int?
         int? targetClassId = _isEditing ? widget.lessonPlan?.classId : widget.initialClassId; 
 
-        if (targetClassId != null) {
-          initialSelection = _availableClasses.firstWhere((c) => c.id == targetClassId, orElse: () => _availableClasses.first);
-        } else if (!_isEditing) { 
-          initialSelection = _availableClasses.length == 1 ? _availableClasses.first : null;
-        } else { 
-            initialSelection = _availableClasses.first;
-        }
-        
+        initialSelection = _availableClasses.firstWhere((c) => c.id == targetClassId, orElse: () => _availableClasses.first);
+              
         if (_selectedClass != initialSelection) { // Check if it actually changed
              setState(() {
                 _selectedClass = initialSelection;
@@ -280,16 +274,16 @@ class _AddEditLessonPlanScreenState extends State<AddEditLessonPlanScreen> {
                     validator: (value) => (value == null || value.isEmpty) ? l10n.titleValidator : null,
                   ),
                   const SizedBox(height: 16),
-                  DropdownButtonFormField<app_class.Class>(
+                  DropdownButtonFormField<app_class.SchoolClass>(
                     value: _selectedClass,
                     hint: Text(l10n.selectClassHint),
-                    items: _availableClasses.map((app_class.Class cls) {
-                      return DropdownMenuItem<app_class.Class>(
+                    items: _availableClasses.map((app_class.SchoolClass cls) {
+                      return DropdownMenuItem<app_class.SchoolClass>(
                         value: cls,
                         child: Text(cls.name),
                       );
                     }).toList(),
-                    onChanged: (app_class.Class? newValue) {
+                    onChanged: (app_class.SchoolClass? newValue) {
                       setState(() {
                         _selectedClass = newValue;
                         _selectedSubjectName = null; 

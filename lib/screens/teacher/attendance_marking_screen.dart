@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:edu_sync/models/class.dart' as app_class;
+import 'package:edu_sync/models/school_class.dart' as app_class;
 import 'package:edu_sync/models/student.dart';
 import 'package:edu_sync/models/attendance.dart' as app_attendance;
-import 'package:edu_sync/services/class_service.dart'; 
-import 'package:edu_sync/services/student_service.dart';
-import 'package:edu_sync/services/attendance_service.dart'; 
+import 'package:edu_sync/services/attendance_service.dart';
 import 'package:edu_sync/services/auth_service.dart';
-import 'package:edu_sync/l10n/app_localizations.dart'; 
+import 'package:edu_sync/l10n/app_localizations.dart';
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
+import 'package:edu_sync/services/class_service.dart';
+import 'package:edu_sync/services/student_service.dart';
 
 class AttendanceMarkingScreen extends StatefulWidget {
   const AttendanceMarkingScreen({super.key});
@@ -18,13 +18,13 @@ class AttendanceMarkingScreen extends StatefulWidget {
 }
 
 class _AttendanceMarkingScreenState extends State<AttendanceMarkingScreen> {
-  final ClassService _classService = ClassService(); 
+  final ClassService _classService = ClassService();
   final StudentService _studentService = StudentService();
-  final AttendanceService _attendanceService = AttendanceService(); 
+  final AttendanceService _attendanceService = AttendanceService();
   final AuthService _authService = AuthService();
 
-  List<app_class.Class> _teacherClasses = [];
-  app_class.Class? _selectedClass;
+  List<app_class.SchoolClass> _teacherClasses = [];
+  app_class.SchoolClass? _selectedClass;
   DateTime _selectedDate = DateTime.now();
   List<Student> _studentsInClass = [];
   Map<int, String> _attendanceStatus = {}; 
@@ -42,7 +42,7 @@ class _AttendanceMarkingScreenState extends State<AttendanceMarkingScreen> {
   Future<void> _loadInitialData() async {
     setState(() => _isLoading = true);
     final currentUser = _authService.getCurrentUser();
-    _currentUserRole = _authService.getUserRole();
+    _currentUserRole = await _authService.getUserRole();
 
     if (currentUser == null || _currentUserRole == null) {
       if (mounted) setState(() => _isLoading = false);
@@ -55,7 +55,7 @@ class _AttendanceMarkingScreenState extends State<AttendanceMarkingScreen> {
       _currentSchoolId = await _authService.getCurrentUserSchoolId();
 
       if (_currentSchoolId != null && _currentUserId != null) {
-        List<app_class.Class> allClassesInSchool = await _classService.getClassesBySchool(_currentSchoolId!);
+        List<app_class.SchoolClass> allClassesInSchool = await _classService.getClasses(_currentSchoolId!);
         
         if (_currentUserRole == 'Teacher') {
           _teacherClasses = allClassesInSchool.where((c) => c.teacherId == _currentUserId).toList();
@@ -81,10 +81,11 @@ class _AttendanceMarkingScreenState extends State<AttendanceMarkingScreen> {
     if (!mounted) return;
     setState(() => _isLoading = true);
     // _selectedClass.id is int?
-    _studentsInClass = await _studentService.getStudentsByClass(_selectedClass!.id!); 
+    _studentsInClass = await _studentService.getStudentsByClass(_selectedClass!.id!);
     
     // _selectedClass.id is int?
-    _attendanceStatus = await _attendanceService.getAttendanceForClassDate(_selectedClass!.id!, _selectedDate); 
+    final attendance = await _attendanceService.getAttendanceForClassByDate(_selectedClass!.id!, _selectedDate);
+    _attendanceStatus = {for (var a in attendance) a.studentId: a.status};
     
     for (var student in _studentsInClass) {
       _attendanceStatus.putIfAbsent(student.id, () => 'Present'); 
@@ -178,6 +179,12 @@ class _AttendanceMarkingScreenState extends State<AttendanceMarkingScreen> {
     return Scaffold(
       appBar: AppBar( // Theme applied globally
         title: Text(l10n.markAttendanceTitle),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadInitialData,
+          ),
+        ],
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(contextualAccentColor)))
@@ -188,16 +195,16 @@ class _AttendanceMarkingScreenState extends State<AttendanceMarkingScreen> {
                   child: Row(
                     children: [
                       Expanded(
-                        child: DropdownButtonFormField<app_class.Class>(
+                        child: DropdownButtonFormField<app_class.SchoolClass>(
                           value: _selectedClass,
                           hint: Text(l10n.selectClassHint, style: theme.textTheme.bodyLarge),
-                          items: _teacherClasses.map((app_class.Class cls) {
-                            return DropdownMenuItem<app_class.Class>(
+                          items: _teacherClasses.map((app_class.SchoolClass cls) {
+                            return DropdownMenuItem<app_class.SchoolClass>(
                               value: cls,
                               child: Text(cls.name, style: theme.textTheme.bodyLarge), 
                             );
                           }).toList(),
-                          onChanged: (app_class.Class? newValue) {
+                          onChanged: (app_class.SchoolClass? newValue) {
                             setState(() {
                               _selectedClass = newValue;
                             });
@@ -238,7 +245,7 @@ class _AttendanceMarkingScreenState extends State<AttendanceMarkingScreen> {
                                           ? NetworkImage(student.profilePhotoUrl!)
                                           : null,
                                       child: student.profilePhotoUrl == null || student.profilePhotoUrl!.isEmpty
-                                          ? Text(student.fullName.isNotEmpty ? student.fullName[0].toUpperCase() : '?', style: TextStyle(color: contextualAccentColor, fontWeight: FontWeight.bold)) 
+                                          ? Text(student.fullName.isNotEmpty ? student.fullName[0].toUpperCase() : '?', style: TextStyle(color: contextualAccentColor, fontWeight: FontWeight.bold))
                                           : null,
                                     ),
                                     title: Text(student.fullName, style: theme.textTheme.titleMedium), 
@@ -312,7 +319,7 @@ class AttendanceStatusButtons extends StatelessWidget {
       children: statuses.map((status) {
         bool isSelected = currentStatus == status;
         Color activeColor = statusColors[status] ?? textLightGrey; // Fallback to a theme grey
-        Color inactiveColor = theme.colorScheme.surfaceContainerHighest ?? Colors.grey.shade300; // Lighter grey for unselected
+        Color inactiveColor = theme.colorScheme.surfaceContainerHighest; // Lighter grey for unselected
         Color textColor = isSelected ? Colors.white : activeColor; // Text color contrast
 
         return Padding(

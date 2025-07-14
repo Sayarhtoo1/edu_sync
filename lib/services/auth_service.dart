@@ -1,9 +1,15 @@
 import 'dart:io'; // Added for File
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+
 import 'package:edu_sync/models/user.dart' as app_user; // Aliased to avoid conflict with supabase_flutter.User
+import 'package:edu_sync/main.dart';
 
 class AuthService {
   final SupabaseClient _supabaseClient = Supabase.instance.client;
+  final SharedPreferences _prefs = getIt<SharedPreferences>();
+  final Connectivity _connectivity = getIt<Connectivity>();
 
   Future<User?> signUp(String email, String password, String role, {String? fullName, int? schoolIdIfKnown, String? profilePhotoUrl}) async {
     final Map<String, dynamic> userMetadata = {'role': role};
@@ -28,6 +34,7 @@ class AuthService {
   }
 
   Future<void> signOut() async {
+    await _prefs.remove('user_role');
     await _supabaseClient.auth.signOut();
   }
 
@@ -35,16 +42,33 @@ class AuthService {
     return _supabaseClient.auth.currentUser;
   }
 
-  String? getUserRole() {
-    final User? user = getCurrentUser();
-    // Prefer fetching role from public.users table as it's our source of truth for app-specific roles
-    // This requires an async call, so this synchronous getter might need to be rethought
-    // or we rely on userMetadata if populated reliably at sign-in/sign-up.
-    // For now, let's assume userMetadata is the primary source during active session.
-    if (user != null && user.userMetadata != null) {
-      return user.userMetadata!['role'] as String?;
+  Future<String?> getUserRole() async {
+    final currentUser = _supabaseClient.auth.currentUser;
+    if (currentUser == null) return null;
+
+    // Try to get the role from cache first
+    String? cachedRole = _prefs.getString('user_role');
+    if (cachedRole != null) {
+      return cachedRole;
     }
-    return null;
+
+    try {
+      final response = await _supabaseClient
+          .from('users')
+          .select('role')
+          .eq('id', currentUser.id)
+          .single();
+
+      final role = response['role'] as String?;
+      if (role != null) {
+        // Cache the role
+        await _prefs.setString('user_role', role);
+      }
+      return role;
+    } catch (e) {
+      print('Error fetching user role: $e');
+      return null;
+    }
   }
 
   // Fetch a specific user's details (app_user.User model) by their ID
@@ -66,16 +90,30 @@ class AuthService {
   Future<int?> getCurrentUserSchoolId() async {
     final currentUser = _supabaseClient.auth.currentUser;
     if (currentUser == null) return null;
+
+    // Try to get the school_id from cache first
+    final cachedSchoolId = _prefs.getInt('school_id');
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none && cachedSchoolId != null) {
+      return cachedSchoolId;
+    }
+
     try {
       final response = await _supabaseClient
           .from('users')
           .select('school_id')
           .eq('id', currentUser.id)
           .single();
-      return response['school_id'] as int?;
+      final schoolId = response['school_id'] as int?;
+      if (schoolId != null) {
+        // Cache the school_id
+        await _prefs.setInt('school_id', schoolId);
+      }
+      return schoolId;
     } catch (e) {
       print('Error fetching current user school_id: $e');
-      return null;
+      // If fetching from Supabase fails, try to get from cache
+      return cachedSchoolId;
     }
   }
 

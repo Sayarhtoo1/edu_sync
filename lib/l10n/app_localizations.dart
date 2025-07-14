@@ -62,7 +62,8 @@ import 'app_localizations_my.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale)
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -70,7 +71,8 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -82,17 +84,18 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
-    delegate,
-    GlobalMaterialLocalizations.delegate,
-    GlobalCupertinoLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-  ];
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
-    Locale('my')
+    Locale('my'),
   ];
 
   /// No description provided for @appTitle.
@@ -1019,6 +1022,18 @@ abstract class AppLocalizations {
   /// **'Failed to save record.'**
   String get failedToSaveRecordError;
 
+  /// No description provided for @categoryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get categoryLabel;
+
+  /// No description provided for @categoryValidator.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a category.'**
+  String get categoryValidator;
+
   /// No description provided for @announcementsTitle.
   ///
   /// In en, this message translates to:
@@ -1943,18 +1958,6 @@ abstract class AppLocalizations {
   /// **'Option text cannot be empty'**
   String get optionTextValidator;
 
-  /// No description provided for @categoryLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Category'**
-  String get categoryLabel;
-
-  /// No description provided for @categoryValidator.
-  ///
-  /// In en, this message translates to:
-  /// **'Please select a category'**
-  String get categoryValidator;
-
   /// No description provided for @saveButton.
   ///
   /// In en, this message translates to:
@@ -2584,9 +2587,136 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Version'**
   String get versionLabel;
+
+  /// No description provided for @editManagerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Manager'**
+  String get editManagerTitle;
+
+  /// No description provided for @addManagerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Manager'**
+  String get addManagerTitle;
+
+  /// No description provided for @updateManagerButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Manager'**
+  String get updateManagerButton;
+
+  /// No description provided for @addManagerButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Manager'**
+  String get addManagerButton;
+
+  /// No description provided for @teacherTimetableAction.
+  ///
+  /// In en, this message translates to:
+  /// **'View Timetable'**
+  String get teacherTimetableAction;
+
+  /// No description provided for @addStudent.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Student'**
+  String get addStudent;
+
+  /// No description provided for @addParent.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Parent'**
+  String get addParent;
+
+  /// No description provided for @error_school_not_found.
+  ///
+  /// In en, this message translates to:
+  /// **'School not found.'**
+  String get error_school_not_found;
+
+  /// No description provided for @error_invalid_number.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid number.'**
+  String get error_invalid_number;
+
+  /// No description provided for @settingsSavedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings saved successfully.'**
+  String get settingsSavedSuccessfully;
+
+  /// No description provided for @errorSavingSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Error saving settings.'**
+  String get errorSavingSettings;
+
+  /// No description provided for @adminSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin Settings'**
+  String get adminSettingsTitle;
+
+  /// No description provided for @hijriCalendarSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hijri Calendar Settings'**
+  String get hijriCalendarSettingsTitle;
+
+  /// No description provided for @dayAdjustmentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Day Adjustment'**
+  String get dayAdjustmentLabel;
+
+  /// No description provided for @dayAdjustmentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g., -1, 0, 1'**
+  String get dayAdjustmentHint;
+
+  /// No description provided for @saveSettingsButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Settings'**
+  String get saveSettingsButton;
+
+  /// No description provided for @managerDashboardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manager Dashboard'**
+  String get managerDashboardTitle;
+
+  /// No description provided for @managerDashboardWelcomeMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome, Manager!'**
+  String get managerDashboardWelcomeMessage;
+
+  /// No description provided for @unassignedClass.
+  ///
+  /// In en, this message translates to:
+  /// **'Unassigned'**
+  String get unassignedClass;
+
+  /// No description provided for @gallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery'**
+  String get gallery;
+
+  /// No description provided for @camera.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera'**
+  String get camera;
 }
 
-class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -2595,25 +2725,26 @@ class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> 
   }
 
   @override
-  bool isSupported(Locale locale) => <String>['en', 'my'].contains(locale.languageCode);
+  bool isSupported(Locale locale) =>
+      <String>['en', 'my'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
-
-
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'en': return AppLocalizationsEn();
-    case 'my': return AppLocalizationsMy();
+    case 'en':
+      return AppLocalizationsEn();
+    case 'my':
+      return AppLocalizationsMy();
   }
 
   throw FlutterError(
     'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
     'an issue with the localizations generation tool. Please file an issue '
     'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.'
+    'that was used.',
   );
 }

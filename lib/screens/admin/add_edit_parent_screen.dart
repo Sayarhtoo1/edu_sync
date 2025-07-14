@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:edu_sync/models/user.dart' as app_user;
@@ -92,7 +93,6 @@ class _AddEditParentScreenState extends State<AddEditParentScreen> {
         String tempUserIdForPhoto = _isEditing ? widget.parent!.id : DateTime.now().millisecondsSinceEpoch.toString();
         final fileName = 'profile.${_profilePhotoFile!.path.split('.').last}';
         photoUrl = await _authService.uploadProfilePhoto(tempUserIdForPhoto, _profilePhotoFile!.path, fileName);
-        if (photoUrl == null) throw Exception('Profile photo upload failed.');
       }
 
       if (_isEditing) {
@@ -227,7 +227,13 @@ class _AddEditParentScreenState extends State<AddEditParentScreen> {
                       child: _profilePhotoFile != null
                           ? Image.file(_profilePhotoFile!, height: 90, fit: BoxFit.contain)
                           : (_currentProfilePhotoUrl != null && _currentProfilePhotoUrl!.isNotEmpty
-                              ? Image.network(_currentProfilePhotoUrl!, height: 90, fit: BoxFit.contain, errorBuilder: (context, error, stackTrace) => Text(l10n.couldNotLoadImage, style: theme.textTheme.bodySmall))
+                              ? CachedNetworkImage(
+                                  imageUrl: _currentProfilePhotoUrl!,
+                                  height: 90,
+                                  fit: BoxFit.contain,
+                                  placeholder: (context, url) => CircularProgressIndicator(),
+                                  errorWidget: (context, url, error) => Text(l10n.couldNotLoadImage, style: theme.textTheme.bodySmall),
+                                )
                               : Text(l10n.noProfilePhoto, style: theme.textTheme.bodyMedium?.copyWith(color: textLightGrey))),
                     )
                   ),

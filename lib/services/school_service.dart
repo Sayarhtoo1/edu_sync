@@ -1,9 +1,12 @@
 import 'dart:io'; // Moved import to the top
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:edu_sync/models/school.dart'; // Assuming School model is defined
+import 'cache_service.dart';
 
 class SchoolService {
   final SupabaseClient _supabaseClient = Supabase.instance.client;
+  final CacheService _cacheService = CacheService();
 
   // Create a new school profile
   Future<School?> createSchool({
@@ -44,23 +47,30 @@ class SchoolService {
 
   // Fetch school details
   Future<School?> getSchoolById(int schoolId) async {
-    try {
-      final response = await _supabaseClient
-          .from('schools')
-          .select()
-          .eq('id', schoolId)
-          .single();
-      return School(
-        id: response['id'],
-        name: response['name'],
-        logoUrl: response['logo_url'] ?? '',
-        academicYear: response['academic_year'] ?? '',
-        theme: response['theme'] ?? '',
-        contact: response['contact_info'] ?? '',
-      );
-    } catch (e) {
-      print('Error fetching school: ${e.toString()}');
-      return null;
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      return await _cacheService.getSchool(schoolId);
+    } else {
+      try {
+        final response = await _supabaseClient
+            .from('schools')
+            .select()
+            .eq('id', schoolId)
+            .single();
+        final school = School(
+          id: response['id'],
+          name: response['name'],
+          logoUrl: response['logo_url'] ?? '',
+          academicYear: response['academic_year'] ?? '',
+          theme: response['theme'] ?? '',
+          contact: response['contact_info'] ?? '',
+        );
+        await _cacheService.saveSchool(school);
+        return school;
+      } catch (e) {
+        print('Error fetching school: ${e.toString()}');
+        return await _cacheService.getSchool(schoolId);
+      }
     }
   }
 

@@ -1,38 +1,55 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:edu_sync/models/timetable.dart'; // Assuming Timetable model is defined
+import 'cache_service.dart';
 
 class TimetableService {
   final SupabaseClient _supabaseClient = Supabase.instance.client;
+  final CacheService _cacheService = CacheService();
 
   // Fetch timetable for a specific class
   Future<List<Timetable>> getTimetableForClass(int classId) async { // Corrected to int
-    try {
-      final response = await _supabaseClient
-          .from('timetables')
-          .select()
-          .eq('class_id', classId)
-          .order('day_of_week', ascending: true) // You might need a way to order days correctly
-          .order('start_time', ascending: true);
-      return response.map((data) => Timetable.fromMap(data)).toList();
-    } catch (e) {
-      print('Error fetching timetable for class $classId: $e');
-      return [];
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      return await _cacheService.getTimetableForClass(classId);
+    } else {
+      try {
+        final response = await _supabaseClient
+            .from('timetables')
+            .select()
+            .eq('class_id', classId)
+            .order('day_of_week', ascending: true) // You might need a way to order days correctly
+            .order('start_time', ascending: true);
+        final timetable = response.map((data) => Timetable.fromMap(data)).toList();
+        await _cacheService.saveTimetableForClass(classId, timetable);
+        return timetable;
+      } catch (e) {
+        print('Error fetching timetable for class $classId: $e');
+        return await _cacheService.getTimetableForClass(classId);
+      }
     }
   }
 
   // Fetch timetable for a specific teacher
   Future<List<Timetable>> getTimetableForTeacher(String teacherId) async {
-    try {
-      final response = await _supabaseClient
-          .from('timetables')
-          .select('*, classes!inner(school_id)') // Assuming you need school context
-          .eq('teacher_id', teacherId)
-          .order('day_of_week', ascending: true)
-          .order('start_time', ascending: true);
-      return response.map((data) => Timetable.fromMap(data)).toList();
-    } catch (e) {
-      print('Error fetching timetable for teacher $teacherId: $e');
-      return [];
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      return await _cacheService.getTimetableForTeacher(teacherId);
+    } else {
+      try {
+        final response = await _supabaseClient
+            .from('timetables')
+            .select('*, classes!inner(school_id)') // Assuming you need school context
+            .eq('teacher_id', teacherId)
+            .order('day_of_week', ascending: true)
+            .order('start_time', ascending: true);
+        final timetable = response.map((data) => Timetable.fromMap(data)).toList();
+        await _cacheService.saveTimetableForTeacher(teacherId, timetable);
+        return timetable;
+      } catch (e) {
+        print('Error fetching timetable for teacher $teacherId: $e');
+        return await _cacheService.getTimetableForTeacher(teacherId);
+      }
     }
   }
   

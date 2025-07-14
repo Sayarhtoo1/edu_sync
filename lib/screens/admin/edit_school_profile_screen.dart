@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:edu_sync/models/school.dart';
@@ -65,9 +66,6 @@ class _EditSchoolProfileScreenState extends State<EditSchoolProfileScreen> {
       if (_schoolLogoFile != null) {
         final fileName = 'logo.${_schoolLogoFile!.path.split('.').last}';
         newLogoUrl = await _schoolService.uploadSchoolLogo(widget.school.id, _schoolLogoFile!.path, fileName);
-        if (newLogoUrl == null) {
-          throw Exception('Logo upload failed.');
-        }
       }
 
       final updatedSchool = widget.school.copyWith(
@@ -160,8 +158,14 @@ class _EditSchoolProfileScreenState extends State<EditSchoolProfileScreen> {
                       child: _schoolLogoFile != null
                           ? Image.file(_schoolLogoFile!, height: 90, fit: BoxFit.contain)
                           : (_currentLogoUrl != null && _currentLogoUrl!.isNotEmpty
-                              ? Image.network(_currentLogoUrl!, height: 90, fit: BoxFit.contain, errorBuilder: (context, error, stackTrace) => Text(l10n.couldNotLoadImage, style: theme.textTheme.bodySmall))
-                              : Text(l10n.noLogoSelected, style: theme.textTheme.bodyMedium?.copyWith(color: textLightGrey))), 
+                              ? CachedNetworkImage(
+                                  imageUrl: _currentLogoUrl!,
+                                  height: 90,
+                                  fit: BoxFit.contain,
+                                  placeholder: (context, url) => CircularProgressIndicator(),
+                                  errorWidget: (context, url, error) => Text(l10n.couldNotLoadImage, style: theme.textTheme.bodySmall),
+                                )
+                              : Text(l10n.noLogoSelected, style: theme.textTheme.bodyMedium?.copyWith(color: textLightGrey))),
                     )
                   ),
                   const SizedBox(width: 16),

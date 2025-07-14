@@ -7,7 +7,7 @@ import 'package:edu_sync/models/form_field_type.dart';
 import 'package:edu_sync/services/custom_form_service.dart';
 import 'package:edu_sync/services/class_service.dart'; // For fetching classes
 // For fetching students
-import 'package:edu_sync/models/class.dart' as app_class;
+import 'package:edu_sync/models/school_class.dart' as app_class;
 import 'package:edu_sync/l10n/app_localizations.dart';
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
 import 'package:collection/collection.dart'; // Import collection package
@@ -44,7 +44,7 @@ class _AddEditCustomFormScreenState extends State<AddEditCustomFormScreen> {
   bool _assignToWholeSchool = false;
 
   List<FormFieldItem> _fields = [];
-  List<app_class.Class> _availableClasses = [];
+  List<app_class.SchoolClass> _availableClasses = [];
   
   List<int> _selectedClassIds = []; 
   List<int> _selectedStudentIds = []; 
@@ -95,7 +95,7 @@ class _AddEditCustomFormScreenState extends State<AddEditCustomFormScreen> {
   Future<void> _loadAssignableEntities() async {
     // In a real app, consider pagination or searching for large lists
     try {
-      _availableClasses = await _classService.getClassesBySchool(widget.schoolId);
+      _availableClasses = await _classService.getClasses(widget.schoolId);
       // _availableStudents = await _studentService.getStudentsBySchool(widget.schoolId);
     } catch (e) {
        if(mounted) setState(() => _errorMessage = "Error loading classes/students: ${e.toString()}");
@@ -120,7 +120,7 @@ class _AddEditCustomFormScreenState extends State<AddEditCustomFormScreen> {
               onPrimary: Colors.white, 
               onSurface: textDarkGrey, 
             ),
-            dialogTheme: DialogTheme(backgroundColor: cardBackgroundColor),
+            dialogTheme: DialogThemeData(backgroundColor: cardBackgroundColor),
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
                 foregroundColor: contextualAccentColor, 

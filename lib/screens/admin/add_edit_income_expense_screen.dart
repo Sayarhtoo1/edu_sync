@@ -30,6 +30,7 @@ class _AddEditIncomeExpenseScreenState extends State<AddEditIncomeExpenseScreen>
   late TextEditingController _descriptionController;
   late TextEditingController _amountController;
   late TextEditingController _dateController;
+  late TextEditingController _categoryController;
   DateTime? _selectedDate;
 
   String _errorMessage = '';
@@ -44,16 +45,19 @@ class _AddEditIncomeExpenseScreenState extends State<AddEditIncomeExpenseScreen>
 
     String initialDescription = '';
     String initialAmount = '';
+    String initialCategory = '';
     DateTime initialDate = DateTime.now();
 
     if (_isEditing) {
       initialDescription = widget.record.description;
       initialAmount = widget.record.amount.toString();
+      initialCategory = widget.record.category;
       initialDate = widget.record.date;
     }
     
     _descriptionController = TextEditingController(text: initialDescription);
     _amountController = TextEditingController(text: initialAmount);
+    _categoryController = TextEditingController(text: initialCategory);
     _selectedDate = initialDate;
     _dateController = TextEditingController(text: DateFormat('yyyy-MM-dd').format(initialDate));
   }
@@ -117,6 +121,7 @@ class _AddEditIncomeExpenseScreenState extends State<AddEditIncomeExpenseScreen>
           description: _descriptionController.text,
           amount: amount,
           date: _selectedDate!,
+          category: _categoryController.text,
           createdByUserId: _adminUserId, // Add createdByUserId
         );
         if (_isEditing) {
@@ -132,6 +137,7 @@ class _AddEditIncomeExpenseScreenState extends State<AddEditIncomeExpenseScreen>
           description: _descriptionController.text,
           amount: amount,
           date: _selectedDate!,
+          category: _categoryController.text,
           createdByUserId: _adminUserId, // Add createdByUserId
         );
         if (_isEditing) {
@@ -161,6 +167,7 @@ class _AddEditIncomeExpenseScreenState extends State<AddEditIncomeExpenseScreen>
     _descriptionController.dispose();
     _amountController.dispose();
     _dateController.dispose();
+    _categoryController.dispose();
     super.dispose();
   }
 
@@ -184,8 +191,14 @@ class _AddEditIncomeExpenseScreenState extends State<AddEditIncomeExpenseScreen>
             children: [
               TextFormField(
                 controller: _descriptionController,
-                decoration: InputDecoration(labelText: l10n.descriptionLabel), 
-                validator: (value) => (value == null || value.isEmpty) ? l10n.descriptionValidator : null, 
+                decoration: InputDecoration(labelText: l10n.descriptionLabel),
+                validator: (value) => (value == null || value.isEmpty) ? l10n.descriptionValidator : null,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _categoryController,
+                decoration: InputDecoration(labelText: l10n.categoryLabel),
+                validator: (value) => (value == null || value.isEmpty) ? l10n.categoryValidator : null,
               ),
               const SizedBox(height: 16),
               TextFormField(

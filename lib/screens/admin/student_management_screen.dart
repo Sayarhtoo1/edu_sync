@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:edu_sync/models/student.dart';
 import 'package:edu_sync/services/student_service.dart';
@@ -136,13 +137,21 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                           margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           child: ListTile(
                             leading: CircleAvatar(
-                              backgroundColor: contextualAccentColor.withAlpha((255 * 0.2).round()), // Use withAlpha
-                              backgroundImage: student.profilePhotoUrl != null && student.profilePhotoUrl!.isNotEmpty
-                                  ? NetworkImage(student.profilePhotoUrl!)
-                                  : null,
-                              child: student.profilePhotoUrl == null || student.profilePhotoUrl!.isEmpty
-                                  ? Icon(Icons.school_outlined, color: contextualAccentColor) 
-                                  : null,
+                              backgroundColor: contextualAccentColor.withAlpha((255 * 0.2).round()),
+                              child: student.profilePhotoUrl != null && student.profilePhotoUrl!.isNotEmpty
+                                  ? ClipOval(
+                                      child: CachedNetworkImage(
+                                        imageUrl: student.profilePhotoUrl!,
+                                        placeholder: (context, url) => CircularProgressIndicator(
+                                          valueColor: AlwaysStoppedAnimation<Color>(contextualAccentColor),
+                                        ),
+                                        errorWidget: (context, url, error) => Icon(Icons.school_outlined, color: contextualAccentColor),
+                                        fit: BoxFit.cover,
+                                        width: 50,
+                                        height: 50,
+                                      ),
+                                    )
+                                  : Icon(Icons.school_outlined, color: contextualAccentColor),
                             ),
                             title: Text(student.fullName, style: theme.textTheme.titleMedium),
                             subtitle: Text('ID: ${student.id} - ${l10n.classLabel} ID: ${student.classId ?? l10n.not_specified}', style: theme.textTheme.bodySmall),

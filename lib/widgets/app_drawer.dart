@@ -44,7 +44,6 @@ class AppDrawer extends StatelessWidget {
     final schoolProvider = Provider.of<SchoolProvider>(context, listen: false);
     final notificationService = Provider.of<NotificationService>(context); // Listen to changes
     final School? currentSchool = schoolProvider.currentSchool;
-    final String? userRole = authService.getUserRole();
     final l10n = AppLocalizations.of(context); // Get l10n instance
 
     // Drawer items for Admin
@@ -270,59 +269,69 @@ class AppDrawer extends StatelessWidget {
       ];
     }
 
-    List<Widget> drawerItems = [];
-    if (userRole == 'Admin') {
-      drawerItems = buildAdminDrawerItems(context, currentSchool);
-    } else if (userRole == 'Teacher') {
-      drawerItems = buildTeacherDrawerItems(context);
-    } else if (userRole == 'Parent') {
-      drawerItems = buildParentDrawerItems(context);
-    }
-
     return Drawer(
-      backgroundColor: drawerAppBackgroundColor, // Set drawer background color
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: <Widget>[
-          UserAccountsDrawerHeader(
-            accountName: Text(currentSchool?.name ?? 'EduSync User', style: TextStyle(color: drawerTextDarkGrey)),
-            accountEmail: Text(authService.getCurrentUser()?.email ?? '', style: TextStyle(color: drawerTextLightGrey)),
-            currentAccountPicture: CircleAvatar(
-              backgroundColor: Colors.white, // Keep avatar background white or a contrasting light color
-              backgroundImage: (currentSchool?.logoUrl != null && currentSchool!.logoUrl.isNotEmpty)
-                  ? NetworkImage(currentSchool.logoUrl)
-                  : null,
-              child: (currentSchool?.logoUrl == null || currentSchool!.logoUrl.isEmpty)
-                  ? Icon(Icons.school, size: 40, color: drawerIconColor) // Use themed icon color
-                  : null,
-            ),
-            decoration: BoxDecoration(
-              color: drawerAppBackgroundColor, // Header background to match drawer
-            ),
-          ),
-          ...drawerItems,
-          const Divider(color: drawerTextLightGrey), // Themed divider
-          ListTile(
-            leading: const Icon(Icons.settings, color: drawerIconColor),
-            title: Text('App Settings', style: TextStyle(color: drawerTextDarkGrey)),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AppSettingsScreen()));
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.logout, color: drawerIconColor),
-            title: Text('Logout', style: TextStyle(color: drawerTextDarkGrey)),
-            onTap: () async {
-              Navigator.pop(context); // Close drawer first
-              await authService.signOut();
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => const LoginScreen()),
-                (Route<dynamic> route) => false,
-              );
-            },
-          ),
-        ],
+      backgroundColor: drawerAppBackgroundColor,
+      child: FutureBuilder<String?>(
+        future: authService.getUserRole(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final userRole = snapshot.data;
+          List<Widget> drawerItems = [];
+          if (userRole == 'Admin') {
+            drawerItems = buildAdminDrawerItems(context, currentSchool);
+          } else if (userRole == 'Teacher') {
+            drawerItems = buildTeacherDrawerItems(context);
+          } else if (userRole == 'Parent') {
+            drawerItems = buildParentDrawerItems(context);
+          }
+
+          return ListView(
+            padding: EdgeInsets.zero,
+            children: <Widget>[
+              UserAccountsDrawerHeader(
+                accountName: Text(currentSchool?.name ?? 'EduSync User', style: TextStyle(color: drawerTextDarkGrey)),
+                accountEmail: Text(authService.getCurrentUser()?.email ?? '', style: TextStyle(color: drawerTextLightGrey)),
+                currentAccountPicture: CircleAvatar(
+                  backgroundColor: Colors.white,
+                  backgroundImage: (currentSchool?.logoUrl != null && currentSchool!.logoUrl.isNotEmpty)
+                      ? NetworkImage(currentSchool.logoUrl)
+                      : null,
+                  child: (currentSchool?.logoUrl == null || currentSchool!.logoUrl.isEmpty)
+                      ? Icon(Icons.school, size: 40, color: drawerIconColor)
+                      : null,
+                ),
+                decoration: BoxDecoration(
+                  color: drawerAppBackgroundColor,
+                ),
+              ),
+              ...drawerItems,
+              const Divider(color: drawerTextLightGrey),
+              ListTile(
+                leading: const Icon(Icons.settings, color: drawerIconColor),
+                title: Text('App Settings', style: TextStyle(color: drawerTextDarkGrey)),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AppSettingsScreen()));
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.logout, color: drawerIconColor),
+                title: Text('Logout', style: TextStyle(color: drawerTextDarkGrey)),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await authService.signOut();
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (context) => const LoginScreen()),
+                    (Route<dynamic> route) => false,
+                  );
+                },
+              ),
+            ],
+          );
+        },
       ),
     );
   }

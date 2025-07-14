@@ -1,23 +1,13 @@
-import 'package:floor/floor.dart';
 import 'package:intl/intl.dart'; // For date formatting in toMap
-import '../type_converters.dart'; // Import DateTimeConverter
 
-@Entity(tableName: 'attendance') // Use const constructor for @Entity, ensure table name matches Supabase
 class Attendance {
-  @PrimaryKey(autoGenerate: true)
   final int? id;
-  @ColumnInfo(name: 'class_id')
   final int classId; // Corrected to int
-  @ColumnInfo(name: 'student_id')
   final int studentId;
-
-  @TypeConverters([DateTimeConverter])
   final DateTime date;
-
-  // Removed isPresent, status is now the source of truth
   final String status; // Changed to non-nullable, as DB has a default and CHECK constraint
-  @ColumnInfo(name: 'marked_by_teacher_id') // Ensure column name matches Supabase
   final String? markedByTeacherId; // UUID String of the teacher
+  final DateTime? updatedAt;
 
   Attendance({
     this.id,
@@ -26,6 +16,7 @@ class Attendance {
     required this.date,
     required this.status, // Changed from isPresent
     this.markedByTeacherId,
+    this.updatedAt,
   });
 
   factory Attendance.fromMap(Map<String, dynamic> map) {
@@ -36,6 +27,7 @@ class Attendance {
       date: DateTime.parse(map['date'] as String),
       status: map['status'] as String? ?? 'Present', // Default if null, though DB should prevent null
       markedByTeacherId: map['marked_by_teacher_id'] as String?,
+      updatedAt: map['updated_at'] == null ? null : DateTime.parse(map['updated_at'] as String),
     );
   }
 
@@ -47,6 +39,7 @@ class Attendance {
       'date': DateFormat('yyyy-MM-dd').format(date),
       'status': status, // status is now directly used
       'marked_by_teacher_id': markedByTeacherId,
+      'updated_at': updatedAt?.toIso8601String(),
     };
   }
 }

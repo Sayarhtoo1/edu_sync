@@ -1,20 +1,13 @@
-import 'package:floor/floor.dart';
 import 'package:intl/intl.dart'; // For date formatting in toMap
 
-@Entity(tableName: 'lesson_plans') // Changed from @entity
 class LessonPlan {
-  @PrimaryKey() 
   final int? id;
-  @ColumnInfo(name: 'class_id')
   final int classId; // Corrected to int
-  @ColumnInfo(name: 'teacher_id')
   final String teacherId; // UUID of the teacher
-  @ColumnInfo(name: 'subject_name')
   final String subjectName; // Name of the subject
   final String title;
   final String description;
   final DateTime date;
-  @ColumnInfo(name: 'document_url')
   final String? documentUrl; // Optional URL for an attached document
 
   LessonPlan({

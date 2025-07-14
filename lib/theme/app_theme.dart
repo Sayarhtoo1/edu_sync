@@ -72,7 +72,7 @@ class AppTheme {
         displayColor: textDarkGrey,
         fontFamily: 'Poppins', // Default font family
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: cardBackgroundColor,
         elevation: 1.0, // Subtle shadow
         shape: RoundedRectangleBorder(
@@ -120,7 +120,7 @@ class AppTheme {
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: cardBackgroundColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20.0),

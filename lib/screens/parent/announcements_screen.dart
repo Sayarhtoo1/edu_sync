@@ -4,9 +4,9 @@ import 'package:provider/provider.dart';
 import 'package:edu_sync/models/announcement.dart';
 import 'package:edu_sync/services/announcement_service.dart';
 import 'package:edu_sync/providers/school_provider.dart';
-import 'package:edu_sync/services/auth_service.dart'; 
+import 'package:edu_sync/services/auth_service.dart';
 import 'package:edu_sync/l10n/app_localizations.dart';
-import 'package:edu_sync/services/notification_service.dart'; 
+import 'package:edu_sync/services/notification_service.dart';
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
 
 class AnnouncementsScreen extends StatefulWidget {
@@ -18,21 +18,24 @@ class AnnouncementsScreen extends StatefulWidget {
 
 class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
   final AnnouncementService _announcementService = AnnouncementService();
-  final AuthService _authService = AuthService(); 
+  final AuthService _authService = AuthService();
   final NotificationService _notificationService = NotificationService(); // Add NotificationService instance
 
   List<Announcement> _announcements = [];
   bool _isLoading = true;
   String? _errorMessage;
   int? _schoolId;
-  String? _userRole;
 
   @override
   void initState() {
     super.initState();
+    _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
     final schoolProvider = Provider.of<SchoolProvider>(context, listen: false);
     _schoolId = schoolProvider.currentSchool?.id;
-    _userRole = _authService.getUserRole(); // Get current user's role
+    if (!mounted) return;
 
     if (_schoolId != null) {
       _loadAnnouncements();
@@ -43,7 +46,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
         if (mounted) {
           setState(() {
             _isLoading = false;
-            _errorMessage = AppLocalizations.of(context).error_school_not_selected_or_found ?? "School not selected.";
+            _errorMessage = AppLocalizations.of(context).error_school_not_selected_or_found;
           });
         }
       });
@@ -61,7 +64,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
       List<Announcement> newAnnouncementsForNotification = [];
 
       if (fetchedAnnouncements.isNotEmpty) {
-         latestTimestampInCurrentFetch = fetchedAnnouncements.first.createdAt; // Assuming sorted by date desc
+        latestTimestampInCurrentFetch = fetchedAnnouncements.first.createdAt; // Assuming sorted by date desc
       }
 
       for (var announcement in fetchedAnnouncements) {
@@ -69,7 +72,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
           newAnnouncementsForNotification.add(announcement);
         }
       }
-      
+
       _announcements = fetchedAnnouncements;
 
       if (mounted) {
@@ -117,7 +120,13 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
 
     return Scaffold(
       appBar: AppBar( // Theme applied globally
-        title: Text(l10n.announcementsTitle), 
+        title: Text(l10n.announcementsTitle),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadAnnouncements,
+          ),
+        ],
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(contextualAccentColor)))

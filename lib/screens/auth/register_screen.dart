@@ -106,10 +106,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (_schoolLogoFile != null) {
         final fileName = 'logo.${_schoolLogoFile!.path.split('.').last}';
         logoUrl = await _schoolService.uploadSchoolLogo(newSchool.id, _schoolLogoFile!.path, fileName);
-        if (logoUrl != null) {
-          await _schoolService.updateSchool(newSchool.copyWith(logoUrl: logoUrl));
-        }
-      }
+        await _schoolService.updateSchool(newSchool.copyWith(logoUrl: logoUrl));
+            }
       if (!mounted) return;
       setState(() => _isLoading = false);
       Navigator.of(context).pop(); 

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:edu_sync/models/timetable.dart';
 import 'package:edu_sync/services/timetable_service.dart';
 import 'package:edu_sync/services/auth_service.dart';
-import 'package:edu_sync/models/class.dart' as app_class;
+import 'package:edu_sync/models/school_class.dart' as app_class;
 import 'package:edu_sync/services/class_service.dart';
 import 'add_edit_timetable_entry_screen.dart';
 import 'package:edu_sync/l10n/app_localizations.dart'; // Import AppLocalizations
@@ -21,8 +21,8 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
   final ClassService _classService = ClassService();
 
   List<Timetable> _timetableEntries = [];
-  List<app_class.Class> _availableClasses = [];
-  app_class.Class? _selectedClass;
+  List<app_class.SchoolClass> _availableClasses = [];
+  app_class.SchoolClass? _selectedClass;
   bool _isLoading = true;
   int? _currentSchoolId;
 
@@ -36,16 +36,14 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
     setState(() => _isLoading = true);
     _currentSchoolId = await _authService.getCurrentUserSchoolId();
     if (_currentSchoolId != null) {
-      _availableClasses = await _classService.getClassesBySchool(_currentSchoolId!);
+      _availableClasses = await _classService.getClasses(_currentSchoolId!);
       if (_availableClasses.isNotEmpty) {
         _selectedClass = _availableClasses.first; // Default to first class
         await _loadTimetableForSelectedClass();
-      } else {
-         if (mounted) setState(() => _isLoading = false);
       }
-    } else {
-      // print("School ID not found. Cannot load timetables."); // Removed print
-      if (mounted) setState(() => _isLoading = false);
+    }
+    if (mounted) {
+      setState(() => _isLoading = false);
     }
   }
 
@@ -131,16 +129,16 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
                 if (_availableClasses.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.all(16.0), 
-                    child: DropdownButtonFormField<app_class.Class>(
+                    child: DropdownButtonFormField<app_class.SchoolClass>(
                       value: _selectedClass,
                       hint: Text(l10n.selectClassToViewTimetableHint, style: theme.textTheme.bodyLarge), 
-                      items: _availableClasses.map((app_class.Class cls) {
-                        return DropdownMenuItem<app_class.Class>(
+                      items: _availableClasses.map((app_class.SchoolClass cls) {
+                        return DropdownMenuItem<app_class.SchoolClass>(
                           value: cls,
                           child: Text(cls.name, style: theme.textTheme.bodyLarge),
                         );
                       }).toList(),
-                      onChanged: (app_class.Class? newValue) {
+                      onChanged: (app_class.SchoolClass? newValue) {
                         setState(() {
                           _selectedClass = newValue;
                         });

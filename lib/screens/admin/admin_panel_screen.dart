@@ -4,6 +4,7 @@ import 'package:edu_sync/providers/school_provider.dart';
 import 'package:edu_sync/services/auth_service.dart';
 import 'package:edu_sync/models/school.dart';
 import 'package:edu_sync/widgets/app_drawer.dart';
+import 'package:edu_sync/widgets/hijri_calendar_card.dart';
 import 'package:edu_sync/services/student_service.dart';
 import 'package:edu_sync/services/class_service.dart'; // Import ClassService
 import 'package:edu_sync/services/custom_form_service.dart';
@@ -22,10 +23,11 @@ import 'package:edu_sync/screens/admin/manage_custom_forms_screen.dart';
 import 'package:edu_sync/screens/admin/user_management_screen.dart';
 // import 'package:edu_sync/screens/admin/view_form_responses_screen.dart'; // Not used in quick actions directly
 import 'package:edu_sync/screens/admin/admin_announcements_screen.dart';
+import 'package:edu_sync/screens/admin/finance_overview_screen.dart';
 
 // TODO: Add fl_chart to pubspec.yaml if not already present for actual charts
 import 'package:fl_chart/fl_chart.dart';
-import 'package:edu_sync/models/class.dart' as app_class;
+import 'package:edu_sync/models/school_class.dart' as app_class;
 
 
 // --- Color Palette (Dribbble Inspired) ---
@@ -166,7 +168,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         // String earningsToday = "\$19.3K"; // Placeholder, replaced by formsTodayCount
 
         // Calculate student distribution by class for Donut Chart
-        final List<app_class.Class> schoolClasses = await _classService.getClassesBySchool(currentSchool.id);
+        final List<app_class.SchoolClass> schoolClasses = await _classService.getClasses(currentSchool.id);
         Map<String, int> studentCounts = {};
         Map<int?, String> classNameMap = {for (var c in schoolClasses) c.id: c.name};
         classNameMap[null] = l10n.unassigned; // For students not in any class
@@ -276,9 +278,14 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                     children: [
                       _buildGreetingRow(context, textTheme, l10n),
                       const SizedBox(height: 24),
+                      HijriCalendarCard(),
+                      const SizedBox(height: 24),
                       _buildSummaryItemsGrid(context, textTheme, l10n),
                       const SizedBox(height: 24),
-                      _buildFinancialSummarySection(context, textTheme, l10n), // Added Financial Summary Section
+                      GestureDetector(
+                        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const FinanceOverviewScreen(),)),
+                        child: _buildFinancialSummarySection(context, textTheme, l10n)
+                      ), // Added Financial Summary Section
                       const SizedBox(height: 24),
                       _buildQuickActionsSection(context, textTheme, l10n), // Added Quick Actions
                       const SizedBox(height: 24),
@@ -296,8 +303,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   Future<void> _loadFinancialSummary(int schoolId) async {
     if (!mounted) return;
     try {
-      final List<Income> incomeRecords = await _financeService.getIncomeRecords(schoolId);
-      final List<Expense> expenseRecords = await _financeService.getExpenseRecords(schoolId);
+      final List<Income> incomeRecords = await _financeService.getIncomes(schoolId);
+      final List<Expense> expenseRecords = await _financeService.getExpenses(schoolId);
 
       double currentTotalIncome = incomeRecords.fold(0.0, (sum, item) => sum + item.amount);
       double currentTotalExpenses = expenseRecords.fold(0.0, (sum, item) => sum + item.amount);

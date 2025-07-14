@@ -48,8 +48,14 @@ class _ViewFormResponsesScreenState extends State<ViewFormResponsesScreen> {
   void initState() {
     super.initState();
     _currentUserId = _authService.getCurrentUser()?.id;
-    _currentUserRole = _authService.getUserRole();
-    _loadForms();
+    _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
+    _currentUserRole = await _authService.getUserRole();
+    if (mounted) {
+      _loadForms();
+    }
   }
 
   Future<void> _loadForms() async {
@@ -122,7 +128,7 @@ class _ViewFormResponsesScreenState extends State<ViewFormResponsesScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.viewFormResponsesTitle ?? "View Form Responses")), 
+      appBar: AppBar(title: Text(l10n.viewFormResponsesTitle)), 
       body: _buildBody(l10n),
     );
   }
@@ -138,7 +144,7 @@ class _ViewFormResponsesScreenState extends State<ViewFormResponsesScreen> {
       return Center(child: Padding(padding: const EdgeInsets.all(16.0), child: Text(_errorMessage!, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.error))));
     }
     if (_availableForms.isEmpty) {
-      return Center(child: Text(l10n.noFormsAvailableToViewResponses ?? "No forms available to view responses.", style: theme.textTheme.bodyLarge));
+      return Center(child: Text(l10n.noFormsAvailableToViewResponses, style: theme.textTheme.bodyLarge));
     }
 
     return Column(
@@ -147,7 +153,7 @@ class _ViewFormResponsesScreenState extends State<ViewFormResponsesScreen> {
           padding: const EdgeInsets.all(16.0),
           child: DropdownButtonFormField<CustomForm>(
             value: _selectedForm,
-            hint: Text(l10n.selectFormToViewResponses ?? "Select a form to view responses", style: theme.textTheme.bodyLarge),
+            hint: Text(l10n.selectFormToViewResponses, style: theme.textTheme.bodyLarge),
             items: _availableForms.map((CustomForm form) {
               return DropdownMenuItem<CustomForm>(
                 value: form,
@@ -162,13 +168,13 @@ class _ViewFormResponsesScreenState extends State<ViewFormResponsesScreen> {
                 _loadResponsesForForm();
               }
             },
-            decoration: InputDecoration(labelText: l10n.formLabel ?? "Form"), // InputDecorationTheme applied globally
+            decoration: InputDecoration(labelText: l10n.formLabel), // InputDecorationTheme applied globally
           ),
         ),
         if (_isLoadingResponses)
           Expanded(child: Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(contextualAccentColor))))
         else if (_responses.isEmpty && _selectedForm != null)
-          Expanded(child: Center(child: Text(l10n.noResponsesForThisForm ?? "No responses found for this form.", style: theme.textTheme.bodyLarge)))
+          Expanded(child: Center(child: Text(l10n.noResponsesForThisForm, style: theme.textTheme.bodyLarge)))
         else
           Expanded(
             child: ListView.builder(

@@ -64,8 +64,8 @@ class _FinanceManagementScreenState extends State<FinanceManagementScreen> with 
     if (_schoolId == null) return;
     setState(() => _isLoading = true);
     try {
-      _incomeRecords = await _financeService.getIncomeRecords(_schoolId!);
-      _expenseRecords = await _financeService.getExpenseRecords(_schoolId!);
+      _incomeRecords = await _financeService.getIncomes(_schoolId!);
+      _expenseRecords = await _financeService.getExpenses(_schoolId!);
     } catch (e) {
       if (mounted) {
         final l10n = AppLocalizations.of(context);
@@ -168,7 +168,7 @@ class _FinanceManagementScreenState extends State<FinanceManagementScreen> with 
           margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           child: ListTile(
             title: Text(title, style: theme.textTheme.titleMedium),
-            subtitle: Text('${l10n.date}: $date', style: theme.textTheme.bodySmall),
+            subtitle: Text('${l10n.categoryLabel}: ${record.category} • ${l10n.date}: $date', style: theme.textTheme.bodySmall),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [

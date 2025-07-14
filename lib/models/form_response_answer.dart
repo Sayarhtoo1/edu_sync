@@ -1,38 +1,11 @@
-import 'package:floor/floor.dart';
-import 'form_response.dart'; // Required for ForeignKey
-import 'form_field_item.dart'; // Required for ForeignKey
+// Required for ForeignKey
+// Required for ForeignKey
 import 'dart:convert'; // Import for jsonEncode/Decode
 
-@Entity(
-  tableName: 'form_response_answers',
-  foreignKeys: [
-    ForeignKey(
-      childColumns: ['response_id'],
-      parentColumns: ['id'],
-      entity: FormResponse,
-      onDelete: ForeignKeyAction.cascade,
-    ),
-    ForeignKey(
-      childColumns: ['field_id'],
-      parentColumns: ['id'],
-      entity: FormFieldItem,
-      onDelete: ForeignKeyAction.cascade,
-    )
-  ],
-  indices: [
-    Index(value: ['response_id']),
-    Index(value: ['field_id']),
-    // Ensures one answer per field per response
-    Index(value: ['response_id', 'field_id'], unique: true) 
-  ]
-)
 class FormResponseAnswer {
-  @PrimaryKey()
   final String id; // uuid
 
-  @ColumnInfo(name: 'response_id')
   final String responseId; // uuid
-  @ColumnInfo(name: 'field_id')
   final String fieldId; // uuid
   
   // Answer can be text, number, boolean (for yes/no), or list of strings (for checkbox)
@@ -41,7 +14,6 @@ class FormResponseAnswer {
   final String answerJson; 
 
   // Not persisted, helper getter
-  @ignore
   dynamic get answer {
     try {
       return jsonDecode(answerJson);

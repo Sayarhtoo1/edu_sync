@@ -1,17 +1,11 @@
-import 'package:floor/floor.dart';
-
-@Entity(tableName: 'classes')
-class Class {
-  @PrimaryKey(autoGenerate: true) // Allow Floor to auto-generate for local cache if needed
+class SchoolClass {
   final int? id; // Changed to int?
   final String name;
-  @ColumnInfo(name: 'teacher_id')
   final String? teacherId; // Assuming teacher_id is UUID (String)
-  @ColumnInfo(name: 'school_id')
   final int schoolId;
   final String? section; 
 
-  Class({
+  SchoolClass({
     required this.id, // Now int
     required this.name,
     this.teacherId,
@@ -19,8 +13,8 @@ class Class {
     this.section,
   });
 
-  factory Class.fromMap(Map<String, dynamic> map) {
-    return Class(
+  factory SchoolClass.fromMap(Map<String, dynamic> map) {
+    return SchoolClass(
       id: map['id'] as int, // Corrected to int
       name: map['name'] as String,
       teacherId: map['teacher_id'] as String?,
@@ -42,14 +36,14 @@ class Class {
     return map;
   }
 
-  Class copyWith({
-    int? id, 
+  SchoolClass copyWith({
+    int? id,
     String? name,
     String? teacherId,
     int? schoolId,
     String? section,
   }) {
-    return Class(
+    return SchoolClass(
       id: id ?? this.id,
       name: name ?? this.name,
       teacherId: teacherId ?? this.teacherId,

@@ -1,35 +1,48 @@
 import 'dart:io';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:edu_sync/models/student.dart';
+import 'cache_service.dart';
+import 'class_service.dart';
 
 class StudentService {
   final SupabaseClient _supabaseClient = Supabase.instance.client;
+  final CacheService _cacheService = CacheService();
+  final ClassService _classService = ClassService();
 
   // Fetch all students for a school
   Future<List<Student>> getStudentsBySchool(int schoolId) async {
-    try {
-      final response = await _supabaseClient
-          .from('students')
-          .select()
-          .eq('school_id', schoolId);
-      return response.map((data) => Student.fromMap(data)).toList();
-    } catch (e) {
-      print('Error fetching students by school: $e');
-      return [];
+    final List<Student> allStudents = [];
+    final classes = await _classService.getClasses(schoolId);
+    for (final c in classes) {
+      if (c.id != null) {
+        final students = await getStudentsByClass(c.id!);
+        allStudents.addAll(students);
+      }
     }
+    return allStudents;
   }
 
   // Fetch students for a specific class
   Future<List<Student>> getStudentsByClass(int classId) async { // Corrected to int
-    try {
-      final response = await _supabaseClient
-          .from('students')
-          .select()
-          .eq('class_id', classId);
-      return response.map((data) => Student.fromMap(data)).toList();
-    } catch (e) {
-      print('Error fetching students by class: $e');
-      return [];
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      // Offline: Fetch from cache
+      return await _cacheService.getStudentsForClass(classId);
+    } else {
+      // Online: Fetch from Supabase and update cache
+      try {
+        final response = await _supabaseClient
+            .from('students')
+            .select()
+            .eq('class_id', classId);
+        final students = response.map((data) => Student.fromMap(data)).toList();
+        await _cacheService.saveStudentsForClass(classId, students);
+        return students;
+      } catch (e) {
+        print('Error fetching students by class: $e');
+        return await _cacheService.getStudentsForClass(classId);
+      }
     }
   }
   
@@ -125,66 +138,94 @@ class StudentService {
 
   // Get student IDs for a parent
   Future<List<int>> getStudentIdsForParent(String parentId) async {
-    try {
-      final response = await _supabaseClient
-          .from('parent_student_relations')
-          .select('student_id')
-          .eq('parent_id', parentId);
-      return response.map((data) => data['student_id'] as int).toList();
-    } catch (e) {
-      print('Error fetching student IDs for parent: $e');
-      return [];
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      return await _cacheService.getStudentIdsForParent(parentId);
+    } else {
+      try {
+        final response = await _supabaseClient
+            .from('parent_student_relations')
+            .select('student_id')
+            .eq('parent_id', parentId);
+        final studentIds = response.map((data) => data['student_id'] as int).toList();
+        await _cacheService.saveStudentIdsForParent(parentId, studentIds);
+        return studentIds;
+      } catch (e) {
+        print('Error fetching student IDs for parent: $e');
+        return await _cacheService.getStudentIdsForParent(parentId);
+      }
     }
   }
 
   // Fetch full student details for a parent
   Future<List<Student>> getStudentsByParent(String parentId, int schoolId) async {
-    try {
-      final studentIds = await getStudentIdsForParent(parentId);
-      if (studentIds.isEmpty) {
-        return [];
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      return await _cacheService.getStudentsForParent(parentId);
+    } else {
+      try {
+        final studentIds = await getStudentIdsForParent(parentId);
+        if (studentIds.isEmpty) {
+          return [];
+        }
+        // Fetch students whose IDs are in the list and belong to the specified school
+        // This also respects RLS on the students table (e.g., parent can only see their linked students)
+        final response = await _supabaseClient
+            .from('students')
+            .select()
+            .filter('id', 'in', studentIds) // Corrected 'in' filter
+            .eq('school_id', schoolId); // Ensure students are from the correct school context
+
+        final students = response.map((data) => Student.fromMap(data)).toList();
+        await _cacheService.saveStudentsForParent(parentId, students);
+        return students;
+      } catch (e) {
+        print('Error fetching students for parent $parentId: $e');
+        return await _cacheService.getStudentsForParent(parentId);
       }
-      // Fetch students whose IDs are in the list and belong to the specified school
-      // This also respects RLS on the students table (e.g., parent can only see their linked students)
-      final response = await _supabaseClient
-          .from('students')
-          .select()
-          .filter('id', 'in', studentIds) // Corrected 'in' filter
-          .eq('school_id', schoolId); // Ensure students are from the correct school context
-          
-      return response.map((data) => Student.fromMap(data)).toList();
-    } catch (e) {
-      print('Error fetching students for parent $parentId: $e');
-      return [];
     }
   }
 
   // Get parent IDs for a student
   Future<List<String>> getParentIdsForStudent(int studentId) async {
-    try {
-      final response = await _supabaseClient
-          .from('parent_student_relations')
-          .select('parent_id')
-          .eq('student_id', studentId);
-      return response.map((data) => data['parent_id'] as String).toList();
-    } catch (e) {
-      print('Error fetching parent IDs for student $studentId: $e');
-      return [];
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      return await _cacheService.getParentIdsForStudent(studentId);
+    } else {
+      try {
+        final response = await _supabaseClient
+            .from('parent_student_relations')
+            .select('parent_id')
+            .eq('student_id', studentId);
+        final parentIds = response.map((data) => data['parent_id'] as String).toList();
+        await _cacheService.saveParentIdsForStudent(studentId, parentIds);
+        return parentIds;
+      } catch (e) {
+        print('Error fetching parent IDs for student $studentId: $e');
+        return await _cacheService.getParentIdsForStudent(studentId);
+      }
     }
   }
 
   Future<Student?> getStudentById(int studentId, int schoolId) async {
-    try {
-      final response = await _supabaseClient
-          .from('students')
-          .select()
-          .eq('id', studentId)
-          .eq('school_id', schoolId) // Ensure student belongs to the correct school
-          .single();
-      return Student.fromMap(response);
-    } catch (e) {
-      print('Error fetching student by ID $studentId for school $schoolId: $e');
-      return null;
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      return await _cacheService.getStudentById(studentId);
+    } else {
+      try {
+        final response = await _supabaseClient
+            .from('students')
+            .select()
+            .eq('id', studentId)
+            .eq('school_id', schoolId) // Ensure student belongs to the correct school
+            .single();
+        final student = Student.fromMap(response);
+        await _cacheService.saveStudentById(student);
+        return student;
+      } catch (e) {
+        print('Error fetching student by ID $studentId for school $schoolId: $e');
+        return await _cacheService.getStudentById(studentId);
+      }
     }
   }
 }

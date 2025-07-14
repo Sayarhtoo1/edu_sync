@@ -1,32 +1,44 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:edu_sync/models/class.dart' as app_class;
+import 'package:edu_sync/models/school_class.dart' as app_class;
+import 'cache_service.dart';
 
 class ClassService {
   final SupabaseClient _supabaseClient = Supabase.instance.client;
+  final CacheService _cacheService = CacheService();
 
   // Fetch all classes for a school
-  Future<List<app_class.Class>> getClassesBySchool(int schoolId) async {
-    try {
-      final List<dynamic> responseData = await _supabaseClient
-          .from('classes')
-          .select()
-          .eq('school_id', schoolId);
-      return responseData.map((data) => app_class.Class.fromMap(data as Map<String, dynamic>)).toList();
-    } catch (e) {
-      print('Error fetching classes by school: $e');
-      return [];
+  Future<List<app_class.SchoolClass>> getClasses(int schoolId) async {
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      // Offline: Fetch from cache
+      return await _cacheService.getClasses(schoolId);
+    } else {
+      // Online: Fetch from Supabase and update cache
+      try {
+        final List<dynamic> responseData = await _supabaseClient
+            .from('classes')
+            .select()
+            .eq('school_id', schoolId);
+        final classes = responseData.map((data) => app_class.SchoolClass.fromMap(data as Map<String, dynamic>)).toList();
+        await _cacheService.saveClasses(schoolId, classes);
+        return classes;
+      } catch (e) {
+        print('Error fetching classes by school: $e');
+        return await _cacheService.getClasses(schoolId);
+      }
     }
   }
 
   // Add a new class
-  Future<app_class.Class?> createClass(app_class.Class newClass) async {
+  Future<app_class.SchoolClass?> createClass(app_class.SchoolClass newClass) async {
     try {
       final response = await _supabaseClient
           .from('classes')
           .insert(newClass.toMap()..remove('id')) // Remove id for insert
           .select()
           .single();
-      return app_class.Class.fromMap(response);
+      return app_class.SchoolClass.fromMap(response);
     } catch (e) {
       print('Error creating class: $e');
       return null;
@@ -34,7 +46,7 @@ class ClassService {
   }
 
   // Update class details
-  Future<bool> updateClass(app_class.Class classToUpdate) async {
+  Future<bool> updateClass(app_class.SchoolClass classToUpdate) async {
     try {
       if (classToUpdate.id == null) {
         print('Error: Class ID is null, cannot update.');

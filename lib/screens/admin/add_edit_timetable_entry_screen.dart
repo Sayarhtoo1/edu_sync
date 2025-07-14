@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:edu_sync/models/timetable.dart';
 import 'package:edu_sync/services/timetable_service.dart';
-import 'package:edu_sync/models/class.dart' as app_class;
+import 'package:edu_sync/models/school_class.dart' as app_class;
 import 'package:edu_sync/services/class_service.dart';
 import 'package:edu_sync/models/user.dart' as app_user;
 import 'package:edu_sync/services/auth_service.dart';
@@ -38,7 +38,7 @@ class _AddEditTimetableEntryScreenState extends State<AddEditTimetableEntryScree
   int? _selectedClassId; // Corrected to int?
   String? _selectedTeacherId;
 
-  List<app_class.Class> _availableClasses = [];
+  List<app_class.SchoolClass> _availableClasses = [];
   List<app_user.User> _availableTeachers = [];
 
   String _errorMessage = '';
@@ -66,7 +66,7 @@ class _AddEditTimetableEntryScreenState extends State<AddEditTimetableEntryScree
   Future<void> _loadInitialData() async {
     setState(() => _isLoading = true);
     try {
-      _availableClasses = await _classService.getClassesBySchool(widget.schoolId);
+      _availableClasses = await _classService.getClasses(widget.schoolId);
       _availableTeachers = await _authService.getUsersByRole('Teacher', widget.schoolId);
       
       if (_availableClasses.length == 1 && _selectedClassId == null && widget.classIdForNewEntry == null && !_isEditing) {
@@ -216,7 +216,7 @@ class _AddEditTimetableEntryScreenState extends State<AddEditTimetableEntryScree
                     DropdownButtonFormField<int>( // Corrected to int
                       value: _selectedClassId,
                       hint: Text(l10n.selectClassHint),
-                      items: _availableClasses.map((app_class.Class cls) {
+                      items: _availableClasses.map((app_class.SchoolClass cls) {
                         return DropdownMenuItem<int>(value: cls.id, child: Text(cls.name)); // cls.id is int?
                       }).toList(),
                       onChanged: (value) => setState(() => _selectedClassId = value),

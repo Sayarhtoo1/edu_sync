@@ -1,46 +1,29 @@
-import 'package:floor/floor.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert'; // Import for jsonEncode/Decode
 
-@Entity(tableName: 'custom_forms')
 class CustomForm {
-  @PrimaryKey()
   final String id; // uuid
-  @ColumnInfo(name: 'school_id')
   final int schoolId; 
   final String title;
-  @ColumnInfo(name: 'created_by') 
   final String createdBy; // uuid
   
-  @ColumnInfo(name: 'assigned_class_ids_json') 
   final String? assignedClassIdsJson; // JSON string of List<int>
   
-  @ColumnInfo(name: 'assigned_student_ids_json')
   final String? assignedStudentIdsJson; // JSON string of List<int>
 
-  @ColumnInfo(name: 'assigned_section_details_json') 
   final String? assignedSectionDetailsJson;
 
-  @ColumnInfo(name: 'assign_to_whole_school')
   final bool assignToWholeSchool;
 
-  @ColumnInfo(name: 'active_from')
   final DateTime activeFrom;
-  @ColumnInfo(name: 'active_to')
   final DateTime activeTo;
-  @ColumnInfo(name: 'is_daily')
   final bool isDaily; 
 
-  @ColumnInfo(name: 'created_at')
   final DateTime createdAt;
-  @ColumnInfo(name: 'updated_at') 
   final DateTime? updatedAt; 
 
-  @ignore
   List<int> get assignedClassIds => CustomForm.sFromJsonListInt(assignedClassIdsJson); // Corrected to List<int>
-  @ignore
   List<int> get assignedStudentIds => CustomForm.sFromJsonListInt(assignedStudentIdsJson); // Corrected to List<int>
-  @ignore
   List<Map<String, String>> get assignedSectionDetails { 
     if (assignedSectionDetailsJson == null || assignedSectionDetailsJson!.isEmpty) return [];
     try {

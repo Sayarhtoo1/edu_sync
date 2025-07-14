@@ -1,4 +1,3 @@
-
 class Announcement {
   final int id;
   final int schoolId;

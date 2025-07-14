@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:edu_sync/models/announcement.dart';
-import 'package:edu_sync/models/class.dart' as app_class;
+import 'package:edu_sync/models/school_class.dart' as app_class;
 import 'package:edu_sync/services/announcement_service.dart';
 import 'package:edu_sync/services/class_service.dart';
 import 'package:edu_sync/l10n/app_localizations.dart';
@@ -32,7 +32,7 @@ class _AddEditAnnouncementScreenState extends State<AddEditAnnouncementScreen> {
   
   String? _selectedTargetRole;
   int? _selectedTargetClassId; // Corrected to int?
-  List<app_class.Class> _availableClasses = [];
+  List<app_class.SchoolClass> _availableClasses = [];
 
   bool _isLoading = false;
   bool _isLoadingClasses = false; // For loading classes dropdown
@@ -58,7 +58,7 @@ class _AddEditAnnouncementScreenState extends State<AddEditAnnouncementScreen> {
   Future<void> _loadClasses() async {
     setState(() => _isLoadingClasses = true);
     try {
-      _availableClasses = await _classService.getClassesBySchool(widget.schoolId);
+      _availableClasses = await _classService.getClasses(widget.schoolId);
     } catch (e) {
       if(mounted) {
         final l10n = AppLocalizations.of(context);
@@ -190,7 +190,7 @@ class _AddEditAnnouncementScreenState extends State<AddEditAnnouncementScreen> {
                     DropdownButtonFormField<int>( // Corrected to int 
                       value: _selectedTargetClassId, // This is int?
                       hint: Text(l10n.selectClassHint), 
-                      items: _availableClasses.map((app_class.Class cls) {
+                      items: _availableClasses.map((app_class.SchoolClass cls) {
                         return DropdownMenuItem<int>( // Corrected to int
                           value: cls.id, // Class.id is int
                           child: Text(cls.name),

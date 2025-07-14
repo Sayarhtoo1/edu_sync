@@ -63,10 +63,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get classes => 'Classes';
 
   @override
-  String get error_user_not_found => 'Error: User not found. Please log in again.';
+  String get error_user_not_found =>
+      'Error: User not found. Please log in again.';
 
   @override
-  String get error_school_not_selected_or_found => 'Error: School not selected or found. Please ensure a school is associated with your account.';
+  String get error_school_not_selected_or_found =>
+      'Error: School not selected or found. Please ensure a school is associated with your account.';
 
   @override
   String get error_fetching_timetable => 'Error fetching timetable';
@@ -153,7 +155,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get manageLessonPlansTitle => 'Manage Lesson Plans';
 
   @override
-  String get pleaseSelectClassToViewLessonPlans => 'Please select a class to view lesson plans.';
+  String get pleaseSelectClassToViewLessonPlans =>
+      'Please select a class to view lesson plans.';
 
   @override
   String get noLessonPlansFound => 'No lesson plans found for this class.';
@@ -165,7 +168,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get confirmDeleteTitle => 'Confirm Delete';
 
   @override
-  String get confirmDeleteLessonPlanText => 'Are you sure you want to delete this lesson plan?';
+  String get confirmDeleteLessonPlanText =>
+      'Are you sure you want to delete this lesson plan?';
 
   @override
   String get cancel => 'Cancel';
@@ -180,7 +184,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get date => 'Date';
 
   @override
-  String get addEditLessonPlanNotImplemented => 'Add/Edit Lesson Plan screen not yet implemented.';
+  String get addEditLessonPlanNotImplemented =>
+      'Add/Edit Lesson Plan screen not yet implemented.';
 
   @override
   String get editClassTitle => 'Edit Class';
@@ -264,10 +269,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addTeacherButton => 'Add Teacher';
 
   @override
-  String get passwordRequiredForNewTeacherError => 'Password is required for new teacher.';
+  String get passwordRequiredForNewTeacherError =>
+      'Password is required for new teacher.';
 
   @override
-  String get newTeacherCreationDisabledError => 'New teacher creation is temporarily disabled. Please use Supabase dashboard or an Edge Function.';
+  String get newTeacherCreationDisabledError =>
+      'New teacher creation is temporarily disabled. Please use Supabase dashboard or an Edge Function.';
 
   @override
   String get profilePhotoUploadFailedError => 'Profile photo upload failed.';
@@ -291,10 +298,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addParentButton => 'Add Parent';
 
   @override
-  String get passwordRequiredForNewParentError => 'Password is required for new parent.';
+  String get passwordRequiredForNewParentError =>
+      'Password is required for new parent.';
 
   @override
-  String get newParentCreationDisabledError => 'New parent creation is temporarily disabled. Please use Supabase dashboard or an Edge Function.';
+  String get newParentCreationDisabledError =>
+      'New parent creation is temporarily disabled. Please use Supabase dashboard or an Edge Function.';
 
   @override
   String get failedToUpdateParentError => 'Failed to update parent.';
@@ -369,16 +378,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addEntryButton => 'Add Entry';
 
   @override
-  String get fillAllFieldsError => 'Please fill all fields, including time, day, class, and teacher.';
+  String get fillAllFieldsError =>
+      'Please fill all fields, including time, day, class, and teacher.';
 
   @override
   String get endTimeAfterStartTimeError => 'End time must be after start time.';
 
   @override
-  String get failedToSaveTimetableEntryError => 'Failed to save timetable entry.';
+  String get failedToSaveTimetableEntryError =>
+      'Failed to save timetable entry.';
 
   @override
-  String get failedToLoadTimetableDataError => 'Failed to load necessary data for timetable entry.';
+  String get failedToLoadTimetableDataError =>
+      'Failed to load necessary data for timetable entry.';
 
   @override
   String get financeManagementTitle => 'Finance Management';
@@ -414,10 +426,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noExpenseRecordsFound => 'No expense records found.';
 
   @override
-  String get confirmDeleteIncomeText => 'Are you sure you want to delete this income record?';
+  String get confirmDeleteIncomeText =>
+      'Are you sure you want to delete this income record?';
 
   @override
-  String get confirmDeleteExpenseText => 'Are you sure you want to delete this expense record?';
+  String get confirmDeleteExpenseText =>
+      'Are you sure you want to delete this expense record?';
 
   @override
   String get errorDeletingIncome => 'Error deleting income record.';
@@ -426,7 +440,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorDeletingExpense => 'Error deleting expense record.';
 
   @override
-  String get addEditFinancialRecordNotImplemented => 'Add/Edit financial record screen not yet implemented.';
+  String get addEditFinancialRecordNotImplemented =>
+      'Add/Edit financial record screen not yet implemented.';
 
   @override
   String get editIncomeTitle => 'Edit Income';
@@ -471,6 +486,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get failedToSaveRecordError => 'Failed to save record.';
 
   @override
+  String get categoryLabel => 'Category';
+
+  @override
+  String get categoryValidator => 'Please enter a category.';
+
+  @override
   String get announcementsTitle => 'Announcements';
 
   @override
@@ -492,16 +513,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pleaseSelectChild => 'Please select a child to view attendance.';
 
   @override
-  String get noAttendanceRecordsFound => 'No attendance records found for the selected child and month.';
+  String get noAttendanceRecordsFound =>
+      'No attendance records found for the selected child and month.';
 
   @override
   String get childScheduleTitle => 'Child\'s Schedule';
 
   @override
-  String get childNotAssignedToClass => 'Child is not currently assigned to a class or no schedule is available.';
+  String get childNotAssignedToClass =>
+      'Child is not currently assigned to a class or no schedule is available.';
 
   @override
-  String get noScheduleFound => 'No schedule found for the selected child\'s class.';
+  String get noScheduleFound =>
+      'No schedule found for the selected child\'s class.';
 
   @override
   String get manageAnnouncementsTitle => 'Manage Announcements';
@@ -510,16 +534,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addAnnouncementTooltip => 'Add New Announcement';
 
   @override
-  String get confirmDeleteAnnouncementText => 'Are you sure you want to delete this announcement?';
+  String get confirmDeleteAnnouncementText =>
+      'Are you sure you want to delete this announcement?';
 
   @override
   String get errorDeletingAnnouncement => 'Error deleting announcement.';
 
   @override
-  String get actionRequiresSchoolAndAdminContext => 'Action requires school and admin context.';
+  String get actionRequiresSchoolAndAdminContext =>
+      'Action requires school and admin context.';
 
   @override
-  String get addEditAnnouncementNotImplemented => 'Add/Edit Announcement screen not yet implemented.';
+  String get addEditAnnouncementNotImplemented =>
+      'Add/Edit Announcement screen not yet implemented.';
 
   @override
   String get targetAudience => 'Target Audience';
@@ -534,7 +561,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get closeButtonLabel => 'Close';
 
   @override
-  String get pleaseSelectClassForAnnouncement => 'Please select a class for this announcement.';
+  String get pleaseSelectClassForAnnouncement =>
+      'Please select a class for this announcement.';
 
   @override
   String get failedToSaveAnnouncementError => 'Failed to save announcement.';
@@ -567,13 +595,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get manageAnnouncementsDrawerItem => 'Manage Announcements';
 
   @override
-  String get classOrUserMissingError => 'Class or user information is missing to save attendance.';
+  String get classOrUserMissingError =>
+      'Class or user information is missing to save attendance.';
 
   @override
   String get failedToLoadInitialData => 'Failed to load initial data.';
 
   @override
-  String get failedToLoadSubjects => 'Failed to load subjects for the selected class.';
+  String get failedToLoadSubjects =>
+      'Failed to load subjects for the selected class.';
 
   @override
   String get fillAllRequiredFields => 'Please fill all required fields.';
@@ -597,22 +627,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get subjectValidator => 'Please select a subject.';
 
   @override
-  String get pleaseSelectClassFirstForSubjects => 'Please select a class to see available subjects.';
+  String get pleaseSelectClassFirstForSubjects =>
+      'Please select a class to see available subjects.';
 
   @override
-  String get noSubjectsFoundForClass => 'No subjects found for the selected class. Please check timetable.';
+  String get noSubjectsFoundForClass =>
+      'No subjects found for the selected class. Please check timetable.';
 
   @override
   String get manageDailyReportFormsTitle => 'Manage Daily Report Forms';
 
   @override
-  String get confirmDeleteCustomFormText => 'Are you sure you want to delete this form and all its responses? This action cannot be undone.';
+  String get confirmDeleteCustomFormText =>
+      'Are you sure you want to delete this form and all its responses? This action cannot be undone.';
 
   @override
   String get errorDeletingCustomFormText => 'Error deleting custom form.';
 
   @override
-  String get noCustomFormsFoundText => 'No custom forms found. Tap \'+\' to create one.';
+  String get noCustomFormsFoundText =>
+      'No custom forms found. Tap \'+\' to create one.';
 
   @override
   String get addCustomFormTooltip => 'Add New Report Form';
@@ -657,16 +691,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addQuestionTooltip => 'Add Question';
 
   @override
-  String get noQuestionsAddedText => 'No questions added yet. Click \'+\' to add.';
+  String get noQuestionsAddedText =>
+      'No questions added yet. Click \'+\' to add.';
 
   @override
   String get pleaseSelectActiveDatesError => 'Please select active dates.';
 
   @override
-  String get activeToDateError => 'Active To date must be after Active From date.';
+  String get activeToDateError =>
+      'Active To date must be after Active From date.';
 
   @override
-  String get addAtLeastOneQuestionError => 'Please add at least one question to the form.';
+  String get addAtLeastOneQuestionError =>
+      'Please add at least one question to the form.';
 
   @override
   String get failedToSaveFormError => 'Failed to save form.';
@@ -696,10 +733,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get optionsLabel => 'Options (one per line)';
 
   @override
-  String get optionsRequiredError => 'Options are required for this question type.';
+  String get optionsRequiredError =>
+      'Options are required for this question type.';
 
   @override
-  String get atLeastTwoOptionsError => 'At least two options are required for this question type.';
+  String get atLeastTwoOptionsError =>
+      'At least two options are required for this question type.';
 
   @override
   String get requiredLabel => 'Required';
@@ -762,7 +801,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get formHasNoQuestions => 'This form has no questions.';
 
   @override
-  String get reportAlreadySubmitted => 'Report already submitted for this form today.';
+  String get reportAlreadySubmitted =>
+      'Report already submitted for this form today.';
 
   @override
   String get submitReportButton => 'Submit Report';
@@ -774,7 +814,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fieldRequiredValidation => 'This field is required.';
 
   @override
-  String get noParentsAvailableToLink => 'No parents available in this school to link.';
+  String get noParentsAvailableToLink =>
+      'No parents available in this school to link.';
 
   @override
   String get linkParentsTitle => 'Link Parents:';
@@ -786,13 +827,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get viewFormResponsesTitle => 'View Form Responses';
 
   @override
-  String get noFormsAvailableToViewResponses => 'No forms available to view responses.';
+  String get noFormsAvailableToViewResponses =>
+      'No forms available to view responses.';
 
   @override
   String get selectFormToViewResponses => 'Select a form to view its responses';
 
   @override
-  String get noResponsesForThisForm => 'No responses submitted for this form yet.';
+  String get noResponsesForThisForm =>
+      'No responses submitted for this form yet.';
 
   @override
   String get responseFrom => 'Response from';
@@ -840,7 +883,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noRecentActivity => 'No recent activity.';
 
   @override
-  String get error_school_or_user_not_found => 'School or user information not found.';
+  String get error_school_or_user_not_found =>
+      'School or user information not found.';
 
   @override
   String get selectGenderHint => 'Select Gender';
@@ -915,7 +959,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fieldType_number => 'Number Input';
 
   @override
-  String get optionsForMCQCheckboxLabel => 'Options (for Multiple Choice/Checkbox, one per line)';
+  String get optionsForMCQCheckboxLabel =>
+      'Options (for Multiple Choice/Checkbox, one per line)';
 
   @override
   String get addOptionButton => 'Add Option';
@@ -931,12 +976,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get optionTextValidator => 'Option text cannot be empty';
-
-  @override
-  String get categoryLabel => 'Category';
-
-  @override
-  String get categoryValidator => 'Please select a category';
 
   @override
   String get saveButton => 'Save';
@@ -1017,7 +1056,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noClassesFound => 'No classes found. Add one!';
 
   @override
-  String get confirmDeleteClassText => 'Are you sure you want to delete this class?';
+  String get confirmDeleteClassText =>
+      'Are you sure you want to delete this class?';
 
   @override
   String get editSchoolProfileTitle => 'Edit School Profile';
@@ -1047,7 +1087,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addTransactionButton => 'Add Transaction';
 
   @override
-  String get confirmDeleteTransactionText => 'Are you sure you want to delete this transaction?';
+  String get confirmDeleteTransactionText =>
+      'Are you sure you want to delete this transaction?';
 
   @override
   String get manageCustomFormsTitle => 'Manage Custom Forms';
@@ -1059,7 +1100,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get viewResponsesButton => 'View Responses';
 
   @override
-  String get confirmDeleteFormText => 'Are you sure you want to delete this form?';
+  String get confirmDeleteFormText =>
+      'Are you sure you want to delete this form?';
 
   @override
   String get schoolRegistrationTitle => 'School Registration';
@@ -1080,7 +1122,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get manageStudentsTitle => 'Manage Students';
 
   @override
-  String get confirmDeleteStudentText => 'Are you sure you want to delete this student? This action cannot be undone.';
+  String get confirmDeleteStudentText =>
+      'Are you sure you want to delete this student? This action cannot be undone.';
 
   @override
   String get manageTimetablesTitle => 'Manage Timetables';
@@ -1089,7 +1132,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectClassToViewTimetableHint => 'Select Class to View Timetable';
 
   @override
-  String get pleaseSelectClassToViewTimetableText => 'Please select a class to view its timetable.';
+  String get pleaseSelectClassToViewTimetableText =>
+      'Please select a class to view its timetable.';
 
   @override
   String get noTimetableEntriesForText => 'No timetable entries for';
@@ -1098,7 +1142,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addOneText => 'Add one!';
 
   @override
-  String get confirmDeleteTimetableEntryText => 'Are you sure you want to delete this timetable entry?';
+  String get confirmDeleteTimetableEntryText =>
+      'Are you sure you want to delete this timetable entry?';
 
   @override
   String get manageUsersTitle => 'Manage Users';
@@ -1110,7 +1155,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noUsersFoundTextPart2 => 'found. Add one!';
 
   @override
-  String get confirmDeleteUserTextPart1 => 'Are you sure you want to delete this';
+  String get confirmDeleteUserTextPart1 =>
+      'Are you sure you want to delete this';
 
   @override
   String get forgotPasswordButtonLabel => 'Forgot Password?';
@@ -1164,7 +1210,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteButton => 'Delete';
 
   @override
-  String get confirmDeleteMessage => 'Are you sure you want to delete this item?';
+  String get confirmDeleteMessage =>
+      'Are you sure you want to delete this item?';
 
   @override
   String get noTeacherAssigned => 'No teacher assigned';
@@ -1188,7 +1235,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get registerSchoolButton => 'Register School';
 
   @override
-  String get confirmDeleteTeacherText => 'Are you sure you want to delete this teacher?';
+  String get confirmDeleteTeacherText =>
+      'Are you sure you want to delete this teacher?';
 
   @override
   String get manageTeachersTitle => 'Manage Teachers';
@@ -1200,25 +1248,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentDashboardTitle => 'Parent Dashboard';
 
   @override
-  String get parentDashboardWelcomeMessage => 'Welcome, Parent!\nUse the drawer to view your child\'s information and announcements.';
+  String get parentDashboardWelcomeMessage =>
+      'Welcome, Parent!\nUse the drawer to view your child\'s information and announcements.';
 
   @override
   String get teacherDashboardTitle => 'Teacher Dashboard';
 
   @override
-  String get teacherDashboardWelcomeMessage => 'Welcome, Teacher!\nUse the drawer to access your tools.';
+  String get teacherDashboardWelcomeMessage =>
+      'Welcome, Teacher!\nUse the drawer to access your tools.';
 
   @override
-  String get unknownUserRoleError => 'Unknown user role. Please contact support.';
+  String get unknownUserRoleError =>
+      'Unknown user role. Please contact support.';
 
   @override
-  String get loginFailedError => 'Login failed. Please check your email and password.';
+  String get loginFailedError =>
+      'Login failed. Please check your email and password.';
 
   @override
-  String get registrationSuccessMessage => 'School and Admin registered successfully! Please log in.';
+  String get registrationSuccessMessage =>
+      'School and Admin registered successfully! Please log in.';
 
   @override
-  String get failedToLinkAdminError => 'Critical: Failed to link admin to the new school. Please contact support.';
+  String get failedToLinkAdminError =>
+      'Critical: Failed to link admin to the new school. Please contact support.';
 
   @override
   String get teacherLabel => 'Teacher';
@@ -1252,4 +1306,67 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get versionLabel => 'Version';
+
+  @override
+  String get editManagerTitle => 'Edit Manager';
+
+  @override
+  String get addManagerTitle => 'Add Manager';
+
+  @override
+  String get updateManagerButton => 'Update Manager';
+
+  @override
+  String get addManagerButton => 'Add Manager';
+
+  @override
+  String get teacherTimetableAction => 'View Timetable';
+
+  @override
+  String get addStudent => 'Add Student';
+
+  @override
+  String get addParent => 'Add Parent';
+
+  @override
+  String get error_school_not_found => 'School not found.';
+
+  @override
+  String get error_invalid_number => 'Invalid number.';
+
+  @override
+  String get settingsSavedSuccessfully => 'Settings saved successfully.';
+
+  @override
+  String get errorSavingSettings => 'Error saving settings.';
+
+  @override
+  String get adminSettingsTitle => 'Admin Settings';
+
+  @override
+  String get hijriCalendarSettingsTitle => 'Hijri Calendar Settings';
+
+  @override
+  String get dayAdjustmentLabel => 'Day Adjustment';
+
+  @override
+  String get dayAdjustmentHint => 'e.g., -1, 0, 1';
+
+  @override
+  String get saveSettingsButton => 'Save Settings';
+
+  @override
+  String get managerDashboardTitle => 'Manager Dashboard';
+
+  @override
+  String get managerDashboardWelcomeMessage => 'Welcome, Manager!';
+
+  @override
+  String get unassignedClass => 'Unassigned';
+
+  @override
+  String get gallery => 'Gallery';
+
+  @override
+  String get camera => 'Camera';
 }

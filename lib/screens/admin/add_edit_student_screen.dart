@@ -1,9 +1,10 @@
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:edu_sync/models/student.dart';
 import 'package:edu_sync/services/student_service.dart';
-import 'package:edu_sync/models/class.dart' as app_class; 
+import 'package:edu_sync/models/school_class.dart' as app_class; 
 import 'package:edu_sync/services/class_service.dart';
 import 'package:edu_sync/models/user.dart' as app_user; // For Parent User
 import 'package:edu_sync/services/auth_service.dart'; // To fetch parents
@@ -36,7 +37,7 @@ class _AddEditStudentScreenState extends State<AddEditStudentScreen> {
   String? _currentProfilePhotoUrl;
   DateTime? _selectedDateOfBirth;
   int? _selectedClassId; 
-  List<app_class.Class> _availableClasses = [];
+  List<app_class.SchoolClass> _availableClasses = [];
   List<app_user.User> _availableParents = [];
   List<String> _linkedParentIds = []; // Store IDs of parents linked to this student
   List<String> _initialLinkedParentIds = []; // To track changes
@@ -72,7 +73,7 @@ class _AddEditStudentScreenState extends State<AddEditStudentScreen> {
 
   Future<void> _loadClasses() async {
     try {
-      _availableClasses = await _classService.getClassesBySchool(widget.schoolId);
+      _availableClasses = await _classService.getClasses(widget.schoolId);
     } catch (e) {
       print("Error loading classes: $e");
       if(mounted) setState(() => _errorMessage = AppLocalizations.of(context).failedToLoadClassesError);
@@ -101,12 +102,45 @@ class _AddEditStudentScreenState extends State<AddEditStudentScreen> {
   }
 
   Future<void> _pickProfilePhoto() async {
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        _profilePhotoFile = File(pickedFile.path);
-        _currentProfilePhotoUrl = null; 
-      });
+    final l10n = AppLocalizations.of(context);
+    final source = await showModalBottomSheet<ImageSource>(
+      backgroundColor: Colors.transparent,
+      context: context,
+      builder: (BuildContext context) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: Text(l10n.gallery),
+                onTap: () => Navigator.of(context).pop(ImageSource.gallery),
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: Text(l10n.camera),
+                onTap: () => Navigator.of(context).pop(ImageSource.camera),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (source != null) {
+      final XFile? pickedFile = await _picker.pickImage(source: source);
+      if (pickedFile != null) {
+        setState(() {
+          _profilePhotoFile = File(pickedFile.path);
+          _currentProfilePhotoUrl = null;
+        });
+      }
     }
   }
 
@@ -189,7 +223,6 @@ class _AddEditStudentScreenState extends State<AddEditStudentScreen> {
         if (_profilePhotoFile != null) {
           final fileName = 'profile.${_profilePhotoFile!.path.split('.').last}';
           photoUrl = await _studentService.uploadStudentProfilePhoto(widget.student!.id, _profilePhotoFile!.path, fileName);
-          if (photoUrl == null) throw Exception(AppLocalizations.of(context).profilePhotoUploadFailedError);
           studentData = studentData.copyWith(profilePhotoUrl: photoUrl);
         }
         final success = await _studentService.updateStudent(studentData);
@@ -203,13 +236,9 @@ class _AddEditStudentScreenState extends State<AddEditStudentScreen> {
         if (_profilePhotoFile != null) {
           final fileName = 'profile.${_profilePhotoFile!.path.split('.').last}';
           photoUrl = await _studentService.uploadStudentProfilePhoto(resultStudent.id, _profilePhotoFile!.path, fileName);
-          if (photoUrl != null) {
-            resultStudent = resultStudent.copyWith(profilePhotoUrl: photoUrl);
-            await _studentService.updateStudent(resultStudent); 
-          } else {
-            print('Photo upload failed, but student created without photo.');
-          }
-        }
+          resultStudent = resultStudent.copyWith(profilePhotoUrl: photoUrl);
+          await _studentService.updateStudent(resultStudent); 
+                }
       }
 
       await _updateParentLinks(resultStudent.id);
@@ -318,7 +347,7 @@ class _AddEditStudentScreenState extends State<AddEditStudentScreen> {
               DropdownButtonFormField<int>( 
                 value: _selectedClassId,
                 hint: Text(l10n.selectClassOptionalHint),
-                items: _availableClasses.map((app_class.Class cls) {
+                items: _availableClasses.map((app_class.SchoolClass cls) {
                   return DropdownMenuItem<int>( 
                     value: cls.id, 
                     child: Text(cls.name), 
@@ -365,7 +394,13 @@ class _AddEditStudentScreenState extends State<AddEditStudentScreen> {
                       child: _profilePhotoFile != null
                           ? Image.file(_profilePhotoFile!, height: 90, fit: BoxFit.contain)
                           : (_currentProfilePhotoUrl != null && _currentProfilePhotoUrl!.isNotEmpty
-                              ? Image.network(_currentProfilePhotoUrl!, height: 90, fit: BoxFit.contain, errorBuilder: (context, error, stackTrace) => Text(l10n.couldNotLoadImage, style: theme.textTheme.bodySmall))
+                              ? CachedNetworkImage(
+                                  imageUrl: _currentProfilePhotoUrl!,
+                                  height: 90,
+                                  fit: BoxFit.contain,
+                                  placeholder: (context, url) => CircularProgressIndicator(),
+                                  errorWidget: (context, url, error) => Text(l10n.couldNotLoadImage, style: theme.textTheme.bodySmall),
+                                )
                               : Text(l10n.noProfilePhoto, style: theme.textTheme.bodyMedium?.copyWith(color: textLightGrey))),
                     )
                   ),

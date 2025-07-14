@@ -1,41 +1,22 @@
-import 'package:floor/floor.dart';
 import 'form_field_type.dart'; // Import the enum
-import 'custom_form.dart'; // Import CustomForm
+// Import CustomForm
 import 'dart:convert'; // For jsonEncode/Decode if storing options as JSON string
 
-@Entity( // Correct casing
-  tableName: 'form_fields',
-  foreignKeys: [
-    ForeignKey(
-      childColumns: ['form_id'],
-      parentColumns: ['id'],
-      entity: CustomForm, 
-      onDelete: ForeignKeyAction.cascade,
-    )
-  ],
-  indices: [Index(value: ['form_id'])]
-)
 class FormFieldItem {
-  @PrimaryKey() // Correct casing
   final String id; // uuid
 
-  @ColumnInfo(name: 'form_id')
   final String formId; // uuid, foreign key to custom_forms
   final String question;
 
   // Store enum as String in DB, convert in model
-  @ignore
   final FormFieldType type;
   
-  @ColumnInfo(name: 'type_string') // Actual column in DB
   final String typeString;
 
   // For multiple_choice, checkbox: store options as JSON string
-  @ColumnInfo(name: 'options_json')
   final String? optionsJson; 
   final bool required;
 
-  @ignore
   List<String> get options {
     if (optionsJson == null || optionsJson!.isEmpty) return [];
     try {

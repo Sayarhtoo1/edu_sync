@@ -12,12 +12,10 @@ class LocaleProvider with ChangeNotifier {
 
   void _loadLocale() async {
     final prefs = await SharedPreferences.getInstance();
-    String? languageCode = prefs.getString('languageCode');
-    if (languageCode != null) {
-      _locale = Locale(languageCode);
-      notifyListeners();
+    String languageCode = prefs.getString('languageCode') ?? 'en';
+    _locale = Locale(languageCode);
+    notifyListeners();
     }
-  }
 
   void setLocale(Locale locale) async {
     if (!L10n.all.contains(locale)) return; // Ensure locale is supported

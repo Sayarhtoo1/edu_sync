@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:edu_sync/models/class.dart' as app_class;
+import 'package:edu_sync/models/school_class.dart' as app_class;
 import 'package:edu_sync/services/class_service.dart';
 import 'package:edu_sync/services/auth_service.dart';
 import 'add_edit_class_screen.dart'; 
@@ -16,7 +16,7 @@ class ClassManagementScreen extends StatefulWidget {
 class _ClassManagementScreenState extends State<ClassManagementScreen> {
   final ClassService _classService = ClassService();
   final AuthService _authService = AuthService();
-  List<app_class.Class> _classes = [];
+  List<app_class.SchoolClass> _classes = [];
   bool _isLoading = true;
   int? _currentSchoolId;
 
@@ -40,13 +40,13 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
   Future<void> _loadClasses() async {
     if (_currentSchoolId == null) return;
     setState(() => _isLoading = true);
-    _classes = await _classService.getClassesBySchool(_currentSchoolId!);
+    _classes = await _classService.getClasses(_currentSchoolId!);
     if (mounted) {
       setState(() => _isLoading = false);
     }
   }
 
-  void _navigateToAddEditClassScreen({app_class.Class? classDetails}) async {
+  void _navigateToAddEditClassScreen({app_class.SchoolClass? classDetails}) async {
      if (_currentSchoolId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Cannot add/edit class: School ID not found.'))

@@ -36,7 +36,8 @@ class _ManageCustomFormsScreenState extends State<ManageCustomFormsScreen> {
   Future<void> _loadInitialData() async {
     setState(() => _isLoading = true);
     _userId = _authService.getCurrentUser()?.id;
-    _userRole = _authService.getUserRole();
+    _userRole = await _authService.getUserRole();
+    if (!mounted) return;
     _schoolId = Provider.of<SchoolProvider>(context, listen: false).currentSchool?.id;
 
     if (_userId == null || _userRole == null || _schoolId == null) {
@@ -52,6 +53,7 @@ class _ManageCustomFormsScreenState extends State<ManageCustomFormsScreen> {
 
   Future<void> _fetchForms() async {
     try {
+      // Assuming the first role is the primary one for this context.
       _forms = await _customFormService.getManageableForms(_userId!, _userRole!, _schoolId!);
     } catch (e) {
       if(mounted) {

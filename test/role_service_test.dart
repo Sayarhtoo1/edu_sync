@@ -8,7 +8,7 @@ class MockAuthService extends AuthService {
   String? mockRole;
 
   @override
-  String? getUserRole() {
+  Future<String?> getUserRole() async {
     return mockRole;
   }
 
@@ -52,24 +52,24 @@ void main() {
   });
 
   group('RoleService', () {
-    test('isAdmin returns true for Admin role', () {
+    test('isAdmin returns true for Admin role', () async {
       mockAuthService.mockRole = 'Admin';
-      expect(roleService.isAdmin(), isTrue);
+      expect(await roleService.isAdmin(), isTrue);
     });
 
-    test('isTeacher returns true for Teacher role', () {
+    test('isTeacher returns true for Teacher role', () async {
       mockAuthService.mockRole = 'Teacher';
-      expect(roleService.isTeacher(), isTrue);
+      expect(await roleService.isTeacher(), isTrue);
     });
 
-    test('isParent returns true for Parent role', () {
+    test('isParent returns true for Parent role', () async {
       mockAuthService.mockRole = 'Parent';
-      expect(roleService.isParent(), isTrue);
+      expect(await roleService.isParent(), isTrue);
     });
 
-    test('isAdmin returns false for non-Admin role', () {
+    test('isAdmin returns false for non-Admin role', () async {
       mockAuthService.mockRole = 'Teacher';
-      expect(roleService.isAdmin(), isFalse);
+      expect(await roleService.isAdmin(), isFalse);
     });
   });
 }

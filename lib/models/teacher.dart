@@ -1,7 +1,5 @@
-import 'package:floor/floor.dart';
 import 'user.dart';
 
-@entity
 class Teacher extends User {
   Teacher({
     required super.id,

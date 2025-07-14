@@ -1,28 +1,36 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:edu_sync/models/attendance.dart' as app_attendance;
 import 'package:intl/intl.dart'; // For date formatting if needed
+import 'cache_service.dart';
 
 class AttendanceService {
   final SupabaseClient _supabaseClient = Supabase.instance.client;
+  final CacheService _cacheService = CacheService();
 
   // Fetch attendance for a specific class on a specific date
-  Future<Map<int, String>> getAttendanceForClassDate(int classId, DateTime date) async { // Corrected to int
-    final dateString = DateFormat('yyyy-MM-dd').format(date);
-    Map<int, String> statuses = {};
-    try {
-      final response = await _supabaseClient
-          .from('attendance')
-          .select('student_id, status') // Fetch the 'status' string directly
-          .eq('class_id', classId)
-          .eq('date', dateString);
+  Future<List<app_attendance.Attendance>> getAttendanceForClassByDate(int classId, DateTime date) async {
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      // Offline: Fetch from cache
+      return await _cacheService.getAttendanceForClass(classId, date);
+    } else {
+      // Online: Fetch from Supabase and update cache
+      final dateString = DateFormat('yyyy-MM-dd').format(date);
+      try {
+        final response = await _supabaseClient
+            .from('attendance')
+            .select()
+            .eq('class_id', classId)
+            .eq('date', dateString);
 
-      for (var record in response) {
-        statuses[record['student_id'] as int] = record['status'] as String? ?? 'Present'; // Default to 'Present' if status is null
+        final attendance = response.map((data) => app_attendance.Attendance.fromMap(data)).toList();
+        await _cacheService.saveAttendanceForClass(classId, date, attendance);
+        return attendance;
+      } catch (e) {
+        print('Error fetching attendance for class $classId on $dateString: $e');
+        return await _cacheService.getAttendanceForClass(classId, date);
       }
-      return statuses;
-    } catch (e) {
-      print('Error fetching attendance for class $classId on $dateString: $e');
-      return statuses; // Return empty or partially filled map on error
     }
   }
 

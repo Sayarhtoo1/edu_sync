@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart'; // Added for TimeOfDay
-import 'package:floor/floor.dart';
 // import '../type_converters.dart'; // Not strictly needed here if TimeOfDay is stored as String
 
 // Helper to format TimeOfDay to HH:mm string
@@ -16,28 +15,18 @@ TimeOfDay _parseTimeOfDay(String timeString) {
 }
 
 
-@Entity(tableName: 'timetables') // Changed from @entity to @Entity for consistency
 class Timetable {
-  @PrimaryKey() 
   final int id; 
-  @ColumnInfo(name: 'class_id')
   final int classId; // Corrected to int
   
-  @ignore 
   final TimeOfDay startTimeOfDay; 
-  @ignore 
   final TimeOfDay endTimeOfDay;
 
-  @ColumnInfo(name: 'start_time')
   final String startTimeString; 
-  @ColumnInfo(name: 'end_time')
   final String endTimeString;   
   
-  @ColumnInfo(name: 'day_of_week')
   final String dayOfWeek; // Consider using int (0-6) for easier sorting/filtering
-  @ColumnInfo(name: 'subject_name')
   final String subjectName;
-  @ColumnInfo(name: 'teacher_id')
   final String? teacherId; // UUID String
 
   Timetable({
@@ -51,25 +40,12 @@ class Timetable {
   }) : startTimeString = _formatTimeOfDay(startTimeOfDay),
        endTimeString = _formatTimeOfDay(endTimeOfDay);
 
-  // Constructor for Floor to use, taking string times
-  Timetable.fromDb({
-    required this.id,
-    required this.classId, // Corrected to int
-    required this.startTimeString,
-    required this.endTimeString,
-    required this.dayOfWeek,
-    required this.subjectName,
-    this.teacherId,
-  }) : startTimeOfDay = _parseTimeOfDay(startTimeString),
-       endTimeOfDay = _parseTimeOfDay(endTimeString);
-
-
   factory Timetable.fromMap(Map<String, dynamic> map) {
-    return Timetable.fromDb( 
+    return Timetable( 
       id: map['id'] as int, 
       classId: map['class_id'] as int, // Corrected to int
-      startTimeString: map['start_time'] as String, 
-      endTimeString: map['end_time'] as String,   
+      startTimeOfDay: _parseTimeOfDay(map['start_time'] as String), 
+      endTimeOfDay: _parseTimeOfDay(map['end_time'] as String),   
       dayOfWeek: map['day_of_week'] as String,
       subjectName: map['subject_name'] as String,
       teacherId: map['teacher_id'] as String?,

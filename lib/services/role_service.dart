@@ -5,15 +5,18 @@ class RoleService {
 
   RoleService(this._authService);
 
-  bool isAdmin() {
-    return _authService.getUserRole() == 'Admin';
+  Future<bool> isAdmin() async {
+    final role = await _authService.getUserRole();
+    return role == 'Admin';
   }
 
-  bool isTeacher() {
-    return _authService.getUserRole() == 'Teacher';
+  Future<bool> isTeacher() async {
+    final role = await _authService.getUserRole();
+    return role == 'Teacher';
   }
 
-  bool isParent() {
-    return _authService.getUserRole() == 'Parent';
+  Future<bool> isParent() async {
+    final role = await _authService.getUserRole();
+    return role == 'Parent';
   }
 }

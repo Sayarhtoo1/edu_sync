@@ -34,7 +34,9 @@ class _LoginScreenState extends State<LoginScreen> {
         if (!mounted) return; // Guard against async gap
 
         if (user != null) {
-          final role = _authService.getUserRole();
+          final role = await _authService.getUserRole();
+          if (!mounted) return;
+
           if (role == 'Admin') {
             Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const AdminPanelScreen()));
           } else if (role == 'Teacher') {
@@ -44,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
           } else {
             if (mounted) {
               setState(() {
-                _errorMessage = l10n.unknownUserRoleError; 
+                _errorMessage = l10n.unknownUserRoleError;
               });
             }
           }

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:edu_sync/models/class.dart' as app_class;
+import 'package:edu_sync/models/school_class.dart' as app_class;
 import 'package:edu_sync/models/lesson_plan.dart';
 import 'package:edu_sync/services/class_service.dart';
 import 'package:edu_sync/services/lesson_plan_service.dart';
 import 'package:edu_sync/services/auth_service.dart';
 import 'package:edu_sync/l10n/app_localizations.dart';
-import 'add_edit_lesson_plan_screen.dart'; 
+import 'add_edit_lesson_plan_screen.dart';
 import 'package:edu_sync/theme/app_theme.dart'; // Ensure AppTheme is imported
 
 class LessonPlanManagementScreen extends StatefulWidget {
@@ -21,8 +21,8 @@ class _LessonPlanManagementScreenState extends State<LessonPlanManagementScreen>
   final LessonPlanService _lessonPlanService = LessonPlanService();
   final AuthService _authService = AuthService();
 
-  List<app_class.Class> _teacherClasses = [];
-  app_class.Class? _selectedClass;
+  List<app_class.SchoolClass> _teacherClasses = [];
+  app_class.SchoolClass? _selectedClass;
   List<LessonPlan> _lessonPlans = [];
   
   bool _isLoadingClasses = true;
@@ -40,7 +40,7 @@ class _LessonPlanManagementScreenState extends State<LessonPlanManagementScreen>
   Future<void> _loadInitialData() async {
     setState(() => _isLoadingClasses = true);
     final currentUser = _authService.getCurrentUser();
-    _currentUserRole = _authService.getUserRole();
+    _currentUserRole = await _authService.getUserRole();
 
     if (currentUser == null || _currentUserRole == null) {
       if (mounted) setState(() => _isLoadingClasses = false);
@@ -50,7 +50,9 @@ class _LessonPlanManagementScreenState extends State<LessonPlanManagementScreen>
     _currentSchoolId = await _authService.getCurrentUserSchoolId();
 
     if (_currentSchoolId != null && _currentUserId != null) {
-      List<app_class.Class> allClassesInSchool = await _classService.getClassesBySchool(_currentSchoolId!);
+      print('Fetching classes for school: $_currentSchoolId');
+      List<app_class.SchoolClass> allClassesInSchool = await _classService.getClasses(_currentSchoolId!);
+      print('Fetched ${allClassesInSchool.length} classes');
       if (_currentUserRole == 'Teacher') {
         _teacherClasses = allClassesInSchool.where((c) => c.teacherId == _currentUserId).toList();
       } else if (_currentUserRole == 'Admin') {
@@ -159,6 +161,12 @@ class _LessonPlanManagementScreenState extends State<LessonPlanManagementScreen>
     return Scaffold( // Scaffold uses appBackgroundColor from theme
       appBar: AppBar( // AppBar uses appBarTheme from theme
         title: Text(l10n.manageLessonPlansTitle),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadInitialData,
+          ),
+        ],
       ),
       body: _isLoadingClasses
           ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(contextualAccentColor)))
@@ -166,16 +174,16 @@ class _LessonPlanManagementScreenState extends State<LessonPlanManagementScreen>
               children: [
                 Padding(
                   padding: const EdgeInsets.all(16.0), // Increased padding
-                  child: DropdownButtonFormField<app_class.Class>(
+                  child: DropdownButtonFormField<app_class.SchoolClass>(
                     value: _selectedClass,
                     hint: Text(l10n.selectClassHint, style: theme.textTheme.bodyLarge), 
-                    items: _teacherClasses.map((app_class.Class cls) {
-                      return DropdownMenuItem<app_class.Class>(
+                    items: _teacherClasses.map((app_class.SchoolClass cls) {
+                      return DropdownMenuItem<app_class.SchoolClass>(
                         value: cls,
                         child: Text(cls.name, style: theme.textTheme.bodyLarge),
                       );
                     }).toList(),
-                    onChanged: (app_class.Class? newValue) {
+                    onChanged: (app_class.SchoolClass? newValue) {
                       setState(() {
                         _selectedClass = newValue;
                         _lessonPlans = []; 
