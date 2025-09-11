@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:edu_sync/widgets/app_drawer.dart';
 import 'package:edu_sync/providers/school_provider.dart';
-import 'package:edu_sync/models/school.dart';
+
 import 'package:edu_sync/l10n/app_localizations.dart';
 import 'package:edu_sync/theme/app_theme.dart';
 
@@ -11,14 +11,16 @@ class ManagerDashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final schoolProvider = Provider.of<SchoolProvider>(context);
-    final School? currentSchool = schoolProvider.currentSchool;
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: appBackgroundColor,
       appBar: AppBar(
-        title: Text(currentSchool?.name ?? l10n.managerDashboardTitle),
+        title: Consumer<SchoolProvider>(
+          builder: (context, schoolProvider, child) {
+            return Text(schoolProvider.currentSchool?.name ?? l10n.managerDashboardTitle);
+          },
+        ),
         backgroundColor: iconColorTeachers, // You might want to define a specific color for managers
       ),
       drawer: AppDrawer(),

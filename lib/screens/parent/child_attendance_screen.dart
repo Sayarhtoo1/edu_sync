@@ -18,9 +18,9 @@ class ChildAttendanceScreen extends StatefulWidget {
 }
 
 class _ChildAttendanceScreenState extends State<ChildAttendanceScreen> {
-  final StudentService _studentService = StudentService();
-  final AttendanceService _attendanceService = AttendanceService();
-  final AuthService _authService = AuthService();
+  late final StudentService _studentService;
+  late final AttendanceService _attendanceService;
+  late final AuthService _authService;
 
   List<Student> _linkedStudents = [];
   Student? _selectedStudent;
@@ -39,6 +39,9 @@ class _ChildAttendanceScreenState extends State<ChildAttendanceScreen> {
   @override
   void initState() {
     super.initState();
+    _studentService = Provider.of<StudentService>(context, listen: false);
+    _attendanceService = Provider.of<AttendanceService>(context, listen: false);
+    _authService = Provider.of<AuthService>(context, listen: false);
     final schoolProvider = Provider.of<SchoolProvider>(context, listen: false);
     _schoolId = schoolProvider.currentSchool?.id;
     _parentId = _authService.getCurrentUser()?.id;
@@ -63,7 +66,7 @@ class _ChildAttendanceScreenState extends State<ChildAttendanceScreen> {
     try {
       // Assumes StudentService has a method to get students linked to a parent.
       // This would query through parent_student_relations.
-      _linkedStudents = await _studentService.getStudentsByParent(_parentId!, _schoolId!);
+      _linkedStudents = (await _studentService.getStudentsByParent(_parentId!, _schoolId!)).cast<Student>();
       if (_linkedStudents.isNotEmpty) {
         _selectedStudent = _linkedStudents.first;
         _loadAttendanceForStudent();
@@ -129,7 +132,7 @@ class _ChildAttendanceScreenState extends State<ChildAttendanceScreen> {
       body: _isLoadingStudents
           ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(contextualAccentColor)))
           : _errorMessage != null
-              ? Center(child: Padding(padding: const EdgeInsets.all(16.0), child: Text(_errorMessage!, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.error))))
+              ? Center(child: Padding(padding: const EdgeInsets.all(16.0), child: Text(_errorMessage!, style: theme.textTheme.bodyMedium!.copyWith(color: theme.colorScheme.error))))
               : _linkedStudents.isEmpty
                   ? Center(child: Text(l10n.noChildrenLinked, style: theme.textTheme.bodyLarge)) 
                   : Column(
@@ -163,7 +166,7 @@ class _ChildAttendanceScreenState extends State<ChildAttendanceScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               IconButton(icon: Icon(Icons.chevron_left, color: theme.iconTheme.color), onPressed: () => _changeMonth(-1)),
-                              Text(DateFormat.yMMMM(l10n.localeName).format(_selectedMonth), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                              Text(DateFormat.yMMMM(l10n.localeName).format(_selectedMonth), style: theme.textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold)),
                               IconButton(icon: Icon(Icons.chevron_right, color: theme.iconTheme.color), onPressed: () => _changeMonth(1)),
                             ],
                           ),
@@ -196,7 +199,7 @@ class _ChildAttendanceScreenState extends State<ChildAttendanceScreen> {
                                                 statusColor = iconColorParents; // Orangeish from theme
                                                 break;
                                               default:
-                                                statusText = record.status ?? l10n.not_specified; 
+                                                statusText = record.status ?? l10n.not_specified;
                                                 statusColor = textLightGrey; // Grey from theme
                                             }
 
@@ -204,7 +207,7 @@ class _ChildAttendanceScreenState extends State<ChildAttendanceScreen> {
                                               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6), // Adjusted margin
                                               child: ListTile(
                                                 title: Text(DateFormat.yMMMd(l10n.localeName).format(record.date), style: theme.textTheme.titleMedium),
-                                                trailing: Text(statusText, style: theme.textTheme.bodyLarge?.copyWith(color: statusColor, fontWeight: FontWeight.bold)),
+                                                trailing: Text(statusText, style: theme.textTheme.bodyLarge!.copyWith(color: statusColor, fontWeight: FontWeight.bold)),
                                               ),
                                             );
                                           },

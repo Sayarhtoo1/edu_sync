@@ -2,10 +2,13 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:edu_sync/models/user_role.dart';
+import 'package:provider/provider.dart';
 import 'package:edu_sync/models/user.dart' as app_user;
 import 'package:edu_sync/services/auth_service.dart';
 import 'package:edu_sync/l10n/app_localizations.dart'; // Import AppLocalizations
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
+import 'package:edu_sync/utils/logger.dart';
 // import 'package:edu_sync/models/student.dart'; // Will be needed for linking
 // import 'package:edu_sync/services/student_service.dart'; // Will be needed for linking
 
@@ -21,7 +24,7 @@ class AddEditParentScreen extends StatefulWidget {
 
 class _AddEditParentScreenState extends State<AddEditParentScreen> {
   final _formKey = GlobalKey<FormState>();
-  final AuthService _authService = AuthService();
+  late final AuthService _authService;
   final ImagePicker _picker = ImagePicker();
   // final StudentService _studentService = StudentService(); // For fetching students to link
 
@@ -41,6 +44,7 @@ class _AddEditParentScreenState extends State<AddEditParentScreen> {
   @override
   void initState() {
     super.initState();
+    _authService = Provider.of<AuthService>(context, listen: false);
     _nameController = TextEditingController(text: widget.parent?.fullName ?? '');
     _emailController = TextEditingController(text: widget.parent?.id != null ? _getEmailFromSupabaseUser(widget.parent!.id) : '');
     _passwordController = TextEditingController();
@@ -87,7 +91,7 @@ class _AddEditParentScreenState extends State<AddEditParentScreen> {
 
     try {
       app_user.User? resultUser;
-      String userIdToUpdate = _isEditing ? widget.parent!.id : '';
+      // String userIdToUpdate = _isEditing ? widget.parent!.id : ''; // Removed unused variable
 
       if (_profilePhotoFile != null) {
         String tempUserIdForPhoto = _isEditing ? widget.parent!.id : DateTime.now().millisecondsSinceEpoch.toString();
@@ -118,7 +122,7 @@ class _AddEditParentScreenState extends State<AddEditParentScreen> {
         final newParent = await _authService.createUserViaEdgeFunction(
           email: _emailController.text,
           password: _passwordController.text,
-          role: 'Parent',
+          role: UserRole.Parent.name,
           schoolId: widget.schoolId,
           fullName: _nameController.text,
           profilePhotoUrl: photoUrl, // This might be null if photo is uploaded after user creation
@@ -139,7 +143,7 @@ class _AddEditParentScreenState extends State<AddEditParentScreen> {
                 // Update the user record in public.users with the correct photo URL
                 await _authService.updateUser(resultUser);
              } else {
-                print("Photo upload failed for new user ${resultUser.id} after creation, during explicit photo step.");
+                logger.e("Photo upload failed for new user ${resultUser.id} after creation, during explicit photo step.");
              }
         }
       }
@@ -151,7 +155,7 @@ class _AddEditParentScreenState extends State<AddEditParentScreen> {
     } catch (e) {
       final l10n = AppLocalizations.of(context);
       String specificError = e.toString();
-      if (e.toString().contains('Profile photo upload failed')) { 
+      if (e.toString().contains('Profile photo upload failed')) {
         specificError = l10n.profilePhotoUploadFailedError;
       } else if (e.toString().contains(l10n.failedToUpdateParentError)) { 
         specificError = l10n.failedToUpdateParentError;

@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:edu_sync/models/form_response.dart';
 import 'package:edu_sync/models/form_response_answer.dart';
 import 'package:intl/intl.dart';
+import 'package:edu_sync/utils/logger.dart';
 import 'cache_service.dart';
 
 class FormResponseService {
@@ -11,32 +12,23 @@ class FormResponseService {
 
   Future<bool> submitResponse(FormResponse response, List<FormResponseAnswer> answers) async {
     try {
-      // Again, ideally a transaction or RPC
-      // 1. Insert the FormResponse
-      final responseMap = response.toMap();
-      // responseMap.remove('id'); // Assuming ID is UUID client-generated, or handled by DB if serial
+      final List<Map<String, dynamic>> answersJson = answers.map((a) => a.toRpcJson()).toList();
       
-      final createdResponseData = await _supabaseClient
-          .from('form_responses')
-          .insert(responseMap)
-          .select()
-          .single();
-      
-      // final createdResponse = FormResponse.fromMap(createdResponseData); // Not strictly needed if we use response.id
+      final newResponseId = await _supabaseClient.rpc(
+        'submit_form_with_answers',
+        params: {
+          'p_form_id': response.formId,
+          'p_student_id': response.studentId,
+          'p_parent_id': response.parentId,
+          'p_submitted_by_id': response.parentId,
+          'p_answers': answersJson,
+        },
+      );
 
-      // 2. Insert the FormResponseAnswers, linking them to the created response
-      if (answers.isNotEmpty) {
-        final answerMaps = answers.map((answer) {
-          final answerMap = answer.toMap();
-          answerMap['response_id'] = createdResponseData['id']; // Use ID from DB response
-          // answerMap.remove('id'); // If answer IDs are also auto-generated or client-generated UUIDs
-          return answerMap;
-        }).toList();
-        await _supabaseClient.from('form_response_answers').insert(answerMaps);
-      }
-      return true;
+      // If the RPC returns a non-null value, the submission was successful.
+      return newResponseId != null;
     } catch (e) {
-      print('Error submitting form response: $e');
+      logger.e('Error submitting form response via RPC: $e');
       return false;
     }
   }
@@ -56,7 +48,7 @@ class FormResponseService {
         await _cacheService.saveFormResponses(formId, responses);
         return responses;
       } catch (e) {
-        print('Error fetching responses for form $formId: $e');
+        logger.e('Error fetching responses for form $formId: $e');
         return await _cacheService.getFormResponses(formId);
       }
     }
@@ -76,7 +68,7 @@ class FormResponseService {
         await _cacheService.saveFormResponseAnswers(responseId, answers);
         return answers;
       } catch (e) {
-        print('Error fetching answers for response $responseId: $e');
+        logger.e('Error fetching answers for response $responseId: $e');
         return await _cacheService.getFormResponseAnswers(responseId);
       }
     }
@@ -96,7 +88,7 @@ class FormResponseService {
       
       return response.isNotEmpty;
     } catch (e) {
-      print('Error checking if response submitted: $e');
+      logger.e('Error checking if response submitted: $e');
       return false; // Assume not submitted on error
     }
   }
@@ -128,7 +120,7 @@ class FormResponseService {
       // The FormResponse model itself doesn't store student_name or form_title.
       return responseData.map((data) => FormResponse.fromMap(data)).toList();
     } catch (e) {
-      print('Error fetching recent responses: $e');
+      logger.e('Error fetching recent responses: $e');
       return [];
     }
   }

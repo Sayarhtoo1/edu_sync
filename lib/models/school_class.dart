@@ -1,9 +1,13 @@
+import 'package:drift/drift.dart' show Value;
+import 'package:edu_sync/database/app_database.dart' as db; // Alias app_database
+
 class SchoolClass {
   final int? id; // Changed to int?
   final String name;
   final String? teacherId; // Assuming teacher_id is UUID (String)
   final int schoolId;
-  final String? section; 
+  final String? section;
+  final DateTime? updatedAt;
 
   SchoolClass({
     required this.id, // Now int
@@ -11,15 +15,17 @@ class SchoolClass {
     this.teacherId,
     required this.schoolId,
     this.section,
+    this.updatedAt,
   });
 
   factory SchoolClass.fromMap(Map<String, dynamic> map) {
     return SchoolClass(
-      id: map['id'] as int, // Corrected to int
-      name: map['name'] as String,
-      teacherId: map['teacher_id'] as String?,
-      schoolId: map['school_id'] as int,
-      section: map['section'] as String?,
+      id: map['id'],
+      name: map['name'] ?? '',
+      teacherId: map['teacher_id'],
+      schoolId: map['school_id'] ?? 0,
+      section: map['section'],
+      updatedAt: map['updated_at'] != null ? DateTime.parse(map['updated_at']) : null,
     );
   }
 
@@ -29,11 +35,36 @@ class SchoolClass {
       'teacher_id': teacherId,
       'school_id': schoolId,
       'section': section,
+      'updated_at': updatedAt?.toIso8601String(),
     };
     if (id != null) {
       map['id'] = id;
     }
     return map;
+  }
+
+  // Convert SchoolClass to ClassesCompanion for drift
+  db.ClassesCompanion toCompanion() {
+    return db.ClassesCompanion(
+      id: id != null ? Value(id!) : const Value.absent(),
+      name: Value(name),
+      teacherId: Value(teacherId),
+      schoolId: Value(schoolId),
+      section: Value(section),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  // Convert ClassData from drift to SchoolClass
+  factory SchoolClass.fromData(db.ClassesData data) {
+    return SchoolClass(
+      id: data.id,
+      name: data.name,
+      teacherId: data.teacherId,
+      schoolId: data.schoolId,
+      section: data.section,
+      updatedAt: data.updatedAt,
+    );
   }
 
   SchoolClass copyWith({
@@ -42,6 +73,7 @@ class SchoolClass {
     String? teacherId,
     int? schoolId,
     String? section,
+    DateTime? updatedAt,
   }) {
     return SchoolClass(
       id: id ?? this.id,
@@ -49,6 +81,7 @@ class SchoolClass {
       teacherId: teacherId ?? this.teacherId,
       schoolId: schoolId ?? this.schoolId,
       section: section ?? this.section,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 }

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:edu_sync/models/user_role.dart';
 import 'package:edu_sync/services/auth_service.dart';
 import 'package:edu_sync/models/user.dart' as app_user;
+import 'package:provider/provider.dart';
 import 'add_edit_teacher_screen.dart';
-import 'add_edit_parent_screen.dart'; 
+import 'add_edit_parent_screen.dart';
 import 'package:edu_sync/l10n/app_localizations.dart'; // Import AppLocalizations
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
 
@@ -15,7 +17,7 @@ class UserManagementScreen extends StatefulWidget {
 }
 
 class _UserManagementScreenState extends State<UserManagementScreen> with SingleTickerProviderStateMixin {
-  final AuthService _authService = AuthService();
+  late final AuthService _authService;
   List<app_user.User> _staffList = [];
   bool _isLoading = true;
   int? _currentSchoolId;
@@ -25,6 +27,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> with Single
   @override
   void initState() {
     super.initState();
+    _authService = Provider.of<AuthService>(context, listen: false);
     _tabController = TabController(length: 2, vsync: this, initialIndex: widget.initialTabIndex);
     // Update currentRoleView based on initialTabIndex
     _currentRoleView = widget.initialTabIndex == 0 ? 'Teacher' : 'Parent';
@@ -55,7 +58,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> with Single
     if (_currentSchoolId != null) {
       _loadStaffData();
     } else {
-      // print("Admin's school ID not found. Cannot load staff."); // Removed print
+      //logger.w("Admin's school ID not found. Cannot load staff.");
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -68,7 +71,9 @@ class _UserManagementScreenState extends State<UserManagementScreen> with Single
       return;
     }
     setState(() => _isLoading = true);
-    _staffList = await _authService.getUsersByRole(_currentRoleView, _currentSchoolId!);
+    _staffList = await _authService.getUsersByRole(
+        _currentRoleView == 'Teacher' ? UserRole.Teacher : UserRole.Parent,
+        _currentSchoolId!);
     if (mounted) {
       setState(() => _isLoading = false);
     }
@@ -81,7 +86,6 @@ class _UserManagementScreenState extends State<UserManagementScreen> with Single
       );
       return;
     }
-    // TODO: Navigate to specific Add/Edit screen based on _currentRoleView
     if (_currentRoleView == 'Teacher') {
       final result = await Navigator.of(context).push(
         MaterialPageRoute(
@@ -160,10 +164,10 @@ class _UserManagementScreenState extends State<UserManagementScreen> with Single
           controller: _tabController,
           indicatorColor: currentAccent,
           labelColor: currentAccent,
-          unselectedLabelColor: textLightGrey, 
+          unselectedLabelColor: textLightGrey,
           tabs: [
-            Tab(text: l10n.teachers), 
-            Tab(text: l10n.parents), 
+            Tab(text: l10n.teachers),
+            Tab(text: l10n.parents),
           ],
         ),
         actions: [
@@ -204,8 +208,8 @@ class _UserManagementScreenState extends State<UserManagementScreen> with Single
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  icon: Icon(Icons.edit, color: theme.iconTheme.color ?? textDarkGrey), 
-                                  tooltip: l10n.editButton, 
+                                  icon: Icon(Icons.edit, color: theme.iconTheme.color ?? textDarkGrey),
+                                  tooltip: l10n.editButton,
                                   onPressed: () => _navigateToAddEditUserScreen(user: user),
                                 ),
                                 IconButton(

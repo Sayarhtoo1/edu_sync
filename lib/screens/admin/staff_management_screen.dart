@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:edu_sync/models/user_role.dart';
 import 'package:edu_sync/services/auth_service.dart';
+import 'package:provider/provider.dart';
 import 'package:edu_sync/models/user.dart' as app_user;
-import 'add_edit_teacher_screen.dart'; 
+import 'add_edit_teacher_screen.dart';
 import 'package:edu_sync/l10n/app_localizations.dart'; // Import AppLocalizations
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
 
@@ -13,7 +15,7 @@ class StaffManagementScreen extends StatefulWidget {
 }
 
 class _StaffManagementScreenState extends State<StaffManagementScreen> {
-  final AuthService _authService = AuthService();
+  late final AuthService _authService;
   // final SchoolService _schoolService = SchoolService(); // Unused
   List<app_user.User> _teachers = [];
   bool _isLoading = true;
@@ -22,6 +24,7 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
   @override
   void initState() {
     super.initState();
+    _authService = Provider.of<AuthService>(context, listen: false);
     _loadStaffData();
   }
 
@@ -31,11 +34,11 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
     if (currentUser != null && currentUser.userMetadata?['school_id'] != null) {
       _currentSchoolId = currentUser.userMetadata!['school_id'] as int;
       if (_currentSchoolId != null) {
-        _teachers = await _authService.getUsersByRole('Teacher', _currentSchoolId!);
+        _teachers = await _authService.getUsersByRole(UserRole.Teacher, _currentSchoolId!);
       }
     } else {
       // Handle user not having school_id or not being logged in
-      // print("Admin's school ID not found."); // Removed print
+      // logger.w("Admin's school ID not found.");
     }
     if (mounted) {
       setState(() => _isLoading = false);
@@ -118,12 +121,40 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
               onRefresh: _loadStaffData,
               color: contextualAccentColor,
               child: _teachers.isEmpty
-                  ? Center(child: Text(l10n.noTeachersFound, style: theme.textTheme.bodyLarge)) 
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.person_add_alt_1_outlined, size: 80, color: contextualAccentColor.withOpacity(0.5)),
+                          const SizedBox(height: 16),
+                          Text(
+                            l10n.noTeachersFound,
+                            style: theme.textTheme.titleLarge?.copyWith(color: Colors.grey.shade600),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 24),
+                          ElevatedButton.icon(
+                            onPressed: _navigateToAddEditTeacherScreen,
+                            icon: const Icon(Icons.add),
+                            label: Text(l10n.addTeacherButton),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: contextualAccentColor,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                              textStyle: theme.textTheme.titleMedium,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
                   : ListView.builder(
                       itemCount: _teachers.length,
                       itemBuilder: (context, index) {
                         final teacher = _teachers[index];
-                        return Card( 
+                        return Card(
                           margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           child: ListTile(
                             leading: CircleAvatar(
@@ -136,18 +167,18 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
                                   : null,
                             ),
                             title: Text(teacher.fullName ?? 'N/A', style: theme.textTheme.titleMedium),
-                            subtitle: Text(teacher.id, style: theme.textTheme.bodySmall), 
+                            subtitle: Text(teacher.id, style: theme.textTheme.bodySmall),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  icon: Icon(Icons.edit, color: theme.iconTheme.color ?? textDarkGrey), 
-                                  tooltip: l10n.editButton, 
+                                  icon: Icon(Icons.edit, color: theme.iconTheme.color ?? Colors.grey.shade700),
+                                  tooltip: l10n.editButton,
                                   onPressed: () => _navigateToAddEditTeacherScreen(teacher: teacher),
                                 ),
                                 IconButton(
                                   icon: Icon(Icons.delete, color: theme.colorScheme.error),
-                                  tooltip: l10n.deleteButton, 
+                                  tooltip: l10n.deleteButton,
                                   onPressed: () => _deleteTeacher(teacher.id),
                                 ),
                               ],

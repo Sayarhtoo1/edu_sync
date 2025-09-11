@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart'; // Import for date formatting
 
 import '../../l10n/app_localizations.dart';
 import '../../models/timetable.dart' as timetable_model; // Aliasing to avoid conflict if any
+import '../../models/school_class.dart' as app_class; // Import SchoolClass
 import '../../services/timetable_service.dart';
+import '../../services/class_service.dart'; // Import ClassService
 import '../../providers/school_provider.dart';
-import '../../services/auth_service.dart'; 
+import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart'; // Import AppTheme
+import '../../models/timetable_status.dart';
+import 'teacher_timetable_components/timetable_helpers.dart';
+import 'teacher_timetable_components/timetable_entry_card.dart';
 
 class TeacherTimetableScreen extends StatefulWidget {
   const TeacherTimetableScreen({super.key});
@@ -17,19 +23,24 @@ class TeacherTimetableScreen extends StatefulWidget {
 
 class _TeacherTimetableScreenState extends State<TeacherTimetableScreen> {
   late final TimetableService _timetableService;
+  late final ClassService _classService; // Initialize ClassService
+  late final AuthService _authService;
   late final String _currentUserId;
   int? _currentSchoolId; // School ID is int as per School model
 
   bool _isLoading = true;
   String? _errorMessage;
   List<timetable_model.Timetable> _timetableEntries = [];
+  Map<int, app_class.SchoolClass> _classMap = {}; // Map to store classes for quick lookup
+  DateTime _selectedDate = DateTime.now(); // Default to present day
 
   @override
   void initState() {
     super.initState();
-    _timetableService = TimetableService(); // Corrected instantiation
-    final authService = AuthService(); // Corrected instantiation
-    _currentUserId = authService.getCurrentUser()?.id ?? ''; // Corrected method call
+    _timetableService = Provider.of<TimetableService>(context, listen: false);
+    _classService = Provider.of<ClassService>(context, listen: false); // Initialize ClassService
+    _authService = Provider.of<AuthService>(context, listen: false);
+    _currentUserId = _authService.getCurrentUser()?.id ?? '';
 
     // It's better to fetch schoolId once SchoolProvider is initialized
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -74,18 +85,26 @@ class _TeacherTimetableScreenState extends State<TeacherTimetableScreen> {
     });
 
     try {
-      // Assuming TimetableService has a method like getTimetableForTeacher
-      // We need to ensure TimetableService can filter by teacher ID.
-      // For now, let's assume it fetches all for the school and we filter client-side,
-      // or ideally, the service method handles it.
-      // Let's assume getTimetableForSchool is available and we need to adapt it or add a new method.
-    // For this example, let's say we need a method `getTimetableForTeacher(schoolId, teacherId)`
-      // Ensure _currentSchoolId is not null before calling. The check is done in _loadSchoolIdAndFetchTimetable
-      // Corrected service call: getTimetableForTeacher only needs userId.
-      // _currentSchoolId check in _loadSchoolIdAndFetchTimetable ensures school context is loaded.
-      final entries = await _timetableService.getTimetableForTeacher(_currentUserId);
+      // Fetch all classes to build the class map
+      if (_currentSchoolId != null) {
+        final allClasses = await _classService.getClasses(_currentSchoolId!);
+        _classMap = {for (var cls in allClasses) cls.id!: cls};
+      }
+
+      // Fetch all timetable entries for the teacher
+      final allEntries = await _timetableService.getTimetableForTeacher(_currentUserId);
+
+      // Filter entries for the selected day
+      final selectedDayName = DateFormat('EEEE').format(_selectedDate); // e.g., "Monday"
+      final entriesForSelectedDay = allEntries
+          .where((entry) => entry.dayOfWeek == selectedDayName)
+          .toList();
+
+      // Sort entries by start time
+      entriesForSelectedDay.sort((a, b) => a.startTimeString.compareTo(b.startTimeString));
+
       setState(() {
-        _timetableEntries = entries;
+        _timetableEntries = entriesForSelectedDay;
         _isLoading = false;
       });
     } catch (e) {
@@ -96,22 +115,89 @@ class _TeacherTimetableScreenState extends State<TeacherTimetableScreen> {
     }
   }
 
+  void _changeSelectedDate(DateTime newDate) {
+    setState(() {
+      _selectedDate = newDate;
+    });
+    _fetchTimetable();
+  }
+
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    // final theme = Theme.of(context); // Not explicitly used here, but good practice if needed
-    // final Color contextualAccentColor = AppTheme.getAccentColorForContext('teachers');
+    final theme = Theme.of(context);
+    final Color contextualAccentColor = AppTheme.getAccentColorForContext('teachers');
 
-    return Scaffold( // Scaffold theme applied globally
-      appBar: AppBar( // AppBar theme applied globally
+    return Scaffold(
+      appBar: AppBar(
         title: Text(l10n.my_timetable_title),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.calendar_today),
+            onPressed: () async {
+              final DateTime? picked = await showDatePicker(
+                context: context,
+                initialDate: _selectedDate,
+                firstDate: DateTime(2000),
+                lastDate: DateTime(2101),
+                builder: (context, child) {
+                  return Theme(
+                    data: theme.copyWith(
+                      colorScheme: theme.colorScheme.copyWith(
+                        primary: contextualAccentColor,
+                        onPrimary: Colors.white,
+                        onSurface: Colors.black, // Adjust as needed
+                      ),
+                      textButtonTheme: TextButtonThemeData(
+                        style: TextButton.styleFrom(
+                          foregroundColor: contextualAccentColor,
+                        ),
+                      ),
+                    ),
+                    child: child!,
+                  );
+                },
+              );
+              if (picked != null && picked != _selectedDate) {
+                _changeSelectedDate(picked);
+              }
+            },
+          ),
+        ],
       ),
-      body: _buildBody(l10n),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back_ios),
+                  onPressed: () => _changeSelectedDate(_selectedDate.subtract(const Duration(days: 1))),
+                ),
+                Text(
+                  DateFormat('EEEE, MMM d, yyyy').format(_selectedDate),
+                  style: theme.textTheme.titleMedium?.copyWith(color: contextualAccentColor),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.arrow_forward_ios),
+                  onPressed: () => _changeSelectedDate(_selectedDate.add(const Duration(days: 1))),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: _buildBody(l10n),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildBody(AppLocalizations l10n) {
-    final theme = Theme.of(context); // Get theme for styling
+    final theme = Theme.of(context);
     final Color contextualAccentColor = AppTheme.getAccentColorForContext('teachers');
 
     if (_isLoading) {
@@ -133,76 +219,30 @@ class _TeacherTimetableScreenState extends State<TeacherTimetableScreen> {
       );
     }
 
-    // Group entries by day of the week for better display
-    Map<String, List<timetable_model.Timetable>> groupedEntries = {};
-    for (var entry in _timetableEntries) {
-      // Assuming dayOfWeek is a non-nullable string in Timetable model
-      groupedEntries.putIfAbsent(entry.dayOfWeek, () => []).add(entry);
-    }
-    // Sort entries within each day by start time
-    groupedEntries.forEach((day, entries) {
-      // Assuming startTimeString is a non-nullable string in Timetable model
-      entries.sort((a, b) => a.startTimeString.compareTo(b.startTimeString));
-    });
-
-    // Define order of days
-    final dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    List<String> sortedDays = groupedEntries.keys.toList()
-      ..sort((a, b) => dayOrder.indexOf(a).compareTo(dayOrder.indexOf(b)));
-
-
     return ListView.builder(
-      itemCount: sortedDays.length,
+      itemCount: _timetableEntries.length,
       itemBuilder: (context, index) {
-        String day = sortedDays[index];
-        List<timetable_model.Timetable> dayEntries = groupedEntries[day]!;
-        
-        String localizedDay;
-        switch (day.toLowerCase()) {
-          case 'monday':
-            localizedDay = l10n.monday;
-            break;
-          case 'tuesday':
-            localizedDay = l10n.tuesday;
-            break;
-          case 'wednesday':
-            localizedDay = l10n.wednesday;
-            break;
-          case 'thursday':
-            localizedDay = l10n.thursday;
-            break;
-          case 'friday':
-            localizedDay = l10n.friday;
-            break;
-          case 'saturday':
-            localizedDay = l10n.saturday;
-            break;
-          case 'sunday':
-            localizedDay = l10n.sunday;
-            break;
-          default:
-            localizedDay = day; 
-        }
-        
-        return Card( // CardTheme applied globally
-          margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0), // Adjusted margin
-          child: ExpansionTile(
-            iconColor: contextualAccentColor,
-            collapsedIconColor: textLightGrey,
-            title: Text(localizedDay, style: theme.textTheme.titleLarge?.copyWith(color: contextualAccentColor)),
-            children: dayEntries.map((entry) {
-              return ListTile(
-                leading: Icon(Icons.schedule, color: contextualAccentColor.withOpacity(0.7)),
-                title: Text(entry.subjectName, style: theme.textTheme.titleMedium), 
-                subtitle: Text(
-                  '${l10n.time}: ${entry.startTimeString} - ${entry.endTimeString}',
-                  style: theme.textTheme.bodySmall,
-                ),
-              );
-            }).toList(),
-          ),
+        final entry = _timetableEntries[index];
+        return TimetableEntryCard(
+          entry: entry,
+          classMap: _classMap,
+          l10n: l10n,
+          selectedDate: _selectedDate,
         );
       },
     );
   }
+
+
+  Color _getColorForStatus(TimetableStatus status) {
+    switch (status) {
+      case TimetableStatus.upcoming:
+        return Colors.blue;
+      case TimetableStatus.inProcess:
+        return Colors.green;
+      case TimetableStatus.done:
+        return Colors.grey;
+      }
+    
+    }
 }

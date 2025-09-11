@@ -22,16 +22,19 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    debugPrint('AdminSettingsScreen: didChangeDependencies called'); // Added debug print
     _schoolService = SchoolService();
   }
 
   @override
   void initState() {
     super.initState();
+    debugPrint('AdminSettingsScreen: initState called'); // Added debug print
     _loadSchoolSettings();
   }
 
   Future<void> _loadSchoolSettings() async {
+    debugPrint('AdminSettingsScreen: _loadSchoolSettings started'); // Added debug print
     if (!mounted) return;
     setState(() {
       _isLoading = true;
@@ -54,6 +57,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         });
       }
     }
+    debugPrint('AdminSettingsScreen: _loadSchoolSettings finished'); // Added debug print
   }
 
   Future<void> _saveSettings() async {
@@ -104,6 +108,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('AdminSettingsScreen: build called'); // Added debug print
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(

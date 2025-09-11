@@ -38,13 +38,13 @@ class School {
   }
 
   factory School.fromJson(Map<String, dynamic> json) => School(
-        id: json['id'] as int,
-        name: json['name'] as String,
-        logoUrl: json['logoUrl'] as String,
-        academicYear: json['academicYear'] as String,
-        theme: json['theme'] as String,
-        contact: json['contact'] as String,
-        hijriDayAdjustment: json['hijriDayAdjustment'] as int?,
+        id: json['id'] ?? 0,
+        name: json['name'] ?? '',
+        logoUrl: json['logoUrl'] ?? '',
+        academicYear: json['academicYear'] ?? '',
+        theme: json['theme'] ?? '',
+        contact: json['contact'] ?? '',
+        hijriDayAdjustment: json['hijriDayAdjustment'],
       );
 
   Map<String, dynamic> toJson() => {

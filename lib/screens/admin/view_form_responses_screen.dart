@@ -13,6 +13,7 @@ import 'package:edu_sync/services/student_service.dart'; // To get student detai
 import 'package:edu_sync/services/auth_service.dart';
 import 'package:edu_sync/l10n/app_localizations.dart';
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
+import 'package:provider/provider.dart';
 
 class ViewFormResponsesScreen extends StatefulWidget {
   final int schoolId;
@@ -24,10 +25,10 @@ class ViewFormResponsesScreen extends StatefulWidget {
 }
 
 class _ViewFormResponsesScreenState extends State<ViewFormResponsesScreen> {
-  final CustomFormService _customFormService = CustomFormService();
-  final FormResponseService _formResponseService = FormResponseService();
-  final StudentService _studentService = StudentService(); // For fetching student names
-  final AuthService _authService = AuthService();
+  late final CustomFormService _customFormService;
+  late final FormResponseService _formResponseService;
+  late final StudentService _studentService;
+  late final AuthService _authService;
 
 
   List<CustomForm> _availableForms = [];
@@ -47,6 +48,10 @@ class _ViewFormResponsesScreenState extends State<ViewFormResponsesScreen> {
   @override
   void initState() {
     super.initState();
+    _customFormService = Provider.of<CustomFormService>(context, listen: false);
+    _formResponseService = Provider.of<FormResponseService>(context, listen: false);
+    _studentService = Provider.of<StudentService>(context, listen: false);
+    _authService = Provider.of<AuthService>(context, listen: false);
     _currentUserId = _authService.getCurrentUser()?.id;
     _loadInitialData();
   }
@@ -188,8 +193,8 @@ class _ViewFormResponsesScreenState extends State<ViewFormResponsesScreen> {
                   child: ExpansionTile(
                     iconColor: contextualAccentColor,
                     collapsedIconColor: textLightGrey, // Use top-level constant
-                    title: Text("${l10n.responseFrom}: $studentName", style: theme.textTheme.titleMedium), 
-                    subtitle: Text("${l10n.submittedOn}: ${DateFormat.yMd(l10n.localeName).add_jm().format(response.submittedAt.toLocal())}", style: theme.textTheme.bodySmall), 
+                    title: Text("${l10n.responseFrom}: $studentName", style: theme.textTheme.titleMedium),
+                    subtitle: Text("${l10n.submittedOn}: ${DateFormat.yMd(l10n.localeName).add_jm().format(response.submittedAt.toLocal())}", style: theme.textTheme.bodySmall),
                     children: answers.map((answer) {
                       final questionText = _getQuestionText(response.formId, answer.fieldId);
                       String displayAnswer = answer.answerJson;

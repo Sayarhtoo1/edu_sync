@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:edu_sync/models/income.dart';
 import 'package:edu_sync/models/expense.dart';
 import 'package:edu_sync/services/finance_service.dart';
@@ -25,7 +26,8 @@ class AddEditIncomeExpenseScreen extends StatefulWidget {
 
 class _AddEditIncomeExpenseScreenState extends State<AddEditIncomeExpenseScreen> {
   final _formKey = GlobalKey<FormState>();
-  final FinanceService _financeService = FinanceService();
+  late final FinanceService _financeService;
+  late final AuthService _authService;
 
   late TextEditingController _descriptionController;
   late TextEditingController _amountController;
@@ -41,7 +43,9 @@ class _AddEditIncomeExpenseScreenState extends State<AddEditIncomeExpenseScreen>
   @override
   void initState() {
     super.initState();
-    _adminUserId = AuthService().getCurrentUser()?.id; // Get admin user ID
+    _financeService = Provider.of<FinanceService>(context, listen: false);
+    _authService = Provider.of<AuthService>(context, listen: false);
+    _adminUserId = _authService.getCurrentUser()?.id; // Get admin user ID
 
     String initialDescription = '';
     String initialAmount = '';

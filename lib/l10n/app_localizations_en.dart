@@ -9,10 +9,13 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'EduSync Myanmar';
+  String get appTitle => 'EduSync';
 
   @override
   String get login => 'Login';
+
+  @override
+  String get logout => 'Logout';
 
   @override
   String get email => 'Email';
@@ -21,63 +24,56 @@ class AppLocalizationsEn extends AppLocalizations {
   String get password => 'Password';
 
   @override
-  String get adminPanel => 'Admin Panel';
+  String get forgotPassword => 'Forgot Password';
 
   @override
-  String get teacherDashboard => 'Teacher Dashboard';
+  String get resetPassword => 'Reset Password';
 
   @override
-  String get parentDashboard => 'Parent Dashboard';
+  String get newPassword => 'New Password';
 
   @override
-  String get welcomeAdmin => 'Welcome, Admin!';
+  String get confirmNewPassword => 'Confirm New Password';
 
   @override
-  String get welcomeTeacher => 'Welcome, Teacher!';
+  String get setNewPassword => 'Set New Password';
 
   @override
-  String get welcomeParent => 'Welcome, Parent!';
+  String get backToLogin => 'Back to Login';
 
   @override
-  String get useDrawerToNavigate => 'Use the drawer to navigate.';
-
-  @override
-  String get settings => 'Settings';
-
-  @override
-  String get language => 'Language';
-
-  @override
-  String get logout => 'Logout';
-
-  @override
-  String get teachers => 'Teachers';
-
-  @override
-  String get parents => 'Parents';
-
-  @override
-  String get students => 'Students';
-
-  @override
-  String get classes => 'Classes';
-
-  @override
-  String get error_user_not_found =>
-      'Error: User not found. Please log in again.';
+  String get error_user_not_found => 'User not found.';
 
   @override
   String get error_school_not_selected_or_found =>
-      'Error: School not selected or found. Please ensure a school is associated with your account.';
+      'School not selected or found.';
 
   @override
-  String get error_fetching_timetable => 'Error fetching timetable';
+  String get error_fetching_timetable => 'Error fetching timetable.';
+
+  @override
+  String get no_timetable_entries_found => 'No timetable entries found.';
 
   @override
   String get my_timetable_title => 'My Timetable';
 
   @override
-  String get no_timetable_entries_found => 'No timetable entries found.';
+  String get classLabel => 'Class';
+
+  @override
+  String get unknown_class => 'Unknown Class';
+
+  @override
+  String get time => 'Time';
+
+  @override
+  String get upcoming => 'Upcoming';
+
+  @override
+  String get in_process => 'In Process';
+
+  @override
+  String get done => 'Done';
 
   @override
   String get monday => 'Monday';
@@ -102,15 +98,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unknown_subject => 'Unknown Subject';
-
-  @override
-  String get classLabel => 'Class';
-
-  @override
-  String get unknown_class => 'Unknown Class';
-
-  @override
-  String get time => 'Time';
 
   @override
   String get room => 'Room';
@@ -150,6 +137,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get attendanceStatusLate => 'Late';
+
+  @override
+  String get attendanceStatusLeave => 'Leave';
 
   @override
   String get manageLessonPlansTitle => 'Manage Lesson Plans';
@@ -1159,6 +1149,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'Are you sure you want to delete this';
 
   @override
+  String get forgotPasswordInstructions =>
+      'Enter your email to receive a password reset link.';
+
+  @override
+  String passwordResetEmailSent(Object email) {
+    return 'Password reset email sent to $email. Please check your inbox.';
+  }
+
+  @override
   String get forgotPasswordButtonLabel => 'Forgot Password?';
 
   @override
@@ -1323,6 +1322,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get teacherTimetableAction => 'View Timetable';
 
   @override
+  String get teacherTimetable => 'Teacher Timetable';
+
+  @override
+  String get markAttendance => 'Mark Attendance';
+
+  @override
   String get addStudent => 'Add Student';
 
   @override
@@ -1369,4 +1374,150 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get camera => 'Camera';
+
+  @override
+  String get teachers => 'Teachers';
+
+  @override
+  String get parents => 'Parents';
+
+  @override
+  String get welcomeAdmin => 'Welcome Admin';
+
+  @override
+  String get students => 'Students';
+
+  @override
+  String get language => 'Language';
+
+  @override
+  String get settings => 'Settings';
+
+  @override
+  String get youAreFreeNow => 'You are free now.';
+
+  @override
+  String get currentSubject => 'Current Subject';
+
+  @override
+  String get nextSubject => 'Next Subject';
+
+  @override
+  String get noScheduleToday => 'No schedule today.';
+
+  @override
+  String get teacherSchedulesSummary => 'Teacher Schedules Summary';
+
+  @override
+  String get teachersTeachingNow => 'Teachers Teaching Now';
+
+  @override
+  String get teachersFreeNow => 'Teachers Free Now';
+
+  @override
+  String get teachersUpcomingClasses => 'Teachers with Upcoming Classes';
+
+  @override
+  String teacherTeaching(
+    String teacherName,
+    String subjectName,
+    String className,
+  ) {
+    return '$teacherName is teaching $subjectName in $className';
+  }
+
+  @override
+  String teacherNextClass(
+    String teacherName,
+    String subjectName,
+    String className,
+  ) {
+    return '$teacherName\'s next class is $subjectName in $className';
+  }
+
+  @override
+  String teacherFreeNow(String teacherName) {
+    return '$teacherName is free now';
+  }
+
+  @override
+  String get teacherScheduleCardTitle => 'Teacher Schedule';
+
+  @override
+  String get noTeacherSchedulesFound => 'No teacher schedules found.';
+
+  @override
+  String get teacherStatusOverviewTitle => 'Teacher Status Overview';
+
+  @override
+  String get noTeachersFoundText => 'No teachers found in this school.';
+
+  @override
+  String get teachingNowStatus => 'Teaching Now';
+
+  @override
+  String get upcomingClassStatus => 'Upcoming Class';
+
+  @override
+  String get nextClassLabel => 'Next Class';
+
+  @override
+  String get freeStatus => 'Free';
+
+  @override
+  String get noScheduledClassesToday => 'No scheduled classes today.';
+
+  @override
+  String get nextLabel => 'Next';
+
+  @override
+  String get unknownTeacher => 'Unknown Teacher';
+
+  @override
+  String get statusLabel => 'Status';
+
+  @override
+  String teachersTeachingNowCount(int count) {
+    return 'Teaching Now: $count';
+  }
+
+  @override
+  String teachersFreeNowCount(int count) {
+    return 'Free Now: $count';
+  }
+
+  @override
+  String get studentInformationLabel => 'Student Information';
+
+  @override
+  String get searchTeacherHint => 'Search Teacher';
+
+  @override
+  String get noTeachersMatchingSearch =>
+      'No teachers found matching your search.';
+
+  @override
+  String get wholeSchoolScheduleTitle => 'Whole School Schedule';
+
+  @override
+  String get timeLabel => 'Time';
+
+  @override
+  String get noClass => 'No Class';
+
+  @override
+  String get viewWholeSchoolScheduleButton => 'View Whole School Schedule';
+
+  @override
+  String get errorLoadingSchoolData =>
+      'Error loading school data. Please try again.';
+
+  @override
+  String get noScheduleDataAvailable =>
+      'No schedule data available. Please add schools, teachers, classes, and timetable entries through the admin panel.';
+
+  @override
+  String noClassesForDay(String day) {
+    return 'No classes scheduled for $day.';
+  }
 }

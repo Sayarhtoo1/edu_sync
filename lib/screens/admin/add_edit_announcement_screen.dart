@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:edu_sync/models/announcement.dart';
 import 'package:edu_sync/models/school_class.dart' as app_class;
 import 'package:edu_sync/services/announcement_service.dart';
+import 'package:edu_sync/models/user_role.dart';
 import 'package:edu_sync/services/class_service.dart';
 import 'package:edu_sync/l10n/app_localizations.dart';
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
+// import 'package:provider/provider.dart'; // Removed unused import
+// import 'package:edu_sync/database/app_database.dart'; // Removed unused import
 
 class AddEditAnnouncementScreen extends StatefulWidget {
   final int schoolId;
@@ -25,7 +28,7 @@ class AddEditAnnouncementScreen extends StatefulWidget {
 class _AddEditAnnouncementScreenState extends State<AddEditAnnouncementScreen> {
   final _formKey = GlobalKey<FormState>();
   final AnnouncementService _announcementService = AnnouncementService();
-  final ClassService _classService = ClassService();
+  late final ClassService _classService;
 
   late TextEditingController _titleController;
   late TextEditingController _contentController;
@@ -41,7 +44,7 @@ class _AddEditAnnouncementScreenState extends State<AddEditAnnouncementScreen> {
 
   // Define target roles based on your schema
   // These will be localized in the DropdownButtonFormField
-  final List<String> _targetRoleValues = ['All', 'Teachers', 'Parents', 'SpecificClass'];
+  final List<String> _targetRoleValues = ['All', UserRole.Teacher.name, UserRole.Parent.name, 'SpecificClass'];
 
   @override
   void initState() {
@@ -101,6 +104,7 @@ class _AddEditAnnouncementScreenState extends State<AddEditAnnouncementScreen> {
       }
 
       if (success) {
+        if (!mounted) return;
         setState(() => _isLoading = false);
         Navigator.of(context).pop(true); // Indicate success to refresh previous screen
       } else {
@@ -124,8 +128,8 @@ class _AddEditAnnouncementScreenState extends State<AddEditAnnouncementScreen> {
   String _getLocalizedTargetRoleDisplay(String roleKey, AppLocalizations l10n) {
     switch (roleKey) {
       case 'All': return l10n.all;
-      case 'Teachers': return l10n.teachers;
-      case 'Parents': return l10n.parents;
+      case 'Teacher': return l10n.teachers;
+      case 'Parent': return l10n.parents;
       case 'SpecificClass': return l10n.specificclass;
       default: return roleKey;
     }

@@ -1,5 +1,7 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:edu_sync/models/user_role.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:edu_sync/utils/logger.dart';
 import '../models/custom_form.dart';
 import '../models/form_field_item.dart';
 import 'package:intl/intl.dart'; // Import DateFormat
@@ -43,7 +45,7 @@ class CustomFormService {
       }
       return createdForm;
     } catch (e) {
-      print('Error creating custom form: $e');
+      logger.e('Error creating custom form: $e');
       // Consider re-throwing or returning a more specific error type
       return null;
     }
@@ -61,7 +63,7 @@ class CustomFormService {
           .select();
           // .eq('school_id', schoolId); // This line needs CustomForm.school_id
 
-      if (userRole == 'Teacher') {
+      if (userRole == UserRole.Teacher.name) {
         queryBuilder = queryBuilder.eq('created_by', userId); // Ensure this matches the DB column name
       }
       
@@ -69,7 +71,7 @@ class CustomFormService {
       // The data from Supabase is List<Map<String, dynamic>>, but often typed as List<dynamic> initially.
       return responseData.map((data) => CustomForm.fromMap(data as Map<String, dynamic>)).toList();
     } catch (e) {
-      print('Error fetching manageable forms: $e');
+      logger.e('Error fetching manageable forms: $e');
       return [];
     }
   }
@@ -89,53 +91,29 @@ class CustomFormService {
         await _cacheService.saveCustomFormsForSchool(schoolId, forms);
         return forms;
       } catch (e) {
-        print('Error fetching custom forms for school $schoolId: $e');
+        logger.e('Error fetching custom forms for school $schoolId: $e');
         return await _cacheService.getCustomFormsForSchool(schoolId);
       }
     }
   }
 
-  Future<List<CustomForm>> getActiveFormsForStudent(int studentId, List<int> classIds, int schoolId, DateTime date) async { // studentId and classIds changed to int
-    // This is complex due to multiple assignment types (whole school, class, student)
-    // and date ranges/recurrence.
-    // This might be best implemented as a Supabase RPC function (database function).
-    // Client-side logic would be very convoluted.
-    
-    // Placeholder for client-side attempt (less efficient and complex):
+  Future<List<CustomForm>> getActiveFormsForStudent(int studentId, List<int> classIds, int schoolId, DateTime date) async {
     try {
-      final String today = DateFormat('yyyy-MM-dd').format(date);
-      final response = await _supabaseClient
-          .from('custom_forms')
-          .select()
-          .eq('school_id', schoolId) // Assuming CustomForm has school_id
-          .lte('active_from', today)
-          .gte('active_to', today)
-          // .eq('is_daily', true) // Or handle recurrence differently
-          // This doesn't filter by assignment yet.
-          .order('title', ascending: true);
-
-      List<CustomForm> allActiveForms = response.map((data) => CustomForm.fromMap(data)).toList();
-      List<CustomForm> relevantForms = [];
-
-      for (var form in allActiveForms) {
-        if (form.assignToWholeSchool) {
-          relevantForms.add(form);
-          continue;
-        }
-        // form.assignedStudentIds is List<int>, studentId is int
-        if (form.assignedStudentIds.contains(studentId)) {
-          relevantForms.add(form);
-          continue;
-        }
-        // classIds is List<int>, form.assignedClassIds is List<int>
-        if (classIds.any((classId) => form.assignedClassIds.contains(classId))) {
-          relevantForms.add(form);
-          continue;
-        }
-      }
-      return relevantForms.toSet().toList(); // Ensure uniqueness
+      final response = await _supabaseClient.rpc(
+        'get_active_forms_for_student',
+        params: {
+          'p_student_id': studentId,
+          'p_class_ids': classIds,
+          'p_school_id': schoolId,
+          'p_date': DateFormat('yyyy-MM-dd').format(date),
+        },
+      );
+      // The RPC function will return a list of form objects (json)
+      return (response as List<dynamic>)
+          .map((data) => CustomForm.fromMap(data as Map<String, dynamic>))
+          .toList();
     } catch (e) {
-      print('Error fetching active forms for student: $e');
+      logger.e('Error calling get_active_forms_for_student RPC: $e');
       return [];
     }
   }
@@ -155,7 +133,7 @@ class CustomFormService {
         await _cacheService.saveFormFields(formId, fields);
         return fields;
       } catch (e) {
-        print('Error fetching form fields for form $formId: $e');
+        logger.e('Error fetching form fields for form $formId: $e');
         return await _cacheService.getFormFields(formId);
       }
     }
@@ -209,7 +187,7 @@ class CustomFormService {
       }
       return true;
     } catch (e) {
-      print('Error updating custom form: $e');
+      logger.e('Error updating custom form: $e');
       return false;
     }
   }
@@ -220,7 +198,7 @@ class CustomFormService {
       await _supabaseClient.from('custom_forms').delete().eq('id', formId);
       return true;
     } catch (e) {
-      print('Error deleting custom form $formId: $e');
+      logger.e('Error deleting custom form $formId: $e');
       return false;
     }
   }

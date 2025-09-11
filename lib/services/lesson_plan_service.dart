@@ -1,5 +1,6 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:edu_sync/utils/logger.dart';
 import '../models/lesson_plan.dart';
 import 'cache_service.dart';
 
@@ -29,7 +30,7 @@ class LessonPlanService {
         await _cacheService.saveLessonPlans(classId, lessonPlans);
         return lessonPlans;
       } catch (e) {
-        print('Error fetching lesson plans: $e');
+        logger.e('Error fetching lesson plans: $e');
         return await _cacheService.getLessonPlans(classId);
       }
     }
@@ -44,7 +45,7 @@ class LessonPlanService {
           .single();
       return LessonPlan.fromMap(response);
     } catch (e) {
-      print('Error creating lesson plan: $e');
+      logger.e('Error creating lesson plan: $e');
       return null;
     }
   }
@@ -52,7 +53,7 @@ class LessonPlanService {
   Future<bool> updateLessonPlan(LessonPlan lessonPlan) async {
     try {
       if (lessonPlan.id == null) {
-        print('Error: LessonPlan ID is null, cannot update.');
+        logger.w('Error: LessonPlan ID is null, cannot update.');
         return false;
       }
       await _supabaseClient
@@ -61,7 +62,7 @@ class LessonPlanService {
           .eq('id', lessonPlan.id!); // Use null-check operator
       return true;
     } catch (e) {
-      print('Error updating lesson plan: $e');
+      logger.e('Error updating lesson plan: $e');
       return false;
     }
   }
@@ -74,7 +75,7 @@ class LessonPlanService {
           .eq('id', lessonPlanId); // lessonPlanId is int, so it's fine
       return true;
     } catch (e) {
-      print('Error deleting lesson plan: $e');
+      logger.e('Error deleting lesson plan: $e');
       return false;
     }
   }

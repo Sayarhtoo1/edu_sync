@@ -4,9 +4,12 @@ import 'package:edu_sync/services/timetable_service.dart';
 import 'package:edu_sync/models/school_class.dart' as app_class;
 import 'package:edu_sync/services/class_service.dart';
 import 'package:edu_sync/models/user.dart' as app_user;
+import 'package:edu_sync/models/user_role.dart';
 import 'package:edu_sync/services/auth_service.dart';
 import 'package:edu_sync/l10n/app_localizations.dart'; // Import AppLocalizations
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
+import 'package:provider/provider.dart';
+import 'package:edu_sync/utils/logger.dart';
 
 class AddEditTimetableEntryScreen extends StatefulWidget {
   final Timetable? timetableEntry;
@@ -26,9 +29,9 @@ class AddEditTimetableEntryScreen extends StatefulWidget {
 
 class _AddEditTimetableEntryScreenState extends State<AddEditTimetableEntryScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TimetableService _timetableService = TimetableService();
-  final ClassService _classService = ClassService();
-  final AuthService _authService = AuthService();
+  late final TimetableService _timetableService;
+  late final ClassService _classService;
+  late final AuthService _authService;
 
   late TextEditingController _subjectNameController;
   
@@ -50,6 +53,10 @@ class _AddEditTimetableEntryScreenState extends State<AddEditTimetableEntryScree
   @override
   void initState() {
     super.initState();
+    debugPrint('AddEditTimetableEntryScreen: initState called'); // Added debug print
+    _timetableService = Provider.of<TimetableService>(context, listen: false);
+    _classService = Provider.of<ClassService>(context, listen: false);
+    _authService = Provider.of<AuthService>(context, listen: false);
     _subjectNameController = TextEditingController(text: widget.timetableEntry?.subjectName ?? '');
     if (_isEditing && widget.timetableEntry != null) {
       _selectedStartTime = widget.timetableEntry!.startTimeOfDay;
@@ -64,26 +71,23 @@ class _AddEditTimetableEntryScreenState extends State<AddEditTimetableEntryScree
   }
 
   Future<void> _loadInitialData() async {
+    debugPrint('AddEditTimetableEntryScreen: _loadInitialData started'); // Added debug print
     setState(() => _isLoading = true);
     try {
       _availableClasses = await _classService.getClasses(widget.schoolId);
-      _availableTeachers = await _authService.getUsersByRole('Teacher', widget.schoolId);
+      _availableTeachers = await _authService.getUsersByRole(UserRole.Teacher, widget.schoolId);
       
       if (_availableClasses.length == 1 && _selectedClassId == null && widget.classIdForNewEntry == null && !_isEditing) {
         _selectedClassId = _availableClasses.first.id; // Class.id is int?
       }
-      // Auto-select teacher if only one is available and not editing
-      // if (_availableTeachers.length == 1 && _selectedTeacherId == null && !_isEditing) {
-      //    _selectedTeacherId = _availableTeachers.first.id; 
-      // }
-
     } catch (e) {
-      print("Error loading initial data for timetable entry: $e");
+      logger.e("Error loading initial data for timetable entry: $e");
       if (mounted) {
         setState(() => _errorMessage = AppLocalizations.of(context).failedToLoadTimetableDataError);
       }
     }
     if(mounted) setState(() => _isLoading = false);
+    debugPrint('AddEditTimetableEntryScreen: _loadInitialData finished'); // Added debug print
   }
 
   Future<void> _selectTime(BuildContext context, bool isStartTime) async {
@@ -145,9 +149,11 @@ class _AddEditTimetableEntryScreenState extends State<AddEditTimetableEntryScree
     setState(() { _isLoading = true; _errorMessage = ''; });
 
     try {
+      final selectedClass = _availableClasses.firstWhere((cls) => cls.id == _selectedClassId);
       final entry = Timetable(
         id: _isEditing ? widget.timetableEntry!.id : 0, 
         classId: _selectedClassId!, // Now int
+        className: selectedClass.name, // Pass the class name
         startTimeOfDay: _selectedStartTime!,
         endTimeOfDay: _selectedEndTime!,
         dayOfWeek: _selectedDayOfWeek!,
@@ -186,6 +192,7 @@ class _AddEditTimetableEntryScreenState extends State<AddEditTimetableEntryScree
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('AddEditTimetableEntryScreen: build called'); // Added debug print
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final Color contextualAccentColor = AppTheme.getAccentColorForContext('students');

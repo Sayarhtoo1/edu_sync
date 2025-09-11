@@ -2,45 +2,50 @@ import 'dart:io'; // Moved import to the top
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:edu_sync/models/school.dart'; // Assuming School model is defined
+import 'package:edu_sync/utils/logger.dart';
 import 'cache_service.dart';
 
 class SchoolService {
   final SupabaseClient _supabaseClient = Supabase.instance.client;
   final CacheService _cacheService = CacheService();
 
-  // Create a new school profile
+  // Create a new school profile using an RPC function for atomicity
   Future<School?> createSchool({
     required String name,
     String? logoUrl,
     String? academicYear,
     String? theme,
     String? contactInfo,
-    required String adminUserId, // To link the school to the admin who created it
+    required String adminUserId,
   }) async {
     try {
-      final response = await _supabaseClient.from('schools').insert({
-        'name': name,
-        'logo_url': logoUrl,
-        'academic_year': academicYear,
-        'theme': theme,
-        'contact_info': contactInfo,
-        // 'created_by': adminUserId, // If you have a created_by field linking to users.id
-      }).select().single(); // Use .select().single() to get the created record back
-
-      // After creating the school, update the admin user's school_id
-      await _supabaseClient.from('users').update({'school_id': response['id']}).eq('id', adminUserId);
-      
-      // Assuming your School model can be created from a Map
-      return School(
-        id: response['id'],
-        name: response['name'],
-        logoUrl: response['logo_url'] ?? '',
-        academicYear: response['academic_year'] ?? '',
-        theme: response['theme'] ?? '',
-        contact: response['contact_info'] ?? '',
+      final newSchoolId = await _supabaseClient.rpc(
+        'create_school_and_assign_admin',
+        params: {
+          'school_name': name,
+          'admin_user_id': adminUserId,
+          'logo_url': logoUrl,
+          'academic_year': academicYear,
+          'theme': theme,
+          'contact_info': contactInfo,
+        },
       );
+
+      if (newSchoolId != null) {
+        // The RPC returns the new school's ID. We can construct the School object
+        // with the data we already have, since the RPC was successful.
+        return School(
+          id: newSchoolId as int,
+          name: name,
+          logoUrl: logoUrl ?? '',
+          academicYear: academicYear ?? '',
+          theme: theme ?? '',
+          contact: contactInfo ?? '',
+        );
+      }
+      return null;
     } catch (e) {
-      print('Error creating school: ${e.toString()}');
+      logger.e('Error creating school via RPC: ${e.toString()}');
       return null;
     }
   }
@@ -64,11 +69,12 @@ class SchoolService {
           academicYear: response['academic_year'] ?? '',
           theme: response['theme'] ?? '',
           contact: response['contact_info'] ?? '',
+          hijriDayAdjustment: response['hijri_day_adjustment'], // Correctly retrieve from DB
         );
         await _cacheService.saveSchool(school);
         return school;
       } catch (e) {
-        print('Error fetching school: ${e.toString()}');
+        logger.e('Error fetching school: ${e.toString()}');
         return await _cacheService.getSchool(schoolId);
       }
     }
@@ -83,11 +89,12 @@ class SchoolService {
         'academic_year': school.academicYear,
         'theme': school.theme,
         'contact_info': school.contact,
+        'hijri_day_adjustment': school.hijriDayAdjustment, // Added Hijri day adjustment
         'updated_at': DateTime.now().toIso8601String(),
       }).eq('id', school.id);
       return true;
     } catch (e) {
-      print('Error updating school: ${e.toString()}');
+      logger.e('Error updating school: ${e.toString()}');
       return false;
     }
   }
@@ -105,7 +112,7 @@ class SchoolService {
         return publicUrl;
       }
     } catch (e) {
-      print('Error uploading school logo: ${e.toString()}');
+      logger.e('Error uploading school logo: ${e.toString()}');
     }
     return null;
   }

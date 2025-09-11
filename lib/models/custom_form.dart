@@ -1,5 +1,6 @@
 import 'package:intl/intl.dart';
 import 'dart:convert'; // Import for jsonEncode/Decode
+import 'package:edu_sync/utils/logger.dart';
 
 class CustomForm {
   final String id; // uuid
@@ -38,7 +39,7 @@ class CustomForm {
       }
       return [];
     } catch (e) {
-      print("Error decoding assignedSectionDetailsJson: $e");
+      logger.e("Error decoding assignedSectionDetailsJson: $e");
       return [];
     }
   }
@@ -60,29 +61,28 @@ class CustomForm {
   });
 
   factory CustomForm.fromMap(Map<String, dynamic> map) {
-    // Supabase returns INTEGER[] as List<dynamic> (of int)
-    List<dynamic>? rawClassIds = map['assigned_class_ids'] as List<dynamic>?;
-    List<dynamic>? rawStudentIds = map['assigned_student_ids'] as List<dynamic>?;
+    List<dynamic>? rawClassIds = map['assigned_class_ids'];
+    List<dynamic>? rawStudentIds = map['assigned_student_ids'];
 
-    List<int>? classIdsFromDb = rawClassIds?.map((e) => e as int).toList();
-    List<int>? studentIdsFromDb = rawStudentIds?.map((e) => e as int).toList();
-    
+    List<int>? classIdsFromDb = rawClassIds?.map((e) => int.tryParse(e.toString()) ?? 0).toList();
+    List<int>? studentIdsFromDb = rawStudentIds?.map((e) => int.tryParse(e.toString()) ?? 0).toList();
+
     return CustomForm(
-      id: map['id'] as String, // Form ID itself is UUID String
-      schoolId: map['school_id'] as int,
-      title: map['title'] as String,
-      createdBy: map['created_by'] as String, 
-      assignedClassIdsJson: classIdsFromDb != null ? jsonEncode(classIdsFromDb) : null, // Store List<int> as JSON
-      assignedStudentIdsJson: studentIdsFromDb != null ? jsonEncode(studentIdsFromDb) : null, // Store List<int> as JSON
+      id: map['id'] ?? '',
+      schoolId: map['school_id'] ?? 0,
+      title: map['title'] ?? '',
+      createdBy: map['created_by'] ?? '',
+      assignedClassIdsJson: classIdsFromDb != null ? jsonEncode(classIdsFromDb) : null,
+      assignedStudentIdsJson: studentIdsFromDb != null ? jsonEncode(studentIdsFromDb) : null,
       assignedSectionDetailsJson: map['assigned_section_details'] != null
-          ? jsonEncode(map['assigned_section_details']) 
+          ? jsonEncode(map['assigned_section_details'])
           : null,
-      assignToWholeSchool: map['assign_to_whole_school'] as bool? ?? false,
-      activeFrom: DateTime.parse(map['active_from'] as String),
-      activeTo: DateTime.parse(map['active_to'] as String),
-      isDaily: map['is_daily'] as bool? ?? true,
-      createdAt: DateTime.parse(map['created_at'] as String),
-      updatedAt: map['updated_at'] != null ? DateTime.parse(map['updated_at'] as String) : null,
+      assignToWholeSchool: map['assign_to_whole_school'] ?? false,
+      activeFrom: DateTime.tryParse(map['active_from'] ?? '') ?? DateTime.now(),
+      activeTo: DateTime.tryParse(map['active_to'] ?? '') ?? DateTime.now(),
+      isDaily: map['is_daily'] ?? true,
+      createdAt: DateTime.tryParse(map['created_at'] ?? '') ?? DateTime.now(),
+      updatedAt: DateTime.tryParse(map['updated_at'] ?? '') ?? DateTime.now(),
     );
   }
 
@@ -108,7 +108,7 @@ class CustomForm {
     try {
       return jsonEncode(list);
     } catch (e) {
-      print("Error encoding List<String> to JSON string for Floor: $e");
+      logger.e("Error encoding List<String> to JSON string for Floor: $e");
       return null;
     }
   }
@@ -129,11 +129,11 @@ class CustomForm {
       final decoded = jsonDecode(jsonString);
       if (decoded is List) {
         return List<int>.from(decoded.map((e) => int.tryParse(e.toString()) ?? 0).where((e) => e != 0 || (e == 0 && decoded.contains(0)))); // Handle potential parse errors
+        }
+        return [];
+      } catch (e) {
+        logger.e("Error decoding JSON string to List<int> from Floor: $e");
+        return [];
       }
-      return [];
-    } catch (e) { 
-      print("Error decoding JSON string to List<int> from Floor: $e");
-      return []; 
     }
   }
-}

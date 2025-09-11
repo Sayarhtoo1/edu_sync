@@ -1,35 +1,27 @@
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:edu_sync/utils/logger.dart';
 import '../models/announcement.dart';
+import 'api_service.dart';
 import 'cache_service.dart';
 
 class AnnouncementService {
   final SupabaseClient _supabaseClient = Supabase.instance.client;
   final CacheService _cacheService = CacheService();
+  final ApiService _apiService = ApiService();
 
   Future<List<Announcement>> getAnnouncements(int schoolId) async {
-    final connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult == ConnectivityResult.none) {
-      // Offline: Fetch from cache
-      return await _cacheService.getAnnouncements(schoolId);
-    } else {
-      // Online: Fetch from Supabase and update cache
-      try {
+    return await _apiService.fetchData<List<Announcement>>(
+      onlineRequest: () async {
         final response = await _supabaseClient
             .from('announcements')
             .select()
             .eq('school_id', schoolId)
             .order('created_at', ascending: false);
-
-        final announcements = response.map((data) => Announcement.fromMap(data)).toList();
-        await _cacheService.saveAnnouncements(schoolId, announcements);
-        return announcements;
-      } catch (e) {
-        print('Error fetching announcements: $e');
-        // If fetching from Supabase fails, try to get from cache
-        return await _cacheService.getAnnouncements(schoolId);
-      }
-    }
+        return response.map((data) => Announcement.fromMap(data)).toList();
+      },
+      offlineRequest: () => _cacheService.getAnnouncements(schoolId),
+      cacheData: (data) => _cacheService.saveAnnouncements(schoolId, data),
+    );
   }
 
   // For Admins: Create a new announcement
@@ -42,7 +34,7 @@ class AnnouncementService {
           .single();
       return Announcement.fromMap(response);
     } catch (e) {
-      print('Error creating announcement: $e');
+      logger.e('Error creating announcement: $e');
       return null;
     }
   }
@@ -56,7 +48,7 @@ class AnnouncementService {
           .eq('id', announcement.id);
       return true;
     } catch (e) {
-      print('Error updating announcement: $e');
+      logger.e('Error updating announcement: $e');
       return false;
     }
   }
@@ -70,7 +62,7 @@ class AnnouncementService {
           .eq('id', announcementId);
       return true;
     } catch (e) {
-      print('Error deleting announcement: $e');
+      logger.e('Error deleting announcement: $e');
       return false;
     }
   }

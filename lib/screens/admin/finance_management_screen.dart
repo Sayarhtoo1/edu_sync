@@ -19,7 +19,8 @@ class FinanceManagementScreen extends StatefulWidget {
 
 class _FinanceManagementScreenState extends State<FinanceManagementScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final FinanceService _financeService = FinanceService();
+  late final FinanceService _financeService;
+  late final AuthService _authService;
   
   List<Income> _incomeRecords = [];
   List<Expense> _expenseRecords = [];
@@ -37,11 +38,13 @@ class _FinanceManagementScreenState extends State<FinanceManagementScreen> with 
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() {
-      if (mounted) setState(() {}); 
+      if (mounted) setState(() {});
     });
+    _financeService = Provider.of<FinanceService>(context, listen: false);
+    _authService = Provider.of<AuthService>(context, listen: false);
     final schoolProvider = Provider.of<SchoolProvider>(context, listen: false);
     _schoolId = schoolProvider.currentSchool?.id;
-    _adminUserId = AuthService().getCurrentUser()?.id; // Get admin user ID
+    _adminUserId = _authService.getCurrentUser()?.id; // Get admin user ID
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final l10n = AppLocalizations.of(context);

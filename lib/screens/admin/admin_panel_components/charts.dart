@@ -1,71 +1,14 @@
-import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/material.dart';
 import 'package:edu_sync/l10n/app_localizations.dart';
 
-class ChartsRow extends StatelessWidget {
+class ChartsSection extends StatelessWidget {
   final Map<String, int> studentCountsByClass;
 
-  const ChartsRow({super.key, required this.studentCountsByClass});
-
-  List<Color> _getSectionColors() {
-    return [
-      Colors.purple.shade300,
-      Colors.blue.shade300,
-      Colors.orange.shade300,
-      Colors.green.shade300,
-      Colors.red.shade300,
-      Colors.teal.shade300,
-      Colors.pink.shade300,
-      Colors.amber.shade300,
-    ];
-  }
-
-  List<PieChartSectionData> _generatePieChartSections(BuildContext context, Map<String, int> data) {
-    final List<Color> sectionColors = _getSectionColors();
-    int colorIndex = 0;
-
-    if (data.isEmpty) return [];
-
-    return data.entries.map((entry) {
-      final sectionColor = sectionColors[colorIndex % sectionColors.length];
-      colorIndex++;
-
-      return PieChartSectionData(
-        color: sectionColor,
-        value: entry.value.toDouble(),
-        title: entry.value.toInt().toString(),
-        radius: 50,
-        titleStyle: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-          shadows: [Shadow(color: Colors.black26, blurRadius: 2)],
-        ),
-      );
-    }).toList();
-  }
-
-  Widget _buildChartLegend(BuildContext context, TextTheme textTheme, Map<String, int> data) {
-    final List<Color> sectionColors = _getSectionColors();
-    int colorIndex = 0;
-
-    return Wrap(
-      spacing: 8.0,
-      runSpacing: 4.0,
-      children: data.entries.map((entry) {
-        final color = sectionColors[colorIndex % sectionColors.length];
-        colorIndex++;
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(width: 10, height: 10, color: color),
-            const SizedBox(width: 4),
-            Text("${entry.key} (${entry.value})", style: textTheme.bodySmall?.copyWith(color: Colors.black87)),
-          ],
-        );
-      }).toList(),
-    );
-  }
+  const ChartsSection({
+    super.key,
+    required this.studentCountsByClass,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -86,30 +29,51 @@ class ChartsRow extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
-                boxShadow: [BoxShadow(color: Colors.black.withAlpha((0.05 * 255).round()), blurRadius: 10, offset: const Offset(0, 2))],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(12),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  )
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(l10n.studentsDistributionByClassTitle, style: textTheme.titleMedium?.copyWith(color: Colors.black87, fontWeight: FontWeight.w600)),
+                  Text(
+                    l10n.studentsDistributionByClassTitle,
+                    style: textTheme.titleMedium?.copyWith(
+                      color: const Color(0xFF2C2C2C),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   const SizedBox(height: 10),
                   Expanded(
                     child: studentCountsByClass.isEmpty
-                        ? Center(child: Text(l10n.noDataAvailable, style: textTheme.bodySmall?.copyWith(color: Colors.grey)))
+                        ? Center(
+                            child: Text(
+                              l10n.noDataAvailable,
+                              style: textTheme.bodySmall?.copyWith(
+                                color: const Color(0xFF8C8C8C),
+                              ),
+                            ),
+                          )
                         : PieChart(
                             PieChartData(
                               sectionsSpace: 2,
                               centerSpaceRadius: 40,
-                              sections: _generatePieChartSections(context, studentCountsByClass),
+                              sections: _generatePieChartSections(context, l10n),
                               pieTouchData: PieTouchData(
-                                touchCallback: (event, response) {},
+                                touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                                  // Handle touch events if needed
+                                },
                               ),
                             ),
                           ),
                   ),
                   if (studentCountsByClass.isNotEmpty) ...[
                     const SizedBox(height: 10),
-                    _buildChartLegend(context, textTheme, studentCountsByClass),
+                    _buildChartLegend(context, textTheme, l10n),
                   ]
                 ],
               ),
@@ -124,14 +88,33 @@ class ChartsRow extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
-                boxShadow: [BoxShadow(color: Colors.black.withAlpha((0.05 * 255).round()), blurRadius: 10, offset: const Offset(0, 2))],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(12),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  )
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("All Exam Results", style: textTheme.titleMedium?.copyWith(color: Colors.black87, fontWeight: FontWeight.w600)),
+                  Text(
+                    "All Exam Results",
+                    style: textTheme.titleMedium?.copyWith(
+                      color: const Color(0xFF2C2C2C),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   const SizedBox(height: 10),
-                  Center(child: Text("Line Chart Placeholder", style: textTheme.bodySmall?.copyWith(color: Colors.grey))),
+                  Center(
+                    child: Text(
+                      "Line Chart Placeholder",
+                      style: textTheme.bodySmall?.copyWith(
+                        color: const Color(0xFF8C8C8C),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -139,5 +122,70 @@ class ChartsRow extends StatelessWidget {
         ],
       );
     });
+  }
+
+  Widget _buildChartLegend(BuildContext context, TextTheme textTheme, AppLocalizations l10n) {
+    final List<Color> sectionColors = _getSectionColors();
+    int colorIndex = 0;
+
+    return Wrap(
+      spacing: 8.0,
+      runSpacing: 4.0,
+      children: studentCountsByClass.entries.map((entry) {
+        final color = sectionColors[colorIndex % sectionColors.length];
+        colorIndex++;
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(width: 10, height: 10, color: color),
+            const SizedBox(width: 4),
+            Text(
+              "${entry.key} (${entry.value})",
+              style: textTheme.bodySmall?.copyWith(
+                color: const Color(0xFF2C2C2C),
+              ),
+            ),
+          ],
+        );
+      }).toList(),
+    );
+  }
+
+  List<Color> _getSectionColors() {
+    return [
+      Colors.purple.shade300,
+      Colors.blue.shade300,
+      Colors.orange.shade300,
+      Colors.green.shade300,
+      Colors.red.shade300,
+      Colors.teal.shade300,
+      Colors.pink.shade300,
+      Colors.amber.shade300,
+    ];
+  }
+
+  List<PieChartSectionData> _generatePieChartSections(BuildContext context, AppLocalizations l10n) {
+    final List<Color> sectionColors = _getSectionColors();
+    int colorIndex = 0;
+
+    if (studentCountsByClass.isEmpty) return [];
+
+    return studentCountsByClass.entries.map((entry) {
+      final sectionColor = sectionColors[colorIndex % sectionColors.length];
+      colorIndex++;
+
+      return PieChartSectionData(
+        color: sectionColor,
+        value: entry.value.toDouble(),
+        title: entry.value.toInt().toString(),
+        radius: 50,
+        titleStyle: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+          shadows: [Shadow(color: Colors.black26, blurRadius: 2)],
+        ),
+      );
+    }).toList();
   }
 }

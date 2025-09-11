@@ -1,9 +1,12 @@
+import 'package:edu_sync/screens/manager/manager_dashboard_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:edu_sync/services/auth_service.dart';
 import 'package:edu_sync/l10n/app_localizations.dart';
 import 'package:edu_sync/screens/admin/admin_panel_screen.dart';
 import 'package:edu_sync/screens/teacher/teacher_dashboard_screen.dart';
 import 'package:edu_sync/screens/parent/parent_dashboard_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:edu_sync/utils/logger.dart';
 
 class RoleSelectionScreen extends StatefulWidget {
   const RoleSelectionScreen({super.key});
@@ -13,13 +16,14 @@ class RoleSelectionScreen extends StatefulWidget {
 }
 
 class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
-  final AuthService _authService = AuthService();
+  late final AuthService _authService;
   String? _userRole;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    _authService = Provider.of<AuthService>(context, listen: false);
     _loadUserRoleAndNavigate();
   }
 
@@ -32,7 +36,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
         _navigateToDashboard(_userRole!);
       }
     } catch (e) {
-      print("Error loading user role: $e");
+      logger.e("Error loading user role: $e");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Error loading user role: $e")),
@@ -56,9 +60,12 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       case 'Parent':
         dashboardScreen = const ParentDashboardScreen();
         break;
+      case 'Manager':
+        dashboardScreen = const ManagerDashboardScreen();
+        break;
       default:
         // Should not happen if roles are validated, but as a fallback
-        print("Attempted to navigate to unknown role dashboard: $role");
+        logger.w("Attempted to navigate to unknown role dashboard: $role");
         return;
     }
     Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => dashboardScreen));

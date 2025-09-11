@@ -2,10 +2,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:edu_sync/services/auth_service.dart';
-import 'package:edu_sync/services/school_service.dart'; 
-import 'package:edu_sync/models/user.dart' as app_user; 
+import 'package:edu_sync/models/user_role.dart';
+import 'package:edu_sync/services/school_service.dart';
+import 'package:edu_sync/models/user.dart' as app_user;
 import 'package:edu_sync/l10n/app_localizations.dart'; // Import AppLocalizations
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
+import 'package:provider/provider.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -16,11 +18,18 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  final AuthService _authService = AuthService();
-  final SchoolService _schoolService = SchoolService();
+  late final AuthService _authService;
+  late final SchoolService _schoolService;
   final ImagePicker _picker = ImagePicker();
 
-  final TextEditingController _passwordController = TextEditingController(); 
+  @override
+  void initState() {
+    super.initState();
+    _authService = Provider.of<AuthService>(context, listen: false);
+    _schoolService = Provider.of<SchoolService>(context, listen: false);
+  }
+
+  final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController(); 
   final TextEditingController _adminNameController = TextEditingController(); // For Admin's full name
 
@@ -55,11 +64,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     try {
       // Step 1: Sign up the admin user, passing full_name for the trigger
       final adminAuthUser = await _authService.signUp(
-        _email, 
-        _passwordController.text, 
-        'Admin',
+        _email,
+        _passwordController.text,
+        UserRole.Admin.name,
         fullName: _adminNameController.text // Pass admin's full name
-      ); 
+      );
       if (adminAuthUser == null || adminAuthUser.id.isEmpty) {
         throw Exception('Admin user registration in auth failed.');
       }
@@ -88,7 +97,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final adminProfileToUpdate = app_user.User(
         id: adminAuthUser.id,
         fullName: _adminNameController.text, // Ensure this is consistent
-        role: 'Admin', // Role is known
+        role: UserRole.Admin.name, // Role is known
         schoolId: newSchool.id, // CRUCIAL: Link admin to the new school
         // email: _email, // Trigger should handle email based on auth.users.email
         profilePhotoUrl: null // Admin can set their photo later via profile edit

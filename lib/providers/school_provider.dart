@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:edu_sync/models/school.dart';
 import 'package:edu_sync/services/school_service.dart';
 import 'package:edu_sync/services/auth_service.dart';
+import 'package:edu_sync/utils/logger.dart';
 
 class SchoolProvider with ChangeNotifier {
   School? _currentSchool;
   bool _isLoading = false;
-  final SchoolService _schoolService = SchoolService();
-  final AuthService _authService = AuthService();
+  final SchoolService _schoolService;
+  final AuthService _authService;
+
+  SchoolProvider(this._schoolService, this._authService);
 
   School? get currentSchool => _currentSchool;
   bool get isLoading => _isLoading;
@@ -28,7 +31,7 @@ class SchoolProvider with ChangeNotifier {
           final schoolIdFromMeta = user.userMetadata!['school_id'] as int;
           _currentSchool = await _schoolService.getSchoolById(schoolIdFromMeta);
         } catch (e) {
-          print("Error fetching school from metadata: $e");
+          logger.e("Error fetching school from metadata: $e");
           _currentSchool = null;
         }
       } else {

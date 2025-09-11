@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:edu_sync/models/school_class.dart' as app_class;
 import 'package:edu_sync/services/class_service.dart';
 import 'package:edu_sync/services/auth_service.dart';
-import 'add_edit_class_screen.dart'; 
+import 'add_edit_class_screen.dart';
+import 'package:provider/provider.dart';
 import 'package:edu_sync/l10n/app_localizations.dart'; // Import AppLocalizations
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
 
@@ -14,8 +15,8 @@ class ClassManagementScreen extends StatefulWidget {
 }
 
 class _ClassManagementScreenState extends State<ClassManagementScreen> {
-  final ClassService _classService = ClassService();
-  final AuthService _authService = AuthService();
+  late final ClassService _classService;
+  late final AuthService _authService;
   List<app_class.SchoolClass> _classes = [];
   bool _isLoading = true;
   int? _currentSchoolId;
@@ -23,6 +24,8 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
   @override
   void initState() {
     super.initState();
+    _classService = Provider.of<ClassService>(context, listen: false);
+    _authService = Provider.of<AuthService>(context, listen: false);
     _fetchSchoolIdAndLoadClasses();
   }
 
@@ -32,7 +35,7 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
     if (_currentSchoolId != null) {
       await _loadClasses();
     } else {
-      // print("School ID not found. Cannot load classes."); // Removed print
+      // logger.w("School ID not found. Cannot load classes.");
       if(mounted) setState(() => _isLoading = false);
     }
   }
@@ -133,9 +136,9 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
                       itemBuilder: (context, index) {
                         final classItem = _classes[index];
                         // TODO: Fetch teacher name based on classItem.teacherId for a better display
-                        String teacherDisplay = classItem.teacherId != null 
-                            ? '${l10n.teacherLabel}: ${classItem.teacherId}' 
-                            : l10n.noTeacherAssigned; 
+                        String teacherDisplay = classItem.teacherId != null
+                            ? '${l10n.teacherLabel}: ${classItem.teacherId}'
+                            : l10n.noTeacherAssigned;
 
                         return Card( 
                           margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

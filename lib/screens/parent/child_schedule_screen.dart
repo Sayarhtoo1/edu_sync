@@ -17,9 +17,9 @@ class ChildScheduleScreen extends StatefulWidget {
 }
 
 class _ChildScheduleScreenState extends State<ChildScheduleScreen> {
-  final StudentService _studentService = StudentService();
-  final TimetableService _timetableService = TimetableService();
-  final AuthService _authService = AuthService();
+  late final StudentService _studentService;
+  late final TimetableService _timetableService;
+  late final AuthService _authService;
 
   List<Student> _linkedStudents = [];
   Student? _selectedStudent;
@@ -34,6 +34,9 @@ class _ChildScheduleScreenState extends State<ChildScheduleScreen> {
   @override
   void initState() {
     super.initState();
+    _studentService = Provider.of<StudentService>(context, listen: false);
+    _timetableService = Provider.of<TimetableService>(context, listen: false);
+    _authService = Provider.of<AuthService>(context, listen: false);
     final schoolProvider = Provider.of<SchoolProvider>(context, listen: false);
     _schoolId = schoolProvider.currentSchool?.id;
     _parentId = _authService.getCurrentUser()?.id;
@@ -56,7 +59,7 @@ class _ChildScheduleScreenState extends State<ChildScheduleScreen> {
     if (_parentId == null || _schoolId == null) return;
     setState(() => _isLoadingStudents = true);
     try {
-      _linkedStudents = await _studentService.getStudentsByParent(_parentId!, _schoolId!);
+      _linkedStudents = (await _studentService.getStudentsByParent(_parentId!, _schoolId!)).cast<Student>();
       if (_linkedStudents.isNotEmpty) {
         _selectedStudent = _linkedStudents.first;
         _loadScheduleForStudent();
@@ -104,7 +107,7 @@ class _ChildScheduleScreenState extends State<ChildScheduleScreen> {
       body: _isLoadingStudents
           ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(contextualAccentColor)))
           : _errorMessage != null
-              ? Center(child: Padding(padding: const EdgeInsets.all(16.0), child: Text(_errorMessage!, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.error))))
+              ? Center(child: Padding(padding: const EdgeInsets.all(16.0), child: Text(_errorMessage!, style: theme.textTheme.bodyMedium!.copyWith(color: theme.colorScheme.error))))
               : _linkedStudents.isEmpty
                   ? Center(child: Text(l10n.noChildrenLinked, style: theme.textTheme.bodyLarge)) 
                   : Column(
@@ -187,7 +190,7 @@ class _ChildScheduleScreenState extends State<ChildScheduleScreen> {
           child: ExpansionTile(
             iconColor: contextualAccentColor,
             collapsedIconColor: textLightGrey, // Use top-level constant
-            title: Text(getLocalizedDayName(day), style: theme.textTheme.titleLarge?.copyWith(color: contextualAccentColor)),
+            title: Text(getLocalizedDayName(day), style: theme.textTheme.titleLarge!.copyWith(color: contextualAccentColor)),
             children: dayEntries.map((entry) {
               return ListTile(
                 title: Text(entry.subjectName, style: theme.textTheme.titleMedium),

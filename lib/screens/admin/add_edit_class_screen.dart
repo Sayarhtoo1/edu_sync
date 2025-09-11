@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:edu_sync/models/school_class.dart' as app_class;
 import 'package:edu_sync/models/user.dart' as app_user;
+import 'package:edu_sync/models/user_role.dart';
 import 'package:edu_sync/services/class_service.dart';
 import 'package:edu_sync/services/auth_service.dart'; // To fetch teachers
 import 'package:edu_sync/l10n/app_localizations.dart'; // Import AppLocalizations
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
-import 'package:uuid/uuid.dart'; // For generating UUIDs
+import 'package:provider/provider.dart';
+// For generating UUIDs
+import 'package:edu_sync/utils/logger.dart';
 
 class AddEditClassScreen extends StatefulWidget {
   final app_class.SchoolClass? classDetails;
@@ -19,9 +22,9 @@ class AddEditClassScreen extends StatefulWidget {
 
 class _AddEditClassScreenState extends State<AddEditClassScreen> {
   final _formKey = GlobalKey<FormState>();
-  final ClassService _classService = ClassService();
-  final AuthService _authService = AuthService();
-  final Uuid _uuid = const Uuid(); // UUID generator
+  late final ClassService _classService;
+  late final AuthService _authService;
+  // final Uuid _uuid = const Uuid(); // UUID generator - Removed as it's unused
 
   late TextEditingController _nameController;
   String? _selectedTeacherId; // Store as String (UUID)
@@ -35,8 +38,10 @@ class _AddEditClassScreenState extends State<AddEditClassScreen> {
   @override
   void initState() {
     super.initState();
+    _classService = Provider.of<ClassService>(context, listen: false);
+    _authService = Provider.of<AuthService>(context, listen: false);
     _nameController = TextEditingController(text: widget.classDetails?.name ?? '');
-    _selectedTeacherId = widget.classDetails?.teacherId; 
+    _selectedTeacherId = widget.classDetails?.teacherId;
     _sectionControllerText = widget.classDetails?.section;
     _loadTeachers();
   }
@@ -46,15 +51,15 @@ class _AddEditClassScreenState extends State<AddEditClassScreen> {
     try {
       // Assuming getTeachersBySchool or similar method exists that returns List<app_user.User>
       // For now, using getUsersByRole as a placeholder if it fetches teachers.
-      _availableTeachers = await _authService.getUsersByRole('Teacher', widget.schoolId);
+      _availableTeachers = await _authService.getUsersByRole(UserRole.Teacher, widget.schoolId);
       
       if (_isEditing && widget.classDetails?.teacherId != null) {
         if (!_availableTeachers.any((t) => t.id == widget.classDetails!.teacherId)) {
-          _selectedTeacherId = widget.classDetails!.teacherId; 
+          _selectedTeacherId = widget.classDetails!.teacherId;
         }
       }
     } catch (e) {
-      print("Error loading teachers: $e");
+      logger.e("Error loading teachers: $e");
       if(mounted) setState(() => _errorMessage = AppLocalizations.of(context).failedToLoadTeachersError);
     }
     if(mounted) setState(() => _isLoading = false);

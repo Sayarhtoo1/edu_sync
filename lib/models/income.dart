@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart'; // Import DateFormat
 
 class Income {
@@ -21,31 +20,14 @@ class Income {
   });
 
   factory Income.fromMap(Map<String, dynamic> map) {
-    // Add this block for logging
-    if (kDebugMode) {
-      print('--- Deserializing Income ---');
-      print('Raw data: $map');
-      if (map['description'] == null) {
-        print('WARNING: Income "description" is null.');
-      }
-      if (map['date'] == null) {
-        print('WARNING: Income "date" is null.');
-      }
-      if (map['category'] == null) {
-        print('WARNING: Income "category" is null.');
-      }
-      print('--------------------------');
-    }
-    // End of logging block
-
     return Income(
-      id: map['id'] as int?,
-      schoolId: map['school_id'] as int,
-      description: map['description'] as String,
-      amount: double.parse(map['amount'].toString()),
-      date: DateTime.parse(map['date'] as String),
-      category: map['category'] as String?,
-      createdByUserId: map['created_by_user_id'] as String?,
+      id: map['id'],
+      schoolId: map['school_id'] ?? 0,
+      description: map['description'] ?? '',
+      amount: double.tryParse(map['amount']?.toString() ?? '0.0') ?? 0.0,
+      date: DateTime.tryParse(map['date'] ?? '') ?? DateTime.now(),
+      category: map['category'],
+      createdByUserId: map['created_by_user_id'],
     );
   }
 

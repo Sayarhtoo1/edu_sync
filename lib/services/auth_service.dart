@@ -2,14 +2,23 @@ import 'dart:io'; // Added for File
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:edu_sync/utils/logger.dart';
 
 import 'package:edu_sync/models/user.dart' as app_user; // Aliased to avoid conflict with supabase_flutter.User
-import 'package:edu_sync/main.dart';
+import 'package:edu_sync/models/user_role.dart';
 
 class AuthService {
-  final SupabaseClient _supabaseClient = Supabase.instance.client;
-  final SharedPreferences _prefs = getIt<SharedPreferences>();
-  final Connectivity _connectivity = getIt<Connectivity>();
+  final SupabaseClient _supabaseClient;
+  final SharedPreferences _prefs;
+  final Connectivity _connectivity;
+
+  AuthService({
+    required SupabaseClient supabaseClient,
+    required SharedPreferences sharedPreferences,
+    required Connectivity connectivity,
+  })  : _supabaseClient = supabaseClient,
+        _prefs = sharedPreferences,
+        _connectivity = connectivity;
 
   Future<User?> signUp(String email, String password, String role, {String? fullName, int? schoolIdIfKnown, String? profilePhotoUrl}) async {
     final Map<String, dynamic> userMetadata = {'role': role};
@@ -38,6 +47,14 @@ class AuthService {
     await _supabaseClient.auth.signOut();
   }
 
+  Future<void> resetPassword(String email) async {
+    // The redirectTo URL must be configured in the Supabase Dashboard under Authentication -> Settings -> Redirect URLs
+    // and should point to a page in your app that can handle the password reset.
+    // The redirectTo URL must be a URL that the app can handle as a deep link.
+    await _supabaseClient.auth.resetPasswordForEmail(email,
+        redirectTo: 'com.example.edusync://reset-password');
+  }
+
   User? getCurrentUser() {
     return _supabaseClient.auth.currentUser;
   }
@@ -51,7 +68,7 @@ class AuthService {
     if (cachedRole != null) {
       return cachedRole;
     }
-
+  
     try {
       final response = await _supabaseClient
           .from('users')
@@ -66,7 +83,7 @@ class AuthService {
       }
       return role;
     } catch (e) {
-      print('Error fetching user role: $e');
+      logger.e('Error fetching user role: $e');
       return null;
     }
   }
@@ -79,9 +96,9 @@ class AuthService {
           .select()
           .eq('id', userId)
           .single();
-      return app_user.User.fromMap(response);
+      return app_user.User.fromJson(response);
     } catch (e) {
-      print('Error fetching user by ID $userId: $e');
+      logger.e('Error fetching user by ID $userId: $e');
       return null;
     }
   }
@@ -111,24 +128,34 @@ class AuthService {
       }
       return schoolId;
     } catch (e) {
-      print('Error fetching current user school_id: $e');
+      logger.e('Error fetching current user school_id: $e');
       // If fetching from Supabase fails, try to get from cache
       return cachedSchoolId;
     }
   }
 
   // Fetch users by role (e.g., 'Teacher', 'Parent') for a specific school
-  Future<List<app_user.User>> getUsersByRole(String role, int schoolId) async {
+  Future<List<app_user.User>> getUsersByRole(UserRole role, int schoolId) async {
     try {
-      final response = await _supabaseClient
-          .from('users')
-          .select()
-          .eq('role', role)
-          .eq('school_id', schoolId); // Assuming users table has school_id
+      List<Map<String, dynamic>> response;
+      if (role == UserRole.Teacher) {
+        // If fetching teachers, also include users with 'Admin' role
+        response = await _supabaseClient
+            .from('users')
+            .select()
+            .eq('school_id', schoolId)
+            .or('role.eq.${UserRole.Teacher.name},role.eq.${UserRole.Admin.name}');
+      } else {
+        response = await _supabaseClient
+            .from('users')
+            .select()
+            .eq('role', role.name)
+            .eq('school_id', schoolId);
+      }
 
-      return response.map((userData) => app_user.User.fromMap(userData)).toList();
+      return response.map((userData) => app_user.User.fromJson(userData)).toList();
     } catch (e) {
-      print('Error fetching users by role: $e');
+      logger.e('Error fetching users by role: $e');
       return [];
     }
   }
@@ -212,21 +239,21 @@ class AuthService {
       
       if (response.data == null) {
         // This case might indicate a more fundamental issue with the function call or an empty successful response.
-        print('Edge Function "create-user-admin" returned no data or failed to invoke.');
+        logger.e('Edge Function "create-user-admin" returned no data or failed to invoke.');
         throw Exception('Failed to create user: Edge function returned no data.');
       }
 
       // Check if the data returned by the function contains an error key (as per our Edge Function design)
       final responseData = response.data as Map<String, dynamic>;
       if (responseData.containsKey('error')) {
-        print('Error from create-user-admin Edge Function: ${responseData['error']}');
+        logger.e('Error from create-user-admin Edge Function: ${responseData['error']}');
         throw Exception('Failed to create user: ${responseData['error']}');
       }
       
       // If no error key and data is present, assume success
-      return app_user.User.fromMap(responseData);
+      return app_user.User.fromJson(responseData);
     } catch (e) {
-      print('Exception calling create-user-admin function: $e');
+      logger.e('Exception calling create-user-admin function: $e');
       // Rethrow or provide a user-friendly error
       throw Exception('Failed to create user due to an unexpected error: ${e.toString()}');
     }
@@ -244,7 +271,7 @@ class AuthService {
       }).eq('id', user.id);
       return true;
     } catch (e) {
-      print('Error updating user: $e');
+      logger.e('Error updating user: $e');
       return false;
     }
   }
@@ -257,10 +284,10 @@ class AuthService {
       // Then, the trigger on auth.users should handle deletion from public.users if set up for ON DELETE CASCADE
       // Or, delete manually if trigger is not sufficient or for cleanup.
       // await _supabaseClient.from('users').delete().eq('id', userId); // This might be redundant if FK is ON DELETE CASCADE
-      print("User $userId deleted from auth.users. Corresponding public.users entry should be removed by trigger/cascade.");
+      logger.i("User $userId deleted from auth.users. Corresponding public.users entry should be removed by trigger/cascade.");
       return true;
     } catch (e) {
-      print('Error deleting user: $e');
+      logger.e('Error deleting user: $e');
       return false;
     }
   }
@@ -277,7 +304,7 @@ class AuthService {
       final publicUrl = _supabaseClient.storage.from('edusync').getPublicUrl(storagePath);
       return publicUrl;
     } catch (e) {
-      print('Error uploading profile photo: $e');
+      logger.e('Error uploading profile photo: $e');
     }
     return null;
   }

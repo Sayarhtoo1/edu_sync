@@ -1,11 +1,14 @@
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:edu_sync/models/user_role.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:edu_sync/models/user.dart';
 import 'package:edu_sync/services/auth_service.dart';
+import 'package:provider/provider.dart';
 import 'package:edu_sync/l10n/app_localizations.dart'; // Localization
 import 'package:edu_sync/theme/app_theme.dart'; // Theme
+
 
 class AddEditManagerScreen extends StatefulWidget {
   final User? manager;
@@ -19,7 +22,7 @@ class AddEditManagerScreen extends StatefulWidget {
 
 class _AddEditManagerScreenState extends State<AddEditManagerScreen> {
   final _formKey = GlobalKey<FormState>();
-  final AuthService _authService = AuthService();
+  late final AuthService _authService;
   final ImagePicker _picker = ImagePicker();
 
   late TextEditingController _nameController;
@@ -35,6 +38,7 @@ class _AddEditManagerScreenState extends State<AddEditManagerScreen> {
   @override
   void initState() {
     super.initState();
+    _authService = Provider.of<AuthService>(context, listen: false);
     _nameController = TextEditingController(text: widget.manager?.fullName ?? '');
     _emailController = TextEditingController(text: widget.manager?.id ?? '');
     _passwordController = TextEditingController();
@@ -104,7 +108,7 @@ class _AddEditManagerScreenState extends State<AddEditManagerScreen> {
         final newManager = await _authService.createUserViaEdgeFunction(
           email: _emailController.text,
           password: _passwordController.text,
-          role: 'Manager',
+          role: UserRole.Manager.name,
           schoolId: widget.schoolId,
           fullName: _nameController.text,
           profilePhotoUrl: photoUrl,

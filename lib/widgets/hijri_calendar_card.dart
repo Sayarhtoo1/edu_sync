@@ -1,25 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:hijri_calendar/hijri_calendar.dart';
+import 'package:hijri_calendar/hijri_calendar.dart' as hijri_cal;
 import 'package:intl/intl.dart';
-
-// --- Color Palette (Dribbble Inspired) ---
-const Color appBackgroundColor = Color(0xFFF5F0FF); // Very light pastel purple
-const Color cardBackgroundColor = Colors.white;
-const Color textDarkGrey = Color(0xFF2C2C2C);
-const Color textLightGrey = Color(0xFF8C8C8C);
-
-// Accent colors for summary items
-const Color accentStudents = Color(0xFFE0C7FF); // Pastel Purple
-const Color iconBgStudents = Color(0xFFD4D0FB); // Slightly darker purple for icon bg
-const Color iconColorStudents = Color(0xFF7A6FF0); // Icon color
-
+import 'package:provider/provider.dart'; // Import provider
+import 'package:edu_sync/providers/school_provider.dart'; // Import SchoolProvider
+import 'package:edu_sync/screens/admin/admin_panel_constants.dart'; // Import new constants file
 
 class HijriCalendarCard extends StatelessWidget {
   const HijriCalendarCard({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final today = HijriCalendarConfig.now();
+    final schoolProvider = Provider.of<SchoolProvider>(context);
+    final int hijriDayAdjustment = schoolProvider.currentSchool?.hijriDayAdjustment ?? 0;
+
+    final todayGregorian = DateTime.now(); // Get unadjusted Gregorian date
+    final todayHijri = hijri_cal.HijriCalendarConfig.fromGregorian(todayGregorian); // Convert to Hijri
+
+    if (hijriDayAdjustment != 0) {
+      // Calculate JDN for todayGregorian to apply adjustment
+      int jdn = (todayGregorian.millisecondsSinceEpoch / 86400000).floor() + 2440588;
+      todayHijri.setAdjustments({jdn: hijriDayAdjustment}); // Apply adjustment
+    }
     final textTheme = Theme.of(context).textTheme;
 
     return Container(
@@ -45,12 +46,12 @@ class HijriCalendarCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  today.toFormat("dd MMMM yyyy"),
+                  todayHijri.toFormat("dd MMMM yyyy"), // Corrected to use todayHijri
                   style: textTheme.titleLarge?.copyWith(color: textDarkGrey, fontWeight: FontWeight.bold),
                 ),
                  const SizedBox(height: 4),
                 Text(
-                  DateFormat('EEEE, dd MMMM yyyy').format(DateTime.now()),
+                  DateFormat('EEEE, dd MMMM yyyy').format(todayGregorian), // Corrected to use todayGregorian
                   style: textTheme.bodyMedium?.copyWith(color: textLightGrey),
                 ),
               ],

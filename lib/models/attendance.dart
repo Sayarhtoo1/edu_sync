@@ -21,23 +21,34 @@ class Attendance {
 
   factory Attendance.fromMap(Map<String, dynamic> map) {
     return Attendance(
-      id: map['id'] as int?,
-      classId: map['class_id'] as int, // Corrected to int
-      studentId: map['student_id'] as int,
-      date: DateTime.parse(map['date'] as String),
-      status: map['status'] as String? ?? 'Present', // Default if null, though DB should prevent null
-      markedByTeacherId: map['marked_by_teacher_id'] as String?,
-      updatedAt: map['updated_at'] == null ? null : DateTime.parse(map['updated_at'] as String),
+      id: map['id'],
+      classId: map['class_id'] ?? 0,
+      studentId: map['student_id'] ?? 0,
+      date: DateTime.tryParse(map['date'] ?? '') ?? DateTime.now(),
+      status: map['status'] ?? 'Present',
+      markedByTeacherId: map['marked_by_teacher_id'],
+      updatedAt: DateTime.tryParse(map['updated_at'] ?? '') ?? DateTime.now(),
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      // 'id': id, // Should not be sent for insert if auto-generated
       'class_id': classId,
       'student_id': studentId,
       'date': DateFormat('yyyy-MM-dd').format(date),
-      'status': status, // status is now directly used
+      'status': status,
+      'marked_by_teacher_id': markedByTeacherId,
+      'updated_at': updatedAt?.toIso8601String(),
+    };
+  }
+
+  Map<String, dynamic> toMapWithId() {
+    return {
+      'id': id,
+      'class_id': classId,
+      'student_id': studentId,
+      'date': DateFormat('yyyy-MM-dd').format(date),
+      'status': status,
       'marked_by_teacher_id': markedByTeacherId,
       'updated_at': updatedAt?.toIso8601String(),
     };

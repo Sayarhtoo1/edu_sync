@@ -19,11 +19,11 @@ class FormResponse {
 
   factory FormResponse.fromMap(Map<String, dynamic> map) {
     return FormResponse(
-      id: map['id'] as String,
-      formId: map['form_id'] as String,
-      studentId: map['student_id'] as int, // Changed to int
-      parentId: map['parent_id'] as String,
-      submittedAt: DateTime.parse(map['submitted_at'] as String),
+      id: map['id'] ?? '',
+      formId: map['form_id'] ?? '',
+      studentId: map['student_id'] ?? 0,
+      parentId: map['parent_id'] ?? '',
+      submittedAt: DateTime.tryParse(map['submitted_at'] ?? '') ?? DateTime.now(),
     );
   }
 

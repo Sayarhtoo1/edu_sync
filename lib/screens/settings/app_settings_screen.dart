@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:edu_sync/providers/locale_provider.dart'; 
 import 'package:edu_sync/l10n/app_localizations.dart'; 
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
+import 'package:edu_sync/services/update_service.dart';
 
 class AppSettingsScreen extends StatefulWidget {
   const AppSettingsScreen({super.key});
@@ -12,6 +13,7 @@ class AppSettingsScreen extends StatefulWidget {
 }
 
 class _AppSettingsScreenState extends State<AppSettingsScreen> {
+  final UpdateService _updateService = UpdateService();
   // Example: bool _notificationsEnabled = true;
   // Example: String _selectedLanguage = 'English'; // or from a LocaleProvider
 
@@ -101,6 +103,14 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                   )
                 ],
               );
+            },
+          ),
+          const Divider(),
+          ListTile(
+            leading: Icon(Icons.system_update, color: theme.iconTheme.color),
+            title: Text('Check for Updates', style: theme.textTheme.titleMedium),
+            onTap: () {
+              _updateService.checkForUpdate(context);
             },
           ),
         ],

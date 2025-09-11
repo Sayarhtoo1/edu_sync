@@ -7,6 +7,7 @@ class SummaryItemData {
   final Color backgroundColor;
   final Color iconBackgroundColor;
   final Color iconColor;
+  final VoidCallback? onTap;
 
   SummaryItemData({
     required this.title,
@@ -15,6 +16,7 @@ class SummaryItemData {
     required this.backgroundColor,
     required this.iconBackgroundColor,
     required this.iconColor,
+    this.onTap,
   });
 }
 
@@ -26,11 +28,3 @@ class ActivityLogItem {
   ActivityLogItem({required this.icon, required this.message, required this.timestamp});
 }
 
-class StarStudentItem {
-  final String name;
-  final String id;
-  final String marks;
-  final String? avatarUrl;
-
-  StarStudentItem({required this.name, required this.id, required this.marks, this.avatarUrl});
-}

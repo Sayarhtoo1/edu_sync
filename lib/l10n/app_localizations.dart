@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'EduSync Myanmar'**
+  /// **'EduSync'**
   String get appTitle;
 
   /// No description provided for @login.
@@ -109,6 +109,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Login'**
   String get login;
+
+  /// No description provided for @logout.
+  ///
+  /// In en, this message translates to:
+  /// **'Logout'**
+  String get logout;
 
   /// No description provided for @email.
   ///
@@ -122,107 +128,65 @@ abstract class AppLocalizations {
   /// **'Password'**
   String get password;
 
-  /// No description provided for @adminPanel.
+  /// No description provided for @forgotPassword.
   ///
   /// In en, this message translates to:
-  /// **'Admin Panel'**
-  String get adminPanel;
+  /// **'Forgot Password'**
+  String get forgotPassword;
 
-  /// No description provided for @teacherDashboard.
+  /// No description provided for @resetPassword.
   ///
   /// In en, this message translates to:
-  /// **'Teacher Dashboard'**
-  String get teacherDashboard;
+  /// **'Reset Password'**
+  String get resetPassword;
 
-  /// No description provided for @parentDashboard.
+  /// No description provided for @newPassword.
   ///
   /// In en, this message translates to:
-  /// **'Parent Dashboard'**
-  String get parentDashboard;
+  /// **'New Password'**
+  String get newPassword;
 
-  /// No description provided for @welcomeAdmin.
+  /// No description provided for @confirmNewPassword.
   ///
   /// In en, this message translates to:
-  /// **'Welcome, Admin!'**
-  String get welcomeAdmin;
+  /// **'Confirm New Password'**
+  String get confirmNewPassword;
 
-  /// No description provided for @welcomeTeacher.
+  /// No description provided for @setNewPassword.
   ///
   /// In en, this message translates to:
-  /// **'Welcome, Teacher!'**
-  String get welcomeTeacher;
+  /// **'Set New Password'**
+  String get setNewPassword;
 
-  /// No description provided for @welcomeParent.
+  /// No description provided for @backToLogin.
   ///
   /// In en, this message translates to:
-  /// **'Welcome, Parent!'**
-  String get welcomeParent;
-
-  /// No description provided for @useDrawerToNavigate.
-  ///
-  /// In en, this message translates to:
-  /// **'Use the drawer to navigate.'**
-  String get useDrawerToNavigate;
-
-  /// No description provided for @settings.
-  ///
-  /// In en, this message translates to:
-  /// **'Settings'**
-  String get settings;
-
-  /// No description provided for @language.
-  ///
-  /// In en, this message translates to:
-  /// **'Language'**
-  String get language;
-
-  /// No description provided for @logout.
-  ///
-  /// In en, this message translates to:
-  /// **'Logout'**
-  String get logout;
-
-  /// No description provided for @teachers.
-  ///
-  /// In en, this message translates to:
-  /// **'Teachers'**
-  String get teachers;
-
-  /// No description provided for @parents.
-  ///
-  /// In en, this message translates to:
-  /// **'Parents'**
-  String get parents;
-
-  /// No description provided for @students.
-  ///
-  /// In en, this message translates to:
-  /// **'Students'**
-  String get students;
-
-  /// No description provided for @classes.
-  ///
-  /// In en, this message translates to:
-  /// **'Classes'**
-  String get classes;
+  /// **'Back to Login'**
+  String get backToLogin;
 
   /// No description provided for @error_user_not_found.
   ///
   /// In en, this message translates to:
-  /// **'Error: User not found. Please log in again.'**
+  /// **'User not found.'**
   String get error_user_not_found;
 
   /// No description provided for @error_school_not_selected_or_found.
   ///
   /// In en, this message translates to:
-  /// **'Error: School not selected or found. Please ensure a school is associated with your account.'**
+  /// **'School not selected or found.'**
   String get error_school_not_selected_or_found;
 
   /// No description provided for @error_fetching_timetable.
   ///
   /// In en, this message translates to:
-  /// **'Error fetching timetable'**
+  /// **'Error fetching timetable.'**
   String get error_fetching_timetable;
+
+  /// No description provided for @no_timetable_entries_found.
+  ///
+  /// In en, this message translates to:
+  /// **'No timetable entries found.'**
+  String get no_timetable_entries_found;
 
   /// No description provided for @my_timetable_title.
   ///
@@ -230,11 +194,41 @@ abstract class AppLocalizations {
   /// **'My Timetable'**
   String get my_timetable_title;
 
-  /// No description provided for @no_timetable_entries_found.
+  /// No description provided for @classLabel.
   ///
   /// In en, this message translates to:
-  /// **'No timetable entries found.'**
-  String get no_timetable_entries_found;
+  /// **'Class'**
+  String get classLabel;
+
+  /// No description provided for @unknown_class.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown Class'**
+  String get unknown_class;
+
+  /// No description provided for @time.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get time;
+
+  /// No description provided for @upcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming'**
+  String get upcoming;
+
+  /// No description provided for @in_process.
+  ///
+  /// In en, this message translates to:
+  /// **'In Process'**
+  String get in_process;
+
+  /// No description provided for @done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get done;
 
   /// No description provided for @monday.
   ///
@@ -283,24 +277,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unknown Subject'**
   String get unknown_subject;
-
-  /// No description provided for @classLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Class'**
-  String get classLabel;
-
-  /// No description provided for @unknown_class.
-  ///
-  /// In en, this message translates to:
-  /// **'Unknown Class'**
-  String get unknown_class;
-
-  /// No description provided for @time.
-  ///
-  /// In en, this message translates to:
-  /// **'Time'**
-  String get time;
 
   /// No description provided for @room.
   ///
@@ -379,6 +355,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Late'**
   String get attendanceStatusLate;
+
+  /// No description provided for @attendanceStatusLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get attendanceStatusLeave;
 
   /// No description provided for @manageLessonPlansTitle.
   ///
@@ -2306,6 +2288,18 @@ abstract class AppLocalizations {
   /// **'Are you sure you want to delete this'**
   String get confirmDeleteUserTextPart1;
 
+  /// No description provided for @forgotPasswordInstructions.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email to receive a password reset link.'**
+  String get forgotPasswordInstructions;
+
+  /// No description provided for @passwordResetEmailSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Password reset email sent to {email}. Please check your inbox.'**
+  String passwordResetEmailSent(Object email);
+
   /// No description provided for @forgotPasswordButtonLabel.
   ///
   /// In en, this message translates to:
@@ -2618,6 +2612,18 @@ abstract class AppLocalizations {
   /// **'View Timetable'**
   String get teacherTimetableAction;
 
+  /// No description provided for @teacherTimetable.
+  ///
+  /// In en, this message translates to:
+  /// **'Teacher Timetable'**
+  String get teacherTimetable;
+
+  /// No description provided for @markAttendance.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark Attendance'**
+  String get markAttendance;
+
   /// No description provided for @addStudent.
   ///
   /// In en, this message translates to:
@@ -2713,6 +2719,260 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Camera'**
   String get camera;
+
+  /// No description provided for @teachers.
+  ///
+  /// In en, this message translates to:
+  /// **'Teachers'**
+  String get teachers;
+
+  /// No description provided for @parents.
+  ///
+  /// In en, this message translates to:
+  /// **'Parents'**
+  String get parents;
+
+  /// No description provided for @welcomeAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome Admin'**
+  String get welcomeAdmin;
+
+  /// No description provided for @students.
+  ///
+  /// In en, this message translates to:
+  /// **'Students'**
+  String get students;
+
+  /// No description provided for @language.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get language;
+
+  /// No description provided for @settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings;
+
+  /// Text displayed when a teacher has no current or upcoming schedule.
+  ///
+  /// In en, this message translates to:
+  /// **'You are free now.'**
+  String get youAreFreeNow;
+
+  /// Label for the subject currently in progress.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Subject'**
+  String get currentSubject;
+
+  /// Label for the next upcoming subject.
+  ///
+  /// In en, this message translates to:
+  /// **'Next Subject'**
+  String get nextSubject;
+
+  /// Text displayed when there is no schedule for the current day.
+  ///
+  /// In en, this message translates to:
+  /// **'No schedule today.'**
+  String get noScheduleToday;
+
+  /// Title for the summary of teacher schedules on the admin dashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Teacher Schedules Summary'**
+  String get teacherSchedulesSummary;
+
+  /// Label for the count of teachers currently teaching.
+  ///
+  /// In en, this message translates to:
+  /// **'Teachers Teaching Now'**
+  String get teachersTeachingNow;
+
+  /// Label for the count of teachers who are currently free.
+  ///
+  /// In en, this message translates to:
+  /// **'Teachers Free Now'**
+  String get teachersFreeNow;
+
+  /// Label for the count of teachers with upcoming classes.
+  ///
+  /// In en, this message translates to:
+  /// **'Teachers with Upcoming Classes'**
+  String get teachersUpcomingClasses;
+
+  /// Text displayed when a teacher is currently teaching.
+  ///
+  /// In en, this message translates to:
+  /// **'{teacherName} is teaching {subjectName} in {className}'**
+  String teacherTeaching(
+    String teacherName,
+    String subjectName,
+    String className,
+  );
+
+  /// Text displayed for a teacher's next upcoming class.
+  ///
+  /// In en, this message translates to:
+  /// **'{teacherName}\'s next class is {subjectName} in {className}'**
+  String teacherNextClass(
+    String teacherName,
+    String subjectName,
+    String className,
+  );
+
+  /// Text displayed when a teacher is currently free.
+  ///
+  /// In en, this message translates to:
+  /// **'{teacherName} is free now'**
+  String teacherFreeNow(String teacherName);
+
+  /// Title for the teacher schedule card.
+  ///
+  /// In en, this message translates to:
+  /// **'Teacher Schedule'**
+  String get teacherScheduleCardTitle;
+
+  /// Text displayed when no teacher schedules are found.
+  ///
+  /// In en, this message translates to:
+  /// **'No teacher schedules found.'**
+  String get noTeacherSchedulesFound;
+
+  /// Title for the teacher status overview section in admin panel.
+  ///
+  /// In en, this message translates to:
+  /// **'Teacher Status Overview'**
+  String get teacherStatusOverviewTitle;
+
+  /// Text displayed when no teachers are found for the current school.
+  ///
+  /// In en, this message translates to:
+  /// **'No teachers found in this school.'**
+  String get noTeachersFoundText;
+
+  /// Status for a teacher who is currently teaching.
+  ///
+  /// In en, this message translates to:
+  /// **'Teaching Now'**
+  String get teachingNowStatus;
+
+  /// Status for a teacher who has an upcoming class.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming Class'**
+  String get upcomingClassStatus;
+
+  /// Label for the next upcoming class.
+  ///
+  /// In en, this message translates to:
+  /// **'Next Class'**
+  String get nextClassLabel;
+
+  /// Status for a teacher who is currently free.
+  ///
+  /// In en, this message translates to:
+  /// **'Free'**
+  String get freeStatus;
+
+  /// Text displayed when a teacher has no scheduled classes for the current day.
+  ///
+  /// In en, this message translates to:
+  /// **'No scheduled classes today.'**
+  String get noScheduledClassesToday;
+
+  /// Label for the next upcoming item, e.g., 'Next: Class Name'.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get nextLabel;
+
+  /// Placeholder for a teacher whose name cannot be determined.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown Teacher'**
+  String get unknownTeacher;
+
+  /// No description provided for @statusLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get statusLabel;
+
+  /// Count of teachers currently teaching.
+  ///
+  /// In en, this message translates to:
+  /// **'Teaching Now: {count}'**
+  String teachersTeachingNowCount(int count);
+
+  /// Count of teachers currently free.
+  ///
+  /// In en, this message translates to:
+  /// **'Free Now: {count}'**
+  String teachersFreeNowCount(int count);
+
+  /// No description provided for @studentInformationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Student Information'**
+  String get studentInformationLabel;
+
+  /// Hint text for searching teachers by name.
+  ///
+  /// In en, this message translates to:
+  /// **'Search Teacher'**
+  String get searchTeacherHint;
+
+  /// Text displayed when no teachers match the search query.
+  ///
+  /// In en, this message translates to:
+  /// **'No teachers found matching your search.'**
+  String get noTeachersMatchingSearch;
+
+  /// Title for the whole school schedule screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Whole School Schedule'**
+  String get wholeSchoolScheduleTitle;
+
+  /// Label for time column in schedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get timeLabel;
+
+  /// Text displayed when there is no class scheduled for a specific slot.
+  ///
+  /// In en, this message translates to:
+  /// **'No Class'**
+  String get noClass;
+
+  /// Text for the button to navigate to the whole school schedule screen.
+  ///
+  /// In en, this message translates to:
+  /// **'View Whole School Schedule'**
+  String get viewWholeSchoolScheduleButton;
+
+  /// Error message when school data cannot be loaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading school data. Please try again.'**
+  String get errorLoadingSchoolData;
+
+  /// Message displayed when no whole school schedule data is found.
+  ///
+  /// In en, this message translates to:
+  /// **'No schedule data available. Please add schools, teachers, classes, and timetable entries through the admin panel.'**
+  String get noScheduleDataAvailable;
+
+  /// Text displayed when there are no classes for a specific day.
+  ///
+  /// In en, this message translates to:
+  /// **'No classes scheduled for {day}.'**
+  String noClassesForDay(String day);
 }
 
 class _AppLocalizationsDelegate

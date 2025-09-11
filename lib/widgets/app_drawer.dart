@@ -1,30 +1,17 @@
+import 'package:edu_sync/models/user_role.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:edu_sync/services/auth_service.dart';
-import 'package:edu_sync/screens/auth/login_screen.dart';
+import 'package:go_router/go_router.dart';
 import 'package:edu_sync/providers/school_provider.dart';
 import 'package:edu_sync/models/school.dart';
 // Import other screens as needed for navigation
-import 'package:edu_sync/screens/admin/user_management_screen.dart';
-import 'package:edu_sync/screens/admin/student_management_screen.dart';
-import 'package:edu_sync/screens/admin/view_form_responses_screen.dart'; // Import ViewFormResponsesScreen
-import 'package:edu_sync/screens/admin/class_management_screen.dart';
-import 'package:edu_sync/screens/admin/timetable_management_screen.dart';
-import 'package:edu_sync/screens/admin/finance_management_screen.dart';
-import 'package:edu_sync/screens/admin/edit_school_profile_screen.dart';
-import 'package:edu_sync/screens/teacher/teacher_dashboard_screen.dart';
-import 'package:edu_sync/screens/teacher/teacher_timetable_screen.dart';
-import 'package:edu_sync/screens/teacher/attendance_marking_screen.dart';
-import 'package:edu_sync/screens/teacher/lesson_plan_management_screen.dart';
-import 'package:edu_sync/screens/admin/admin_announcements_screen.dart'; // Import AdminAnnouncementsScreen
-import 'package:edu_sync/screens/admin/manage_custom_forms_screen.dart'; // Import ManageCustomFormsScreen
+// Import ViewFormResponsesScreen
+// Import AdminAnnouncementsScreen
+// Import ManageCustomFormsScreen
+// Import AdminSettingsScreen
 // import 'package:edu_sync/screens/teacher/student_view_screen.dart'; // If a separate one is made
-import 'package:edu_sync/screens/parent/parent_dashboard_screen.dart';
-import 'package:edu_sync/screens/parent/child_attendance_screen.dart';
-import 'package:edu_sync/screens/parent/child_schedule_screen.dart';
-import 'package:edu_sync/screens/parent/announcements_screen.dart';
-import 'package:edu_sync/screens/parent/daily_report_screen.dart'; // Import DailyReportScreen
-import 'package:edu_sync/screens/settings/app_settings_screen.dart'; 
+// Import DailyReportScreen
 import 'package:edu_sync/l10n/app_localizations.dart';
 import 'package:edu_sync/services/notification_service.dart';
 
@@ -40,7 +27,7 @@ class AppDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authService = AuthService();
+    final authService = Provider.of<AuthService>(context, listen: false);
     final schoolProvider = Provider.of<SchoolProvider>(context, listen: false);
     final notificationService = Provider.of<NotificationService>(context); // Listen to changes
     final School? currentSchool = schoolProvider.currentSchool;
@@ -55,7 +42,7 @@ class AppDrawer extends StatelessWidget {
             title: Text('Edit School Profile', style: TextStyle(color: drawerTextDarkGrey)),
             onTap: () {
               Navigator.pop(context); // Close drawer
-              Navigator.of(context).push(MaterialPageRoute(builder: (_) => EditSchoolProfileScreen(school: school)));
+              context.push('/admin/edit-school-profile', extra: school);
             },
           ),
         ListTile(
@@ -63,7 +50,7 @@ class AppDrawer extends StatelessWidget {
           title: Text('User Management', style: TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const UserManagementScreen()));
+            context.push('/admin/user-management');
             },
           ),
         ListTile(
@@ -71,7 +58,7 @@ class AppDrawer extends StatelessWidget {
           title: Text('Student Management', style: TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const StudentManagementScreen()));
+            context.push('/admin/student-management');
             },
           ),
         ListTile(
@@ -79,7 +66,7 @@ class AppDrawer extends StatelessWidget {
           title: Text('Class Management', style: TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ClassManagementScreen()));
+            context.push('/admin/class-management');
             },
           ),
         ListTile(
@@ -87,7 +74,7 @@ class AppDrawer extends StatelessWidget {
           title: Text('Timetable Management', style: TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TimetableManagementScreen()));
+            context.push('/admin/timetable-management');
             },
           ),
         ListTile(
@@ -95,17 +82,16 @@ class AppDrawer extends StatelessWidget {
           title: Text('Finance Management', style: TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const FinanceManagementScreen()));
+            context.push('/admin/finance-management');
           },
         ),
-        const Divider(indent: 16, endIndent: 16), 
+        const Divider(indent: 16, endIndent: 16),
         ListTile(
           leading: const Icon(Icons.check_circle_outline, color: drawerIconColor),
           title: Text('Mark School Attendance', style: TextStyle(color: drawerTextDarkGrey)), // Admin context
           onTap: () {
             Navigator.pop(context);
-            // Admin might need a different view or ability to select class/teacher
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AttendanceMarkingScreen()));
+            context.push('/teacher/attendance-marking');
             },
           ),
         ListTile(
@@ -113,37 +99,45 @@ class AppDrawer extends StatelessWidget {
           title: Text('Manage School Lesson Plans', style: TextStyle(color: drawerTextDarkGrey)), // Admin context
           onTap: () {
             Navigator.pop(context);
-            // Admin might need a different view or ability to select class/teacher
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LessonPlanManagementScreen()));
+            context.push('/teacher/lesson-plan-management');
           },
         ),
-        ListTile( 
-          leading: const Icon(Icons.campaign_outlined, color: drawerIconColor), 
+        ListTile(
+          leading: const Icon(Icons.campaign_outlined, color: drawerIconColor),
           title: Text(AppLocalizations.of(context).manageAnnouncementsDrawerItem, style: TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminAnnouncementsScreen()));
+            context.push('/admin/announcements');
           },
           ),
         ListTile(
-          leading: const Icon(Icons.assignment_outlined, color: drawerIconColor), 
+          leading: const Icon(Icons.assignment_outlined, color: drawerIconColor),
           title: Text(AppLocalizations.of(context).manageDailyReportsDrawerItem, style: TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ManageCustomFormsScreen()));
+            context.push('/admin/manage-custom-forms');
           },
           ),
         ListTile(
-          leading: const Icon(Icons.list_alt_outlined, color: drawerIconColor), 
-          title: Text(l10n.viewFormResponsesTitle, style: TextStyle(color: drawerTextDarkGrey)), 
+          leading: const Icon(Icons.list_alt_outlined, color: drawerIconColor),
+          title: Text(l10n.viewFormResponsesTitle, style: TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
             if (school != null) {
-              Navigator.of(context).push(MaterialPageRoute(builder: (_) => ViewFormResponsesScreen(schoolId: school.id)));
+              context.push('/admin/view-form-responses', extra: school.id);
             } else {
               // Handle case where school is null, maybe show a snackbar
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.error_school_not_selected_or_found)));
             }
+          },
+        ),
+        const Divider(indent: 16, endIndent: 16),
+        ListTile(
+          leading: const Icon(Icons.admin_panel_settings, color: drawerIconColor),
+          title: Text(l10n.adminSettingsTitle, style: TextStyle(color: drawerTextDarkGrey)),
+          onTap: () {
+            Navigator.pop(context);
+            context.push('/admin/settings');
           },
         ),
       ];
@@ -157,7 +151,7 @@ class AppDrawer extends StatelessWidget {
           title: Text('Dashboard', style: TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
-            Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const TeacherDashboardScreen()));
+            context.go('/teacher-dashboard');
             },
           ),
         ListTile(
@@ -165,7 +159,7 @@ class AppDrawer extends StatelessWidget {
           title: Text('My Timetable', style: TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TeacherTimetableScreen()));
+            context.push('/teacher/timetable');
             },
           ),
         ListTile(
@@ -173,7 +167,7 @@ class AppDrawer extends StatelessWidget {
           title: Text('Mark Attendance', style: TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AttendanceMarkingScreen()));
+            context.push('/teacher/attendance-marking');
             },
           ),
         ListTile(
@@ -181,7 +175,7 @@ class AppDrawer extends StatelessWidget {
           title: Text('Lesson Plans', style: TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LessonPlanManagementScreen()));
+            context.push('/teacher/lesson-plan-management');
             },
           ),
          ListTile(
@@ -190,18 +184,18 @@ class AppDrawer extends StatelessWidget {
           onTap: () {
             Navigator.pop(context);
             // Assuming teachers can view the same student list screen as admins for now
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const StudentManagementScreen()));
+            context.push('/admin/student-management');
           },
           ),
         ListTile(
-          leading: const Icon(Icons.list_alt, color: drawerIconColor), 
-          title: Text(l10n.viewFormResponsesTitle, style: TextStyle(color: drawerTextDarkGrey)), 
+          leading: const Icon(Icons.list_alt, color: drawerIconColor),
+          title: Text(l10n.viewFormResponsesTitle, style: TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
             // Teachers also need schoolId context for this screen
             final schoolId = schoolProvider.currentSchool?.id;
             if (schoolId != null) {
-              Navigator.of(context).push(MaterialPageRoute(builder: (_) => ViewFormResponsesScreen(schoolId: schoolId)));
+              context.push('/admin/view-form-responses', extra: schoolId);
             } else {
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.error_school_not_selected_or_found)));
             }
@@ -218,7 +212,7 @@ class AppDrawer extends StatelessWidget {
           title: Text('Dashboard', style: TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
-            Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const ParentDashboardScreen()));
+            context.go('/parent-dashboard');
             },
           ),
         ListTile(
@@ -226,7 +220,7 @@ class AppDrawer extends StatelessWidget {
           title: Text('Child\'s Attendance', style: TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ChildAttendanceScreen()));
+            context.push('/parent/child-attendance');
             },
           ),
         ListTile(
@@ -234,14 +228,14 @@ class AppDrawer extends StatelessWidget {
           title: Text('Child\'s Schedule', style: TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ChildScheduleScreen()));
+            context.push('/parent/child-schedule');
           },
         ),
         ListTile(
           leading: const Icon(Icons.campaign, color: drawerIconColor),
           title: Row(
             children: [
-              Text(AppLocalizations.of(context).announcementsTitle, style: TextStyle(color: drawerTextDarkGrey)), 
+              Text(AppLocalizations.of(context).announcementsTitle, style: TextStyle(color: drawerTextDarkGrey)),
               if (notificationService.hasNewAnnouncements)
                 Padding(
                   padding: const EdgeInsets.only(left: 8.0),
@@ -251,7 +245,7 @@ class AppDrawer extends StatelessWidget {
           ),
           onTap: () {
             Navigator.pop(context);
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AnnouncementsScreen())).then((_){
+            context.push('/parent/announcements').then((_){
               if (notificationService.hasNewAnnouncements) {
                  // Consider clearing flag here or within AnnouncementsScreen
               }
@@ -259,11 +253,64 @@ class AppDrawer extends StatelessWidget {
           },
           ),
         ListTile(
-          leading: const Icon(Icons.assessment_outlined, color: drawerIconColor), 
-          title: Text(l10n.dailyReportsTitle, style: TextStyle(color: drawerTextDarkGrey)), 
+          leading: const Icon(Icons.assessment_outlined, color: drawerIconColor),
+          title: Text(l10n.dailyReportsTitle, style: TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DailyReportScreen()));
+            context.push('/parent/daily-report');
+          },
+        ),
+      ];
+    }
+
+    List<Widget> buildManagerDrawerItems(BuildContext context) {
+      return [
+        ListTile(
+          leading: const Icon(Icons.dashboard, color: drawerIconColor),
+          title: Text('Dashboard', style: TextStyle(color: drawerTextDarkGrey)),
+          onTap: () {
+            Navigator.pop(context);
+            context.go('/manager-dashboard');
+            },
+          ),
+        ListTile(
+          leading: const Icon(Icons.people, color: drawerIconColor),
+          title: Text('User Management', style: TextStyle(color: drawerTextDarkGrey)),
+          onTap: () {
+            Navigator.pop(context);
+            context.push('/admin/user-management');
+            },
+          ),
+        ListTile(
+          leading: const Icon(Icons.school_outlined, color: drawerIconColor),
+          title: Text('Student Management', style: TextStyle(color: drawerTextDarkGrey)),
+          onTap: () {
+            Navigator.pop(context);
+            context.push('/admin/student-management');
+            },
+          ),
+        ListTile(
+          leading: const Icon(Icons.class_, color: drawerIconColor),
+          title: Text('Class Management', style: TextStyle(color: drawerTextDarkGrey)),
+          onTap: () {
+            Navigator.pop(context);
+            context.push('/admin/class-management');
+            },
+          ),
+        ListTile(
+          leading: const Icon(Icons.calendar_today, color: drawerIconColor),
+          title: Text('Timetable Management', style: TextStyle(color: drawerTextDarkGrey)),
+          onTap: () {
+            Navigator.pop(context);
+            context.push('/admin/timetable-management');
+            },
+          ),
+        ListTile(
+          leading: const Icon(Icons.attach_money, color: drawerIconColor),
+          title: Text('Finance Management', style: TextStyle(color: drawerTextDarkGrey)),
+          onTap: () {
+            Navigator.pop(context);
+            context.push('/admin/finance-management');
           },
         ),
       ];
@@ -280,12 +327,14 @@ class AppDrawer extends StatelessWidget {
 
           final userRole = snapshot.data;
           List<Widget> drawerItems = [];
-          if (userRole == 'Admin') {
+          if (userRole == UserRole.Admin.name) {
             drawerItems = buildAdminDrawerItems(context, currentSchool);
-          } else if (userRole == 'Teacher') {
+          } else if (userRole == UserRole.Teacher.name) {
             drawerItems = buildTeacherDrawerItems(context);
-          } else if (userRole == 'Parent') {
+          } else if (userRole == UserRole.Parent.name) {
             drawerItems = buildParentDrawerItems(context);
+          } else if (userRole == UserRole.Manager.name) {
+            drawerItems = buildManagerDrawerItems(context);
           }
 
           return ListView(
@@ -314,7 +363,7 @@ class AppDrawer extends StatelessWidget {
                 title: Text('App Settings', style: TextStyle(color: drawerTextDarkGrey)),
                 onTap: () {
                   Navigator.pop(context);
-                  Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AppSettingsScreen()));
+                  context.push('/app-settings');
                 },
               ),
               ListTile(
@@ -323,10 +372,7 @@ class AppDrawer extends StatelessWidget {
                 onTap: () async {
                   Navigator.pop(context);
                   await authService.signOut();
-                  Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (context) => const LoginScreen()),
-                    (Route<dynamic> route) => false,
-                  );
+                  context.go('/login'); // Use go_router for navigation
                 },
               ),
             ],

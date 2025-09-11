@@ -17,9 +17,9 @@ class AnnouncementsScreen extends StatefulWidget {
 }
 
 class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
-  final AnnouncementService _announcementService = AnnouncementService();
-  final AuthService _authService = AuthService();
-  final NotificationService _notificationService = NotificationService(); // Add NotificationService instance
+  late final AnnouncementService _announcementService;
+  late final AuthService _authService;
+  late final NotificationService _notificationService;
 
   List<Announcement> _announcements = [];
   bool _isLoading = true;
@@ -29,6 +29,9 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
   @override
   void initState() {
     super.initState();
+    _announcementService = Provider.of<AnnouncementService>(context, listen: false);
+    _authService = Provider.of<AuthService>(context, listen: false);
+    _notificationService = Provider.of<NotificationService>(context, listen: false);
     _loadInitialData();
   }
 
@@ -153,7 +156,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                                   Text(announcement.content, style: theme.textTheme.bodyMedium),
                                   const SizedBox(height: 8),
                                   Text(
-                                    '${l10n.postedOn} ${DateFormat.yMMMd(l10n.localeName).format(announcement.createdAt)}', 
+                                    '${l10n.postedOn} ${DateFormat.yMMMd(l10n.localeName).format(announcement.createdAt)}',
                                     style: theme.textTheme.bodySmall?.copyWith(color: textLightGrey), // Use top-level constant
                                   ),
                                 ],

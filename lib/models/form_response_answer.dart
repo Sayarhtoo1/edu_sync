@@ -30,29 +30,23 @@ class FormResponseAnswer {
   });
 
   factory FormResponseAnswer.fromMap(Map<String, dynamic> map) {
-    // Supabase might return 'answer' as already parsed JSON/JSONB or as a string.
-    // For consistency, we expect 'answer' to be the direct value or a JSON string.
     String answerJsonValue;
     if (map['answer'] == null) {
-      answerJsonValue = 'null'; // Store null as a JSON null string
+      answerJsonValue = jsonEncode(null);
     } else if (map['answer'] is String) {
-      // If it's already a JSON string (e.g. from text field, or already encoded)
-      // or just a plain string for text answers.
-      // We need to decide if plain strings should be wrapped in JSON quotes.
-      // For simplicity, let's assume text answers are stored as plain strings,
-      // and other types (list, bool, num) are JSON encoded.
-      // The `answer` getter will try to decode.
-      // For fromMap, we just take the string value if it's a string.
-      // If it's not a string (e.g. bool, num, list from Supabase JSONB), encode it.
-      answerJsonValue = map['answer'] as String; // This assumes DB stores it as text that might be JSON
+      answerJsonValue = map['answer'];
     } else {
-      answerJsonValue = jsonEncode(map['answer']);
+      try {
+        answerJsonValue = jsonEncode(map['answer']);
+      } catch (e) {
+        answerJsonValue = map['answer'].toString();
+      }
     }
-    
+
     return FormResponseAnswer(
-      id: map['id'] as String,
-      responseId: map['response_id'] as String,
-      fieldId: map['field_id'] as String,
+      id: map['id'] ?? '',
+      responseId: map['response_id'] ?? '',
+      fieldId: map['field_id'] ?? '',
       answerJson: answerJsonValue,
     );
   }
@@ -75,4 +69,21 @@ class FormResponseAnswer {
     required this.fieldId,
     required this.answerJson,
   });
+
+  /// Serializes the answer into a format suitable for the RPC function.
+  Map<String, dynamic> toRpcJson() {
+    // The RPC function expects a JSON object with 'field_id' and 'answer_text' or 'answer_json'.
+    // Based on the SQL function, we should provide the answer in a structured way.
+    // The SQL function seems to prefer `answer_text` for simple values and `answer_json` for complex ones.
+    
+    dynamic decodedAnswer = answer; // Use the getter to decode the JSON string
+
+    return {
+      'field_id': fieldId,
+      // If the answer is a simple string, pass it as answer_text.
+      // Otherwise, pass the raw JSON string to the answer_json parameter.
+      'answer_text': decodedAnswer is String ? decodedAnswer : null,
+      'answer_json': decodedAnswer is String ? null : jsonDecode(answerJson),
+    };
+  }
 }

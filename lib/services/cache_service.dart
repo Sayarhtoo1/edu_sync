@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:edu_sync/utils/logger.dart';
 import '../models/announcement.dart';
 import '../models/school_class.dart';
 import '../models/student.dart';
@@ -34,6 +35,11 @@ class CacheService {
   static const String _parentIdsForStudentKeyPrefix = 'cached_parent_ids_for_student_';
   static const String _studentByIdKeyPrefix = 'cached_student_by_id_';
 
+  static String get schoolKeyPrefix => _schoolKeyPrefix;
+  static String get studentsKeyPrefix => _studentsKeyPrefix;
+  static String get studentByIdKeyPrefix => _studentByIdKeyPrefix;
+  static String get studentsForParentKeyPrefix => _studentsForParentKeyPrefix;
+
   Future<SharedPreferences> get _prefs async => await SharedPreferences.getInstance();
 
   // --- Announcements ---
@@ -42,7 +48,7 @@ class CacheService {
     final prefs = await _prefs;
     final announcementsJson = announcements.map((a) => a.toMap()).toList();
     await prefs.setString('$_announcementsKeyPrefix$schoolId', json.encode(announcementsJson));
-    print('Announcements saved for offline use.');
+    logger.d('Announcements saved for offline use.');
   }
 
   Future<List<Announcement>> getAnnouncements(int schoolId) async {
@@ -61,7 +67,7 @@ class CacheService {
     final prefs = await _prefs;
     final classesJson = classes.map((c) => c.toMap()).toList();
     await prefs.setString('$_classesKeyPrefix$schoolId', json.encode(classesJson));
-    print('Classes saved for offline use.');
+    logger.d('Classes saved for offline use.');
   }
 
   Future<List<SchoolClass>> getClasses(int schoolId) async {
@@ -80,7 +86,7 @@ class CacheService {
     final prefs = await _prefs;
     final studentsJson = students.map((s) => s.toMap()).toList();
     await prefs.setString('$_studentsKeyPrefix$classId', json.encode(studentsJson));
-    print('Students for class $classId saved for offline use.');
+    logger.d('Students for class $classId saved for offline use.');
   }
 
   Future<List<Student>> getStudentsForClass(int classId) async {
@@ -100,7 +106,7 @@ class CacheService {
     final dateString = date.toIso8601String().substring(0, 10); // YYYY-MM-DD
     final attendanceJson = attendance.map((a) => a.toMap()).toList();
     await prefs.setString('$_attendanceKeyPrefix${classId}_$dateString', json.encode(attendanceJson));
-    print('Attendance for class $classId on $dateString saved for offline use.');
+    logger.d('Attendance for class $classId on $dateString saved for offline use.');
   }
 
   Future<List<Attendance>> getAttendanceForClass(int classId, DateTime date) async {
@@ -286,6 +292,26 @@ class CacheService {
     if (timetableString != null) {
       final List<dynamic> timetableJson = json.decode(timetableString);
       return timetableJson.map((json) => Timetable.fromMap(json)).toList();
+    }
+    return [];
+  }
+
+  // --- All Timetables ---
+
+  static const String _allTimetablesKeyPrefix = 'cached_all_timetables_for_school_';
+
+  Future<void> saveAllTimetables(int schoolId, List<Timetable> timetables) async {
+    final prefs = await _prefs;
+    final timetablesJson = timetables.map((t) => t.toMap()).toList();
+    await prefs.setString('$_allTimetablesKeyPrefix$schoolId', json.encode(timetablesJson));
+  }
+
+  Future<List<Timetable>> getAllTimetables(int schoolId) async {
+    final prefs = await _prefs;
+    final timetablesString = prefs.getString('$_allTimetablesKeyPrefix$schoolId');
+    if (timetablesString != null) {
+      final List<dynamic> timetablesJson = json.decode(timetablesString);
+      return timetablesJson.map((json) => Timetable.fromMap(json)).toList();
     }
     return [];
   }

@@ -1,62 +1,108 @@
 import 'dart:io';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:edu_sync/models/student.dart';
-import 'cache_service.dart';
-import 'class_service.dart';
+import 'package:edu_sync/utils/logger.dart';
+import 'package:edu_sync/database/app_database.dart' as db; // Alias AppDatabase
+import 'api_service.dart';
 
 class StudentService {
   final SupabaseClient _supabaseClient = Supabase.instance.client;
-  final CacheService _cacheService = CacheService();
-  final ClassService _classService = ClassService();
+  final db.AppDatabase _appDatabase; // Add AppDatabase instance
+  final ApiService _apiService = ApiService();
+  // final ClassService _classService; // ClassService now requires AppDatabase - Removed as it's unused
 
-  // Fetch all students for a school
+  StudentService(this._appDatabase); // Initialize AppDatabase
+
+  // Fetch all students for a school using the new view
   Future<List<Student>> getStudentsBySchool(int schoolId) async {
-    final List<Student> allStudents = [];
-    final classes = await _classService.getClasses(schoolId);
-    for (final c in classes) {
-      if (c.id != null) {
-        final students = await getStudentsByClass(c.id!);
-        allStudents.addAll(students);
-      }
+    try {
+      final response = await _supabaseClient
+          .from('school_students_view')
+          .select()
+          .eq('school_id', schoolId);
+
+      final students = response.map((data) => Student.fromMap(data)).toList();
+      return students;
+    } catch (e) {
+      logger.e('Error fetching students by school: $e');
+      return [];
     }
-    return allStudents;
   }
 
   // Fetch students for a specific class
   Future<List<Student>> getStudentsByClass(int classId) async { // Corrected to int
-    final connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult == ConnectivityResult.none) {
-      // Offline: Fetch from cache
-      return await _cacheService.getStudentsForClass(classId);
-    } else {
-      // Online: Fetch from Supabase and update cache
-      try {
+    // TODO: Implement drift caching for students
+    return await _apiService.fetchData<List<Student>>(
+      onlineRequest: () async {
         final response = await _supabaseClient
             .from('students')
             .select()
             .eq('class_id', classId);
-        final students = response.map((data) => Student.fromMap(data)).toList();
-        await _cacheService.saveStudentsForClass(classId, students);
-        return students;
-      } catch (e) {
-        print('Error fetching students by class: $e');
-        return await _cacheService.getStudentsForClass(classId);
-      }
-    }
+        return response.map((data) => Student.fromMap(data)).toList();
+      },
+      offlineRequest: () async {
+        // For now, no offline support for students by class in drift
+        return [];
+      },
+      cacheData: (data) async {
+        // For now, no caching for students by class in drift
+      },
+    );
   }
   
-  // Add a new student
-  Future<Student?> createStudent(Student student) async {
+  // Creates a student without linking a parent.
+  Future<int?> createStudent({
+    required String studentName,
+    required int schoolId,
+    int? classId, // Made nullable
+    DateTime? dateOfBirth,
+    String? profilePhotoUrl,
+    String? gender,
+  }) async {
     try {
-      final response = await _supabaseClient
-          .from('students')
-          .insert(student.toMap()..remove('id')) // Remove id for insert
-          .select()
-          .single();
-      return Student.fromMap(response);
+      final response = await _supabaseClient.from('students').insert({
+        'full_name': studentName,
+        'school_id': schoolId,
+        'class_id': classId,
+        'date_of_birth': dateOfBirth?.toIso8601String(),
+        'profile_photo_url': profilePhotoUrl,
+        'gender': gender,
+      }).select('id').single();
+      return response['id'] as int?;
     } catch (e) {
-      print('Error creating student: $e');
+      logger.e('Error creating student: $e');
+      return null;
+    }
+  }
+
+  // Creates a student and links them to a parent in a single transaction.
+  Future<int?> createStudentWithParent({
+    required String studentName,
+    required int schoolId,
+    int? classId, // Made nullable
+    required String parentId, // ParentId is required for this RPC
+    required String relationType,
+    DateTime? dateOfBirth,
+    String? profilePhotoUrl,
+    String? gender,
+  }) async {
+    try {
+      final newStudentId = await _supabaseClient.rpc(
+        'create_student_and_link_parent',
+        params: {
+          'p_student_name': studentName,
+          'p_school_id': schoolId,
+          'p_class_id': classId,
+          'p_parent_id': parentId,
+          'p_relation_type': relationType,
+          'p_date_of_birth': dateOfBirth?.toIso8601String(),
+          'p_profile_photo_url': profilePhotoUrl,
+          'p_gender': gender,
+        },
+      );
+      return newStudentId as int?;
+    } catch (e) {
+      logger.e('Error creating student with parent link via RPC: $e');
       return null;
     }
   }
@@ -70,7 +116,7 @@ class StudentService {
           .eq('id', student.id);
       return true;
     } catch (e) {
-      print('Error updating student: $e');
+      logger.e('Error updating student: $e');
       return false;
     }
   }
@@ -84,7 +130,7 @@ class StudentService {
           .eq('id', studentId);
       return true;
     } catch (e) {
-      print('Error deleting student: $e');
+      logger.e('Error deleting student: $e');
       return false;
     }
   }
@@ -101,24 +147,9 @@ class StudentService {
       final publicUrl = _supabaseClient.storage.from('edusync').getPublicUrl(storagePath);
       return publicUrl;
     } catch (e) {
-      print('Error uploading student profile photo: $e');
+      logger.e('Error uploading student profile photo: $e');
     }
     return null;
-  }
-
-  // Link a parent to a student
-  Future<bool> linkParentToStudent(String parentId, int studentId, String relationType) async {
-    try {
-      await _supabaseClient.from('parent_student_relations').insert({
-        'parent_id': parentId,
-        'student_id': studentId,
-        'relation_type': relationType,
-      });
-      return true;
-    } catch (e) {
-      print('Error linking parent to student: $e');
-      return false;
-    }
   }
 
   // Unlink a parent from a student
@@ -131,101 +162,98 @@ class StudentService {
           .eq('student_id', studentId);
       return true;
     } catch (e) {
-      print('Error unlinking parent from student: $e');
+      logger.e('Error unlinking parent from student: $e');
       return false;
     }
   }
 
   // Get student IDs for a parent
   Future<List<int>> getStudentIdsForParent(String parentId) async {
-    final connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult == ConnectivityResult.none) {
-      return await _cacheService.getStudentIdsForParent(parentId);
-    } else {
-      try {
+    // TODO: Implement drift caching for student IDs for parent
+    return await _apiService.fetchData<List<int>>(
+      onlineRequest: () async {
         final response = await _supabaseClient
             .from('parent_student_relations')
             .select('student_id')
             .eq('parent_id', parentId);
-        final studentIds = response.map((data) => data['student_id'] as int).toList();
-        await _cacheService.saveStudentIdsForParent(parentId, studentIds);
-        return studentIds;
-      } catch (e) {
-        print('Error fetching student IDs for parent: $e');
-        return await _cacheService.getStudentIdsForParent(parentId);
-      }
-    }
+        return response.map((data) => data['student_id'] as int).toList();
+      },
+      offlineRequest: () async {
+        // For now, no offline support for student IDs for parent in drift
+        return [];
+      },
+      cacheData: (data) async {
+        // For now, no caching for student IDs for parent in drift
+      },
+    );
   }
 
   // Fetch full student details for a parent
   Future<List<Student>> getStudentsByParent(String parentId, int schoolId) async {
-    final connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult == ConnectivityResult.none) {
-      return await _cacheService.getStudentsForParent(parentId);
-    } else {
-      try {
+    // TODO: Implement drift caching for students by parent
+    return await _apiService.fetchData<List<Student>>(
+      onlineRequest: () async {
         final studentIds = await getStudentIdsForParent(parentId);
         if (studentIds.isEmpty) {
           return [];
         }
-        // Fetch students whose IDs are in the list and belong to the specified school
-        // This also respects RLS on the students table (e.g., parent can only see their linked students)
         final response = await _supabaseClient
             .from('students')
             .select()
-            .filter('id', 'in', studentIds) // Corrected 'in' filter
-            .eq('school_id', schoolId); // Ensure students are from the correct school context
-
-        final students = response.map((data) => Student.fromMap(data)).toList();
-        await _cacheService.saveStudentsForParent(parentId, students);
-        return students;
-      } catch (e) {
-        print('Error fetching students for parent $parentId: $e');
-        return await _cacheService.getStudentsForParent(parentId);
-      }
-    }
+            .filter('id', 'in', studentIds)
+            .eq('school_id', schoolId);
+        return response.map((data) => Student.fromMap(data)).toList();
+      },
+      offlineRequest: () async {
+        // For now, no offline support for students by parent in drift
+        return [];
+      },
+      cacheData: (data) async {
+        // For now, no caching for students by parent in drift
+      },
+    );
   }
 
   // Get parent IDs for a student
   Future<List<String>> getParentIdsForStudent(int studentId) async {
-    final connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult == ConnectivityResult.none) {
-      return await _cacheService.getParentIdsForStudent(studentId);
-    } else {
-      try {
+    // TODO: Implement drift caching for parent IDs for student
+    return await _apiService.fetchData<List<String>>(
+      onlineRequest: () async {
         final response = await _supabaseClient
             .from('parent_student_relations')
             .select('parent_id')
             .eq('student_id', studentId);
-        final parentIds = response.map((data) => data['parent_id'] as String).toList();
-        await _cacheService.saveParentIdsForStudent(studentId, parentIds);
-        return parentIds;
-      } catch (e) {
-        print('Error fetching parent IDs for student $studentId: $e');
-        return await _cacheService.getParentIdsForStudent(studentId);
-      }
-    }
+        return response.map((data) => data['parent_id'] as String).toList();
+      },
+      offlineRequest: () async {
+        // For now, no offline support for parent IDs for student in drift
+        return [];
+      },
+      cacheData: (data) async {
+        // For now, no caching for parent IDs for student in drift
+      },
+    );
   }
 
   Future<Student?> getStudentById(int studentId, int schoolId) async {
-    final connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult == ConnectivityResult.none) {
-      return await _cacheService.getStudentById(studentId);
-    } else {
-      try {
+    // TODO: Implement drift caching for student by ID
+    return await _apiService.fetchData<Student?>(
+      onlineRequest: () async {
         final response = await _supabaseClient
             .from('students')
             .select()
             .eq('id', studentId)
-            .eq('school_id', schoolId) // Ensure student belongs to the correct school
+            .eq('school_id', schoolId)
             .single();
-        final student = Student.fromMap(response);
-        await _cacheService.saveStudentById(student);
-        return student;
-      } catch (e) {
-        print('Error fetching student by ID $studentId for school $schoolId: $e');
-        return await _cacheService.getStudentById(studentId);
-      }
-    }
+        return Student.fromMap(response);
+      },
+      offlineRequest: () async {
+        // For now, no offline support for student by ID in drift
+        return null;
+      },
+      cacheData: (data) async {
+        // For now, no caching for student by ID in drift
+      },
+    );
   }
 }

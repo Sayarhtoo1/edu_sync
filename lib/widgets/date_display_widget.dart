@@ -11,8 +11,7 @@ class DateDisplayWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final schoolProvider = Provider.of<SchoolProvider>(context);
-    final int dayAdjustment = schoolProvider.currentSchool?.hijriDayAdjustment ?? 0;
+    final int dayAdjustment = context.select<SchoolProvider, int>((provider) => provider.currentSchool?.hijriDayAdjustment ?? 0);
 
     final now = DateTime.now();
     final gregorianDate = DateFormat.yMMMMd(l10n.localeName).format(now);

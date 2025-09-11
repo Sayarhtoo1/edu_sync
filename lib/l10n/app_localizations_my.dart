@@ -15,52 +15,31 @@ class AppLocalizationsMy extends AppLocalizations {
   String get login => 'ဝင်မည်';
 
   @override
+  String get logout => 'ထွက်မည်';
+
+  @override
   String get email => 'အီးမေးလ်';
 
   @override
   String get password => 'စကားဝှက်';
 
   @override
-  String get adminPanel => 'အက်မင် ပאנل';
+  String get forgotPassword => 'Forgot Password';
 
   @override
-  String get teacherDashboard => 'ဆရာ ဒက်ရှ်ဘုတ်';
+  String get resetPassword => 'Reset Password';
 
   @override
-  String get parentDashboard => 'မိဘ ဒက်ရှ်ဘုတ်';
+  String get newPassword => 'New Password';
 
   @override
-  String get welcomeAdmin => 'အက်မင်၊ ကြိုဆိုပါတယ်။';
+  String get confirmNewPassword => 'Confirm New Password';
 
   @override
-  String get welcomeTeacher => 'ဆရာ/မ၊ ကြိုဆိုပါတယ်။';
+  String get setNewPassword => 'Set New Password';
 
   @override
-  String get welcomeParent => 'မိဘ၊ ကြိုဆိုပါတယ်။';
-
-  @override
-  String get useDrawerToNavigate => 'သွားလာရန် အံဆွဲကို အသုံးပြုပါ။';
-
-  @override
-  String get settings => 'ဆက်တင်များ';
-
-  @override
-  String get language => 'ဘာသာစကား';
-
-  @override
-  String get logout => 'ထွက်မည်';
-
-  @override
-  String get teachers => 'ဆရာများ';
-
-  @override
-  String get parents => 'မိဘများ';
-
-  @override
-  String get students => 'ကျောင်းသားများ';
-
-  @override
-  String get classes => 'အတန်းများ';
+  String get backToLogin => 'Back to Login';
 
   @override
   String get error_user_not_found =>
@@ -75,11 +54,29 @@ class AppLocalizationsMy extends AppLocalizations {
       'အချိန်ဇယား ရယူရာတွင် အမှားအယွင်းဖြစ်ပွားခဲ့သည်။';
 
   @override
+  String get no_timetable_entries_found =>
+      'အချိန်ဇယား ထည့်သွင်းမှုများ မတွေ့ပါ။';
+
+  @override
   String get my_timetable_title => 'ကျွန်ုပ်၏ အချိန်ဇယား';
 
   @override
-  String get no_timetable_entries_found =>
-      'အချိန်ဇယား ထည့်သွင်းမှုများ မတွေ့ပါ။';
+  String get classLabel => 'အတန်း';
+
+  @override
+  String get unknown_class => 'အမည်မသိ အတန်း';
+
+  @override
+  String get time => 'အချိန်';
+
+  @override
+  String get upcoming => 'Upcoming';
+
+  @override
+  String get in_process => 'In Process';
+
+  @override
+  String get done => 'Done';
 
   @override
   String get monday => 'တနင်္လာ';
@@ -104,15 +101,6 @@ class AppLocalizationsMy extends AppLocalizations {
 
   @override
   String get unknown_subject => 'အမည်မသိ ဘာသာရပ်';
-
-  @override
-  String get classLabel => 'အတန်း';
-
-  @override
-  String get unknown_class => 'အမည်မသိ အတန်း';
-
-  @override
-  String get time => 'အချိန်';
 
   @override
   String get room => 'အခန်း';
@@ -154,6 +142,9 @@ class AppLocalizationsMy extends AppLocalizations {
 
   @override
   String get attendanceStatusLate => 'နောက်ကျ';
+
+  @override
+  String get attendanceStatusLeave => 'Leave';
 
   @override
   String get manageLessonPlansTitle => 'သင်ခန်းစာ အစီအစဉ်များ စီမံရန်';
@@ -1186,6 +1177,15 @@ class AppLocalizationsMy extends AppLocalizations {
   String get confirmDeleteUserTextPart1 => 'ဤ';
 
   @override
+  String get forgotPasswordInstructions =>
+      'Enter your email to receive a password reset link.';
+
+  @override
+  String passwordResetEmailSent(Object email) {
+    return 'Password reset email sent to $email. Please check your inbox.';
+  }
+
+  @override
   String get forgotPasswordButtonLabel => 'စကားဝှက် မေ့နေပါသလား။';
 
   @override
@@ -1350,6 +1350,12 @@ class AppLocalizationsMy extends AppLocalizations {
   String get teacherTimetableAction => 'View Timetable';
 
   @override
+  String get teacherTimetable => 'Teacher Timetable';
+
+  @override
+  String get markAttendance => 'Mark Attendance';
+
+  @override
   String get addStudent => 'Add Student';
 
   @override
@@ -1396,4 +1402,150 @@ class AppLocalizationsMy extends AppLocalizations {
 
   @override
   String get camera => 'ကင်မရာ';
+
+  @override
+  String get teachers => 'ဆရာများ';
+
+  @override
+  String get parents => 'မိဘများ';
+
+  @override
+  String get welcomeAdmin => 'အက်မင်၊ ကြိုဆိုပါတယ်။';
+
+  @override
+  String get students => 'ကျောင်းသားများ';
+
+  @override
+  String get language => 'ဘာသာစကား';
+
+  @override
+  String get settings => 'ဆက်တင်များ';
+
+  @override
+  String get youAreFreeNow => 'You are free now.';
+
+  @override
+  String get currentSubject => 'Current Subject';
+
+  @override
+  String get nextSubject => 'Next Subject';
+
+  @override
+  String get noScheduleToday => 'No schedule today.';
+
+  @override
+  String get teacherSchedulesSummary => 'Teacher Schedules Summary';
+
+  @override
+  String get teachersTeachingNow => 'Teachers Teaching Now';
+
+  @override
+  String get teachersFreeNow => 'Teachers Free Now';
+
+  @override
+  String get teachersUpcomingClasses => 'Teachers with Upcoming Classes';
+
+  @override
+  String teacherTeaching(
+    String teacherName,
+    String subjectName,
+    String className,
+  ) {
+    return '$teacherName is teaching $subjectName in $className';
+  }
+
+  @override
+  String teacherNextClass(
+    String teacherName,
+    String subjectName,
+    String className,
+  ) {
+    return '$teacherName\'s next class is $subjectName in $className';
+  }
+
+  @override
+  String teacherFreeNow(String teacherName) {
+    return '$teacherName is free now';
+  }
+
+  @override
+  String get teacherScheduleCardTitle => 'Teacher Schedule';
+
+  @override
+  String get noTeacherSchedulesFound => 'No teacher schedules found.';
+
+  @override
+  String get teacherStatusOverviewTitle => 'ဆရာ/မ အခြေအနေ အနှစ်ချုပ်';
+
+  @override
+  String get noTeachersFoundText => 'ဤကျောင်းတွင် ဆရာ/မများ မတွေ့ပါ။';
+
+  @override
+  String get teachingNowStatus => 'လက်ရှိ သင်ကြားနေသည်';
+
+  @override
+  String get upcomingClassStatus => 'လာမည့် အတန်း';
+
+  @override
+  String get nextClassLabel => 'နောက်လာမည့် အတန်း';
+
+  @override
+  String get freeStatus => 'အားလပ်သည်';
+
+  @override
+  String get noScheduledClassesToday => 'ယနေ့အတွက် အချိန်ဇယား မရှိပါ။';
+
+  @override
+  String get nextLabel => 'Next';
+
+  @override
+  String get unknownTeacher => 'အမည်မသိ ဆရာ/မ';
+
+  @override
+  String get statusLabel => 'အခြေအနေ';
+
+  @override
+  String teachersTeachingNowCount(int count) {
+    return 'လက်ရှိ သင်ကြားနေသူ: $count ဦး';
+  }
+
+  @override
+  String teachersFreeNowCount(int count) {
+    return 'အားလပ်သူ: $count ဦး';
+  }
+
+  @override
+  String get studentInformationLabel => 'ကျောင်းသား အချက်အလက်';
+
+  @override
+  String get searchTeacherHint => 'Search Teacher';
+
+  @override
+  String get noTeachersMatchingSearch =>
+      'No teachers found matching your search.';
+
+  @override
+  String get wholeSchoolScheduleTitle => 'Whole School Schedule';
+
+  @override
+  String get timeLabel => 'Time';
+
+  @override
+  String get noClass => 'No Class';
+
+  @override
+  String get viewWholeSchoolScheduleButton => 'View Whole School Schedule';
+
+  @override
+  String get errorLoadingSchoolData =>
+      'Error loading school data. Please try again.';
+
+  @override
+  String get noScheduleDataAvailable =>
+      'No schedule data available. Please add schools, teachers, classes, and timetable entries through the admin panel.';
+
+  @override
+  String noClassesForDay(String day) {
+    return 'No classes scheduled for $day.';
+  }
 }

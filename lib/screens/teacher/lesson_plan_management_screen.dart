@@ -3,11 +3,13 @@ import 'package:intl/intl.dart';
 import 'package:edu_sync/models/school_class.dart' as app_class;
 import 'package:edu_sync/models/lesson_plan.dart';
 import 'package:edu_sync/services/class_service.dart';
+import 'package:edu_sync/models/user_role.dart';
 import 'package:edu_sync/services/lesson_plan_service.dart';
 import 'package:edu_sync/services/auth_service.dart';
 import 'package:edu_sync/l10n/app_localizations.dart';
 import 'add_edit_lesson_plan_screen.dart';
 import 'package:edu_sync/theme/app_theme.dart'; // Ensure AppTheme is imported
+import 'package:provider/provider.dart';
 
 class LessonPlanManagementScreen extends StatefulWidget {
   const LessonPlanManagementScreen({super.key});
@@ -17,9 +19,9 @@ class LessonPlanManagementScreen extends StatefulWidget {
 }
 
 class _LessonPlanManagementScreenState extends State<LessonPlanManagementScreen> {
-  final ClassService _classService = ClassService();
-  final LessonPlanService _lessonPlanService = LessonPlanService();
-  final AuthService _authService = AuthService();
+  late final ClassService _classService;
+  late final LessonPlanService _lessonPlanService;
+  late final AuthService _authService;
 
   List<app_class.SchoolClass> _teacherClasses = [];
   app_class.SchoolClass? _selectedClass;
@@ -34,6 +36,9 @@ class _LessonPlanManagementScreenState extends State<LessonPlanManagementScreen>
   @override
   void initState() {
     super.initState();
+    _classService = Provider.of<ClassService>(context, listen: false);
+    _lessonPlanService = Provider.of<LessonPlanService>(context, listen: false);
+    _authService = Provider.of<AuthService>(context, listen: false);
     _loadInitialData();
   }
 
@@ -53,9 +58,9 @@ class _LessonPlanManagementScreenState extends State<LessonPlanManagementScreen>
       print('Fetching classes for school: $_currentSchoolId');
       List<app_class.SchoolClass> allClassesInSchool = await _classService.getClasses(_currentSchoolId!);
       print('Fetched ${allClassesInSchool.length} classes');
-      if (_currentUserRole == 'Teacher') {
+      if (_currentUserRole == UserRole.Teacher.name) {
         _teacherClasses = allClassesInSchool.where((c) => c.teacherId == _currentUserId).toList();
-      } else if (_currentUserRole == 'Admin') {
+      } else if (_currentUserRole == UserRole.Admin.name) {
         _teacherClasses = allClassesInSchool; // Admin sees all classes
       } else {
         _teacherClasses = [];

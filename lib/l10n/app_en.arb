@@ -1,27 +1,26 @@
 {
-  "@@locale": "en",
-  "appTitle": "EduSync Myanmar",
+  "appTitle": "EduSync",
   "login": "Login",
+  "logout": "Logout",
   "email": "Email",
   "password": "Password",
-  "adminPanel": "Admin Panel",
-  "teacherDashboard": "Teacher Dashboard",
-  "parentDashboard": "Parent Dashboard",
-  "welcomeAdmin": "Welcome, Admin!",
-  "welcomeTeacher": "Welcome, Teacher!",
-  "welcomeParent": "Welcome, Parent!",
-  "useDrawerToNavigate": "Use the drawer to navigate.",
-  "settings": "Settings",
-  "language": "Language",
-  "logout": "Logout",
-  "teachers": "Teachers",
-  "parents": "Parents",
-  "students": "Students",
-  "classes": "Classes",
-  "error_user_not_found": "Error: User not found. Please log in again.",
-  "error_school_not_selected_or_found": "Error: School not selected or found. Please ensure a school is associated with your account.",
-  "error_fetching_timetable": "Error fetching timetable",
+  "forgotPassword": "Forgot Password?",
+  "resetPassword": "Reset Password",
+  "newPassword": "New Password",
+  "confirmNewPassword": "Confirm New Password",
+  "setNewPassword": "Set New Password",
+  "backToLogin": "Back to Login",
+  "error_user_not_found": "User not found.",
+  "error_school_not_selected_or_found": "School not selected or found.",
+  "error_fetching_timetable": "Error fetching timetable.",
+  "no_timetable_entries_found": "No timetable entries found for the selected day.",
   "my_timetable_title": "My Timetable",
+  "classLabel": "Class",
+  "unknown_class": "Unknown Class",
+  "time": "Time",
+  "upcoming": "Upcoming",
+  "in_process": "In Process",
+  "done": "Done",
   "no_timetable_entries_found": "No timetable entries found.",
   "monday": "Monday",
   "tuesday": "Tuesday",
@@ -47,6 +46,7 @@
   "attendanceStatusPresent": "Present",
   "attendanceStatusAbsent": "Absent",
   "attendanceStatusLate": "Late",
+  "attendanceStatusLeave": "Leave",
   "manageLessonPlansTitle": "Manage Lesson Plans",
   "pleaseSelectClassToViewLessonPlans": "Please select a class to view lesson plans.",
   "noLessonPlansFound": "No lesson plans found for this class.",
@@ -370,6 +370,10 @@
   "noUsersFoundTextPart1": "No",
   "noUsersFoundTextPart2": "found. Add one!",
   "confirmDeleteUserTextPart1": "Are you sure you want to delete this",
+  "forgotPassword": "Forgot Password",
+  "forgotPasswordInstructions": "Enter your email to receive a password reset link.",
+  "passwordResetEmailSent": "Password reset email sent to {email}. Please check your inbox.",
+  "resetPassword": "Reset Password",
   "forgotPasswordButtonLabel": "Forgot Password?",
   "registerNewSchoolButtonLabel": "Register New School (Admin)",
   "adminFullNameLabel": "Admin's Full Name",
@@ -422,6 +426,8 @@
   "updateManagerButton": "Update Manager",
   "addManagerButton": "Add Manager",
   "teacherTimetableAction": "View Timetable",
+  "teacherTimetable": "Teacher Timetable",
+  "markAttendance": "Mark Attendance",
   "addStudent": "Add Student",
   "addParent": "Add Parent",
   "error_school_not_found": "School not found.",
@@ -437,5 +443,189 @@
   "managerDashboardWelcomeMessage": "Welcome, Manager!",
   "unassignedClass": "Unassigned",
   "gallery": "Gallery",
-  "camera": "Camera"
+  "camera": "Camera",
+  "teachers": "Teachers",
+  "parents": "Parents",
+  "welcomeAdmin": "Welcome Admin",
+  "students": "Students",
+  "language": "Language",
+  "settings": "Settings",
+  "youAreFreeNow": "You are free now.",
+  "currentSubject": "Current Subject",
+  "nextSubject": "Next Subject",
+  "noScheduleToday": "No schedule today.",
+  "@youAreFreeNow": {
+    "description": "Text displayed when a teacher has no current or upcoming schedule."
+  },
+  "@currentSubject": {
+    "description": "Label for the subject currently in progress."
+  },
+  "@nextSubject": {
+    "description": "Label for the next upcoming subject."
+  },
+  "@noScheduleToday": {
+    "description": "Text displayed when there is no schedule for the current day."
+  },
+  "teacherSchedulesSummary": "Teacher Schedules Summary",
+  "teachersTeachingNow": "Teachers Teaching Now",
+  "teachersFreeNow": "Teachers Free Now",
+  "teachersUpcomingClasses": "Teachers with Upcoming Classes",
+  "@teacherSchedulesSummary": {
+    "description": "Title for the summary of teacher schedules on the admin dashboard."
+  },
+  "@teachersTeachingNow": {
+    "description": "Label for the count of teachers currently teaching."
+  },
+  "@teachersFreeNow": {
+    "description": "Label for the count of teachers who are currently free."
+  },
+  "@teachersUpcomingClasses": {
+    "description": "Label for the count of teachers with upcoming classes."
+  },
+  "teacherTeaching": "{teacherName} is teaching {subjectName} in {className}",
+  "@teacherTeaching": {
+    "description": "Text displayed when a teacher is currently teaching.",
+    "placeholders": {
+      "teacherName": {
+        "type": "String"
+      },
+      "subjectName": {
+        "type": "String"
+      },
+      "className": {
+        "type": "String"
+      }
+    }
+  },
+  "teacherNextClass": "{teacherName}'s next class is {subjectName} in {className}",
+  "@teacherNextClass": {
+    "description": "Text displayed for a teacher's next upcoming class.",
+    "placeholders": {
+      "teacherName": {
+        "type": "String"
+      },
+      "subjectName": {
+        "type": "String"
+      },
+      "className": {
+        "type": "String"
+      }
+    }
+  },
+  "teacherFreeNow": "{teacherName} is free now",
+  "@teacherFreeNow": {
+    "description": "Text displayed when a teacher is currently free.",
+    "placeholders": {
+      "teacherName": {
+        "type": "String"
+      }
+    }
+  },
+  "teacherScheduleCardTitle": "Teacher Schedule",
+  "@teacherScheduleCardTitle": {
+    "description": "Title for the teacher schedule card."
+  },
+  "noTeacherSchedulesFound": "No teacher schedules found.",
+  "@noTeacherSchedulesFound": {
+    "description": "Text displayed when no teacher schedules are found."
+  },
+  "teacherStatusOverviewTitle": "Teacher Status Overview",
+  "@teacherStatusOverviewTitle": {
+    "description": "Title for the teacher status overview section in admin panel."
+  },
+  "noTeachersFoundText": "No teachers found in this school.",
+  "@noTeachersFoundText": {
+    "description": "Text displayed when no teachers are found for the current school."
+  },
+  "teachingNowStatus": "Teaching Now",
+  "@teachingNowStatus": {
+    "description": "Status for a teacher who is currently teaching."
+  },
+  "upcomingClassStatus": "Upcoming Class",
+  "@upcomingClassStatus": {
+    "description": "Status for a teacher who has an upcoming class."
+  },
+  "nextClassLabel": "Next Class",
+  "@nextClassLabel": {
+    "description": "Label for the next upcoming class."
+  },
+  "freeStatus": "Free",
+  "@freeStatus": {
+    "description": "Status for a teacher who is currently free."
+  },
+  "noScheduledClassesToday": "No scheduled classes today.",
+  "@noScheduledClassesToday": {
+    "description": "Text displayed when a teacher has no scheduled classes for the current day."
+  },
+  "nextLabel": "Next",
+  "@nextLabel": {
+    "description": "Label for the next upcoming item, e.g., 'Next: Class Name'."
+  },
+  "unknownTeacher": "Unknown Teacher",
+  "@unknownTeacher": {
+    "description": "Placeholder for a teacher whose name cannot be determined."
+  },
+  "statusLabel": "Status",
+  "teachersTeachingNowCount": "Teaching Now: {count}",
+  "@teachersTeachingNowCount": {
+    "description": "Count of teachers currently teaching.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "teachersFreeNowCount": "Free Now: {count}",
+  "@teachersFreeNowCount": {
+    "description": "Count of teachers currently free.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "studentInformationLabel": "Student Information",
+  "profilePhotoLabel": "Profile Photo",
+  "searchTeacherHint": "Search Teacher",
+  "@searchTeacherHint": {
+    "description": "Hint text for searching teachers by name."
+  },
+  "noTeachersMatchingSearch": "No teachers found matching your search.",
+  "@noTeachersMatchingSearch": {
+    "description": "Text displayed when no teachers match the search query."
+  },
+  "wholeSchoolScheduleTitle": "Whole School Schedule",
+  "@wholeSchoolScheduleTitle": {
+    "description": "Title for the whole school schedule screen."
+  },
+  "timeLabel": "Time",
+  "@timeLabel": {
+    "description": "Label for time column in schedule."
+  },
+  "noClass": "No Class",
+  "@noClass": {
+    "description": "Text displayed when there is no class scheduled for a specific slot."
+  },
+  "viewWholeSchoolScheduleButton": "View Whole School Schedule",
+  "@viewWholeSchoolScheduleButton": {
+    "description": "Text for the button to navigate to the whole school schedule screen."
+  },
+  "errorLoadingSchoolData": "Error loading school data. Please try again.",
+  "@errorLoadingSchoolData": {
+    "description": "Error message when school data cannot be loaded."
+  },
+  "noScheduleDataAvailable": "No schedule data available. Please add schools, teachers, classes, and timetable entries through the admin panel.",
+  "@noScheduleDataAvailable": {
+    "description": "Message displayed when no whole school schedule data is found."
+  },
+  "noClassesForDay": "No classes scheduled for {day}.",
+  "@noClassesForDay": {
+    "description": "Text displayed when there are no classes for a specific day.",
+    "placeholders": {
+      "day": {
+        "type": "String",
+        "example": "Monday"
+      }
+    }
+  }
 }

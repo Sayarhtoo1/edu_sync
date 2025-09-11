@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:edu_sync/utils/logger.dart';
 import '../models/income.dart';
 import '../models/expense.dart';
 import 'cache_service.dart';
@@ -15,7 +16,8 @@ class FinanceService {
           .from('finance_entries')
           .select()
           .eq('school_id', schoolId)
-          .eq('entry_type', 'Income');
+          .eq('entry_type', 'Income')
+          .order('date', ascending: false); // Order by date descending
 
       final incomes = response.map((record) {
         // Ensure amount is parsed as double
@@ -25,7 +27,7 @@ class FinanceService {
           
       return incomes;
     } catch (e) {
-      print('Error fetching income records: $e');
+      logger.e('Error fetching income records: $e');
       // Depending on the app's requirements, you might want to return an empty list
       // or re-throw the exception to be handled by the UI layer.
       return [];
@@ -45,7 +47,7 @@ class FinanceService {
           .single();
       return Income.fromMap(response);
     } catch (e) {
-      print('Error creating income record: $e');
+      logger.e('Error creating income record: $e');
       return null;
     }
   }
@@ -53,7 +55,7 @@ class FinanceService {
   Future<bool> updateIncomeRecord(Income income) async {
     try {
       if (income.id == null) {
-        print('Error: Income ID is null, cannot update.');
+        logger.w('Error: Income ID is null, cannot update.');
         return false;
       }
       
@@ -68,7 +70,7 @@ class FinanceService {
           .eq('entry_type', 'Income'); // Ensure we're updating an Income record
       return true;
     } catch (e) {
-      print('Error updating income record: $e');
+      logger.e('Error updating income record: $e');
       return false;
     }
   }
@@ -82,7 +84,7 @@ class FinanceService {
           .eq('entry_type', 'Income'); // Ensure we're deleting an Income record
       return true;
     } catch (e) {
-      print('Error deleting income record: $e');
+      logger.e('Error deleting income record: $e');
       return false;
     }
   }
@@ -95,7 +97,8 @@ class FinanceService {
           .from('finance_entries')
           .select()
           .eq('school_id', schoolId)
-          .eq('entry_type', 'Expense');
+          .eq('entry_type', 'Expense')
+          .order('date', ascending: false); // Order by date descending
 
       final expenses = response.map((record) {
         // Ensure amount is parsed as double
@@ -105,7 +108,7 @@ class FinanceService {
           
       return expenses;
     } catch (e) {
-      print('Error fetching expense records: $e');
+      logger.e('Error fetching expense records: $e');
       return [];
     }
   }
@@ -123,7 +126,7 @@ class FinanceService {
           .single();
       return Expense.fromMap(response);
     } catch (e) {
-      print('Error creating expense record: $e');
+      logger.e('Error creating expense record: $e');
       return null;
     }
   }
@@ -131,7 +134,7 @@ class FinanceService {
   Future<bool> updateExpenseRecord(Expense expense) async {
     try {
       if (expense.id == null) {
-        print('Error: Expense ID is null, cannot update.');
+        logger.w('Error: Expense ID is null, cannot update.');
         return false;
       }
       
@@ -146,7 +149,7 @@ class FinanceService {
           .eq('entry_type', 'Expense'); // Ensure we're updating an Expense record
       return true;
     } catch (e) {
-      print('Error updating expense record: $e');
+      logger.e('Error updating expense record: $e');
       return false;
     }
   }
@@ -160,7 +163,7 @@ class FinanceService {
           .eq('entry_type', 'Expense'); // Ensure we're deleting an Expense record
       return true;
     } catch (e) {
-      print('Error deleting expense record: $e');
+      logger.e('Error deleting expense record: $e');
       return false;
     }
   }
@@ -198,7 +201,7 @@ class FinanceService {
         netProfitPercentageChange: netProfitChange,
       );
     } catch (e) {
-      print('Error fetching financial summary with comparison: $e');
+      logger.e('Error fetching financial summary with comparison: $e');
       return FinancialSummary(totalIncome: 0, totalOutcome: 0);
     }
   }
@@ -232,7 +235,7 @@ class FinanceService {
 
       return {'income': totalIncome, 'outcome': totalOutcome};
     } catch (e) {
-      print('Error fetching financial summary: $e');
+      logger.e('Error fetching financial summary: $e');
       return {'income': 0, 'outcome': 0};
     }
   }
@@ -278,7 +281,7 @@ class FinanceService {
 
       return dataMap.values.toList();
     } catch (e) {
-      print('Error fetching financial chart data: $e');
+      logger.e('Error fetching financial chart data: $e');
       return [];
     }
   }
@@ -301,7 +304,7 @@ class FinanceService {
       }
       return categorizedIncome;
     } catch (e) {
-      print('Error fetching categorized income: $e');
+      logger.e('Error fetching categorized income: $e');
       return {};
     }
   }
@@ -324,7 +327,7 @@ class FinanceService {
       }
       return categorizedExpenses;
     } catch (e) {
-      print('Error fetching categorized expenses: $e');
+      logger.e('Error fetching categorized expenses: $e');
       return {};
     }
   }
@@ -333,11 +336,11 @@ class FinanceService {
     try {
       final response = await _supabaseClient
           .from('finance_entries')
-          .select('date, description, amount, entry_type')
+          .select('date, description, amount, entry_type, created_at')
           .eq('school_id', schoolId)
           .gte('date', startDate.toIso8601String())
           .lte('date', endDate.toIso8601String())
-          .order('date', ascending: false);
+          .order('created_at', ascending: false); // Order by created_at descending for latest records
 
       return response.map((record) {
         return {
@@ -348,7 +351,7 @@ class FinanceService {
         };
       }).toList();
     } catch (e) {
-      print('Error fetching transaction history: $e');
+      logger.e('Error fetching transaction history: $e');
       return [];
     }
   }

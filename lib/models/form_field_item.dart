@@ -45,32 +45,30 @@ class FormFieldItem {
   // Or, make a factory constructor for fromMap that handles this.
   
   factory FormFieldItem.fromMap(Map<String, dynamic> map) {
-    final type = formFieldTypeFromString(map['type'] as String);
+    final type = formFieldTypeFromString(map['type'] ?? 'text');
     List<String>? optList;
     if (map['options'] != null) {
-      // Supabase might return JSONB as List<dynamic> or Map, or string.
-      // If it's already a list (e.g. from JSONB array of strings):
       if (map['options'] is List) {
-         optList = List<String>.from(map['options'].map((e) => e.toString()));
-      } 
-      // If it's a JSON string (less likely for direct Supabase query but good for Floor)
-      else if (map['options'] is String) {
+        optList = List<String>.from(map['options'].map((e) => e.toString()));
+      } else if (map['options'] is String) {
         try {
-          final decoded = jsonDecode(map['options'] as String);
+          final decoded = jsonDecode(map['options']);
           if (decoded is List) {
             optList = List<String>.from(decoded.map((e) => e.toString()));
           }
-        } catch (e) { /* ignore if not valid JSON */ }
+        } catch (e) {
+          // Ignore if not valid JSON
+        }
       }
     }
 
     return FormFieldItem(
-      id: map['id'] as String,
-      formId: map['form_id'] as String,
-      question: map['question'] as String,
+      id: map['id'] ?? '',
+      formId: map['form_id'] ?? '',
+      question: map['question'] ?? '',
       type: type,
-      optionsJson: optList != null ? jsonEncode(optList) : null, // Store as JSON string for Floor
-      required: map['required'] as bool? ?? false,
+      optionsJson: optList != null ? jsonEncode(optList) : null,
+      required: map['required'] ?? false,
     );
   }
 

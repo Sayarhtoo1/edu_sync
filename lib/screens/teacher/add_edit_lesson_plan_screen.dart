@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:edu_sync/models/lesson_plan.dart';
 import 'package:edu_sync/models/school_class.dart' as app_class;
 import 'package:edu_sync/services/lesson_plan_service.dart';
+import 'package:edu_sync/models/user_role.dart';
 import 'package:edu_sync/services/class_service.dart';
 import 'package:edu_sync/services/auth_service.dart'; // Import AuthService
 import 'package:edu_sync/services/timetable_service.dart'; // To get subjects
@@ -31,9 +33,10 @@ class AddEditLessonPlanScreen extends StatefulWidget {
 
 class _AddEditLessonPlanScreenState extends State<AddEditLessonPlanScreen> {
   final _formKey = GlobalKey<FormState>();
-  final LessonPlanService _lessonPlanService = LessonPlanService();
-  final ClassService _classService = ClassService();
-  final TimetableService _timetableService = TimetableService();
+  late final LessonPlanService _lessonPlanService;
+  late final ClassService _classService;
+  late final TimetableService _timetableService;
+  late final AuthService _authService;
 
   late TextEditingController _titleController;
   late TextEditingController _descriptionController;
@@ -54,6 +57,10 @@ class _AddEditLessonPlanScreenState extends State<AddEditLessonPlanScreen> {
   @override
   void initState() {
     super.initState();
+    _lessonPlanService = Provider.of<LessonPlanService>(context, listen: false);
+    _classService = Provider.of<ClassService>(context, listen: false);
+    _timetableService = Provider.of<TimetableService>(context, listen: false);
+    _authService = Provider.of<AuthService>(context, listen: false);
     _titleController = TextEditingController(text: widget.lessonPlan?.title ?? '');
     _descriptionController = TextEditingController(text: widget.lessonPlan?.description ?? '');
     _selectedDate = widget.lessonPlan?.date ?? DateTime.now();
@@ -66,13 +73,12 @@ class _AddEditLessonPlanScreenState extends State<AddEditLessonPlanScreen> {
   Future<void> _loadInitialScreenData() async {
     setState(() => _isLoadingInitialData = true);
     
-    final authService = AuthService();
-    String? currentUserRole = await authService.getUserRole();
+    String? currentUserRole = await _authService.getUserRole();
 
     try {
       List<app_class.SchoolClass> allClassesInSchool = await _classService.getClasses(widget.schoolId);
       
-      if (currentUserRole == 'Admin') {
+      if (currentUserRole == UserRole.Admin.name) {
         _availableClasses = allClassesInSchool;
       } else {
         _availableClasses = allClassesInSchool.where((c) => c.teacherId == widget.teacherId).toList();

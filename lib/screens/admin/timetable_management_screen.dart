@@ -7,6 +7,11 @@ import 'package:edu_sync/services/class_service.dart';
 import 'add_edit_timetable_entry_screen.dart';
 import 'package:edu_sync/l10n/app_localizations.dart'; // Import AppLocalizations
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
+import 'package:provider/provider.dart'; // Import provider
+import 'package:edu_sync/database/app_database.dart'; // Import AppDatabase
+import 'package:connectivity_plus/connectivity_plus.dart'; // Import Connectivity
+import 'package:shared_preferences/shared_preferences.dart'; // Import SharedPreferences
+import 'package:supabase_flutter/supabase_flutter.dart'; // Import Supabase
 
 class TimetableManagementScreen extends StatefulWidget {
   const TimetableManagementScreen({super.key});
@@ -16,9 +21,10 @@ class TimetableManagementScreen extends StatefulWidget {
 }
 
 class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
-  final TimetableService _timetableService = TimetableService();
-  final AuthService _authService = AuthService();
-  final ClassService _classService = ClassService();
+  final _formKey = GlobalKey<FormState>();
+  late final TimetableService _timetableService;
+  late final AuthService _authService;
+  late final ClassService _classService;
 
   List<Timetable> _timetableEntries = [];
   List<app_class.SchoolClass> _availableClasses = [];
@@ -29,6 +35,13 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
   @override
   void initState() {
     super.initState();
+    _timetableService = TimetableService();
+    _authService = AuthService(
+      supabaseClient: Supabase.instance.client,
+      sharedPreferences: context.read<SharedPreferences>(),
+      connectivity: context.read<Connectivity>(),
+    );
+    _classService = ClassService(context.read<AppDatabase>());
     _fetchInitialData();
   }
 
@@ -128,10 +141,10 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
               children: [
                 if (_availableClasses.isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.all(16.0), 
+                    padding: const EdgeInsets.all(16.0),
                     child: DropdownButtonFormField<app_class.SchoolClass>(
                       value: _selectedClass,
-                      hint: Text(l10n.selectClassToViewTimetableHint, style: theme.textTheme.bodyLarge), 
+                      hint: Text(l10n.selectClassToViewTimetableHint, style: theme.textTheme.bodyLarge),
                       items: _availableClasses.map((app_class.SchoolClass cls) {
                         return DropdownMenuItem<app_class.SchoolClass>(
                           value: cls,
@@ -154,37 +167,37 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
                       : _timetableEntries.isEmpty
                           ? Center(child: Text('${l10n.noTimetableEntriesForText} ${_selectedClass!.name}. ${l10n.addOneText}', style: theme.textTheme.bodyLarge))
                           : RefreshIndicator(
-                              onRefresh: _loadTimetableForSelectedClass,
-                              color: contextualAccentColor,
-                              child: ListView.builder(
-                                itemCount: _timetableEntries.length,
-                                itemBuilder: (context, index) {
-                                  final entry = _timetableEntries[index];
-                                  return Card( 
-                                    margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                    child: ListTile(
-                                      title: Text('${entry.subjectName} (${entry.dayOfWeek})', style: theme.textTheme.titleMedium),
-                                      subtitle: Text('${entry.startTimeString} - ${entry.endTimeString} (${l10n.teacherLabel} ID: ${entry.teacherId ?? l10n.not_specified})', style: theme.textTheme.bodySmall), 
-                                      trailing: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          IconButton(
-                                            icon: Icon(Icons.edit, color: theme.iconTheme.color ?? textDarkGrey), 
-                                            tooltip: l10n.editButton, 
-                                            onPressed: () => _navigateToAddEditEntry(entry: entry),
-                                          ),
-                                          IconButton(
-                                            icon: Icon(Icons.delete, color: theme.colorScheme.error),
-                                            tooltip: l10n.deleteButton, 
-                                            onPressed: () => _deleteEntry(entry.id),
-                                          ),
-                                        ],
+                                onRefresh: _loadTimetableForSelectedClass,
+                                color: contextualAccentColor,
+                                child: ListView.builder(
+                                  itemCount: _timetableEntries.length,
+                                  itemBuilder: (context, index) {
+                                    final entry = _timetableEntries[index];
+                                    return Card(
+                                      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      child: ListTile(
+                                        title: Text('${entry.subjectName} (${entry.dayOfWeek})', style: theme.textTheme.titleMedium),
+                                        subtitle: Text('${entry.startTimeString} - ${entry.endTimeString} (${l10n.teacherLabel} ID: ${entry.teacherId ?? l10n.not_specified})', style: theme.textTheme.bodySmall),
+                                        trailing: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            IconButton(
+                                              icon: Icon(Icons.edit, color: theme.iconTheme.color ?? textDarkGrey),
+                                              tooltip: l10n.editButton,
+                                              onPressed: () => _navigateToAddEditEntry(entry: entry),
+                                            ),
+                                            IconButton(
+                                              icon: Icon(Icons.delete, color: theme.colorScheme.error),
+                                              tooltip: l10n.deleteButton,
+                                              onPressed: () => _deleteEntry(entry.id),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  );
-                                },
+                                    );
+                                  },
+                                ),
                               ),
-                            ),
                 ),
               ],
             ),

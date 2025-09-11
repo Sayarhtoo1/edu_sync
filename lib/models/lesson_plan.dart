@@ -23,14 +23,14 @@ class LessonPlan {
 
   factory LessonPlan.fromMap(Map<String, dynamic> map) {
     return LessonPlan(
-      id: map['id'] as int?,
-      classId: map['class_id'] as int, // Corrected to int
-      teacherId: map['teacher_id'] as String,
-      subjectName: map['subject_name'] as String,
-      title: map['title'] as String,
-      description: map['description'] as String,
-      date: DateTime.parse(map['date'] as String),
-      documentUrl: map['document_url'] as String?,
+      id: map['id'],
+      classId: map['class_id'] ?? 0,
+      teacherId: map['teacher_id'] ?? '',
+      subjectName: map['subject_name'] ?? '',
+      title: map['title'] ?? '',
+      description: map['description'] ?? '',
+      date: DateTime.tryParse(map['date'] ?? '') ?? DateTime.now(),
+      documentUrl: map['document_url'],
     );
   }
 

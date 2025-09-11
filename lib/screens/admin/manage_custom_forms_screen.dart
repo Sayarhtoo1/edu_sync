@@ -17,8 +17,8 @@ class ManageCustomFormsScreen extends StatefulWidget {
 }
 
 class _ManageCustomFormsScreenState extends State<ManageCustomFormsScreen> {
-  final CustomFormService _customFormService = CustomFormService();
-  final AuthService _authService = AuthService();
+  late final CustomFormService _customFormService;
+  late final AuthService _authService;
   
   List<CustomForm> _forms = [];
   bool _isLoading = true;
@@ -30,6 +30,8 @@ class _ManageCustomFormsScreenState extends State<ManageCustomFormsScreen> {
   @override
   void initState() {
     super.initState();
+    _customFormService = Provider.of<CustomFormService>(context, listen: false);
+    _authService = Provider.of<AuthService>(context, listen: false);
     _loadInitialData();
   }
 

@@ -20,9 +20,8 @@ String formFieldTypeToString(FormFieldType type) {
       return 'checkbox';
     case FormFieldType.number:
       return 'number';
-    default:
-      throw ArgumentError('Invalid FormFieldType');
   }
+  // The default clause is removed as all enum cases are covered.
 }
 
 FormFieldType formFieldTypeFromString(String typeString) {
@@ -39,7 +38,7 @@ FormFieldType formFieldTypeFromString(String typeString) {
       return FormFieldType.number;
     default:
       // Fallback or throw error
-      print("Warning: Unknown FormFieldType string '$typeString', defaulting to text.");
-      return FormFieldType.text; 
+      // print("Warning: Unknown FormFieldType string '$typeString', defaulting to text.");
+      return FormFieldType.text;
   }
 }

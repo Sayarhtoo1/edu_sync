@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart'; // Import material for ChangeNotifier
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:edu_sync/models/user_role.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:edu_sync/utils/logger.dart';
 import '../models/announcement.dart'; // To parse announcement from Realtime
 
 class NotificationService extends ChangeNotifier {
@@ -34,7 +36,7 @@ class NotificationService extends ChangeNotifier {
             AndroidFlutterLocalNotificationsPlugin>();
     if (androidImplementation != null) {
       final bool? granted = await androidImplementation.requestNotificationsPermission();
-      print("Notification permission granted: $granted");
+      logger.d("Notification permission granted: $granted");
     }
   }
 
@@ -81,7 +83,7 @@ class NotificationService extends ChangeNotifier {
     if (_announcementsChannel != null) {
       _supabaseClient.removeChannel(_announcementsChannel!);
     }
-    print('Subscribing to announcements for school: $schoolId');
+    logger.i('Subscribing to announcements for school: $schoolId');
     _announcementsChannel = _supabaseClient
         .channel('public:announcements:school_id=eq.$schoolId') // Listen to inserts for the specific school
         .onPostgresChanges(
@@ -90,14 +92,14 @@ class NotificationService extends ChangeNotifier {
             table: 'announcements',
             filter: PostgresChangeFilter(type: PostgresChangeFilterType.eq, column: 'school_id', value: schoolId),
             callback: (payload) async {
-              print('New announcement received via Realtime: ${payload.newRecord}');
+              logger.i('New announcement received via Realtime: ${payload.newRecord}');
               final newAnnouncementMap = payload.newRecord;
               final newAnnouncement = Announcement.fromMap(newAnnouncementMap);
               
               // Basic RLS check simulation (actual RLS is on DB)
               // This client-side check is just to avoid unnecessary notifications if possible
               bool isTargeted = false;
-              if (currentUserRole == 'Admin') { // Admins are targeted for all announcements in their school
+              if (currentUserRole == UserRole.Admin.name) { // Admins are targeted for all announcements in their school
                 isTargeted = true;
               } else if (newAnnouncement.targetRole == 'All') {
                 isTargeted = true;
@@ -112,7 +114,7 @@ class NotificationService extends ChangeNotifier {
               if (isTargeted) {
                 final lastSeen = await getLastSeenAnnouncementTimestamp();
                 if (lastSeen == null || newAnnouncement.createdAt.isAfter(lastSeen)) {
-                  print("Setting hasNewAnnouncements to true for user role: $currentUserRole");
+                  logger.d("Setting hasNewAnnouncements to true for user role: $currentUserRole");
                   _setHasNewAnnouncements(true);
                   // Show an immediate local notification
                   await showNotification(
@@ -126,18 +128,18 @@ class NotificationService extends ChangeNotifier {
                         })
         .subscribe((status, [_]) async {
             if (status == 'SUBSCRIBED') {
-                print('Successfully subscribed to announcements channel!');
+                logger.i('Successfully subscribed to announcements channel!');
             } else if (status == 'CHANNEL_ERROR') {
-                print('Error subscribing to announcements channel.');
+                logger.e('Error subscribing to announcements channel.');
             } else if (status == 'TIMED_OUT') {
-                print('Announcements channel subscription timed out.');
+                logger.w('Announcements channel subscription timed out.');
             }
         });
   }
 
   void unsubscribeFromAnnouncements() {
     if (_announcementsChannel != null) {
-      print('Unsubscribing from announcements channel.');
+      logger.i('Unsubscribing from announcements channel.');
       _supabaseClient.removeChannel(_announcementsChannel!);
       _announcementsChannel = null;
     }

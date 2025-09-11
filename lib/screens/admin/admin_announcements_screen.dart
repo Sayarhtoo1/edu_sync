@@ -17,8 +17,8 @@ class AdminAnnouncementsScreen extends StatefulWidget {
 }
 
 class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
-  final AnnouncementService _announcementService = AnnouncementService();
-  final AuthService _authService = AuthService();
+  late final AnnouncementService _announcementService;
+  late final AuthService _authService;
 
   List<Announcement> _announcements = [];
   bool _isLoading = true;
@@ -29,6 +29,8 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
   @override
   void initState() {
     super.initState();
+    _announcementService = Provider.of<AnnouncementService>(context, listen: false);
+    _authService = Provider.of<AuthService>(context, listen: false);
     final schoolProvider = Provider.of<SchoolProvider>(context, listen: false);
     _schoolId = schoolProvider.currentSchool?.id;
     _adminUserId = _authService.getCurrentUser()?.id;

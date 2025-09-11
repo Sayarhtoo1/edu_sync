@@ -11,6 +11,8 @@ import 'package:edu_sync/models/school_class.dart' as app_class;
 import 'package:edu_sync/l10n/app_localizations.dart';
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
 import 'package:collection/collection.dart'; // Import collection package
+import 'package:provider/provider.dart'; // Import provider
+import 'package:edu_sync/database/app_database.dart'; // Import AppDatabase
 
 class AddEditCustomFormScreen extends StatefulWidget {
   final int schoolId;
@@ -31,7 +33,7 @@ class AddEditCustomFormScreen extends StatefulWidget {
 class _AddEditCustomFormScreenState extends State<AddEditCustomFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final CustomFormService _customFormService = CustomFormService();
-  final ClassService _classService = ClassService();
+  late final ClassService _classService;
   final Uuid _uuid = const Uuid();
 
   late TextEditingController _titleController;
@@ -71,9 +73,10 @@ class _AddEditCustomFormScreenState extends State<AddEditCustomFormScreen> {
 
     if (_isEditing && widget.form != null) {
       _selectedClassIds = List<int>.from(widget.form!.assignedClassIds); // CustomForm.assignedClassIds is List<int>
-      _selectedStudentIds = List<int>.from(widget.form!.assignedStudentIds); 
+      _selectedStudentIds = List<int>.from(widget.form!.assignedStudentIds);
       _loadFieldsForEditing();
     }
+    _classService = ClassService(context.read<AppDatabase>());
     _loadAssignableEntities();
   }
 
@@ -263,9 +266,8 @@ class _AddEditCustomFormScreenState extends State<AddEditCustomFormScreen> {
         return l10n.fieldType_checkbox;
       case FormFieldType.number:
         return l10n.fieldType_number;
-      default:
-        return type.toString().split('.').last; // Fallback
     }
+    // The default clause is removed as all enum cases are covered.
   }
 
   // Placeholder for field editor dialog/widget

@@ -1,11 +1,14 @@
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:edu_sync/models/user_role.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:edu_sync/models/user.dart' as app_user;
 import 'package:edu_sync/services/auth_service.dart';
+import 'package:provider/provider.dart';
 import 'package:edu_sync/l10n/app_localizations.dart'; // Import AppLocalizations
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
+import 'package:edu_sync/utils/logger.dart';
 
 class AddEditTeacherScreen extends StatefulWidget {
   final app_user.User? teacher; // Existing teacher to edit, null if adding new
@@ -19,7 +22,7 @@ class AddEditTeacherScreen extends StatefulWidget {
 
 class _AddEditTeacherScreenState extends State<AddEditTeacherScreen> {
   final _formKey = GlobalKey<FormState>();
-  final AuthService _authService = AuthService();
+  late final AuthService _authService;
   final ImagePicker _picker = ImagePicker();
 
   late TextEditingController _nameController;
@@ -35,6 +38,7 @@ class _AddEditTeacherScreenState extends State<AddEditTeacherScreen> {
   @override
   void initState() {
     super.initState();
+    _authService = Provider.of<AuthService>(context, listen: false);
     _nameController = TextEditingController(text: widget.teacher?.fullName ?? '');
     _emailController = TextEditingController(text: widget.teacher?.id != null ? _getEmailFromSupabaseUser(widget.teacher!.id) : ''); // Fetch email if editing
     _passwordController = TextEditingController();
@@ -132,7 +136,7 @@ class _AddEditTeacherScreenState extends State<AddEditTeacherScreen> {
         final newTeacher = await _authService.createUserViaEdgeFunction(
           email: _emailController.text,
           password: _passwordController.text,
-          role: 'Teacher',
+          role: UserRole.Teacher.name,
           schoolId: widget.schoolId,
           fullName: _nameController.text,
           profilePhotoUrl: photoUrl, // This might be null if photo is uploaded after user creation
@@ -154,7 +158,7 @@ class _AddEditTeacherScreenState extends State<AddEditTeacherScreen> {
                 // Update the user record in public.users with the correct photo URL
                 await _authService.updateUser(resultUser);
              } else {
-                print("Photo upload failed for new user ${resultUser.id} after creation, during explicit photo step.");
+                logger.e("Photo upload failed for new user ${resultUser.id} after creation, during explicit photo step.");
                 // Optionally set an error message or allow user to proceed without photo
              }
         }

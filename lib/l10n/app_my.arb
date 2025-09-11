@@ -436,5 +436,34 @@
   "managerDashboardWelcomeMessage": "Welcome, Manager!",
   "unassignedClass": "Unassigned",
   "gallery": "ဓာတ်ပုံများ",
-  "camera": "ကင်မရာ"
+  "camera": "ကင်မရာ",
+  "teacherStatusOverviewTitle": "ဆရာ/မ အခြေအနေ အနှစ်ချုပ်",
+  "noTeachersFoundText": "ဤကျောင်းတွင် ဆရာ/မများ မတွေ့ပါ။",
+  "teachingNowStatus": "လက်ရှိ သင်ကြားနေသည်",
+  "upcomingClassStatus": "လာမည့် အတန်း",
+  "nextClassLabel": "နောက်လာမည့် အတန်း",
+  "freeStatus": "အားလပ်သည်",
+  "noScheduledClassesToday": "ယနေ့အတွက် အချိန်ဇယား မရှိပါ။",
+  "unknownTeacher": "အမည်မသိ ဆရာ/မ",
+  "statusLabel": "အခြေအနေ",
+  "teachersTeachingNowCount": "လက်ရှိ သင်ကြားနေသူ: {count} ဦး",
+  "@teachersTeachingNowCount": {
+    "description": "Count of teachers currently teaching.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "teachersFreeNowCount": "အားလပ်သူ: {count} ဦး",
+  "@teachersFreeNowCount": {
+    "description": "Count of teachers currently free.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "studentInformationLabel": "ကျောင်းသား အချက်အလက်",
+  "profilePhotoLabel": "ပရိုဖိုင်ဓာတ်ပုံ"
 }

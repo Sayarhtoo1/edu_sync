@@ -1,11 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:edu_sync/models/student.dart';
+import 'package:edu_sync/theme/app_theme.dart';
 import 'package:edu_sync/services/student_service.dart';
 import 'package:edu_sync/services/auth_service.dart';
-import 'add_edit_student_screen.dart'; 
+import 'add_edit_student_screen.dart';
 import 'package:edu_sync/l10n/app_localizations.dart'; // Import AppLocalizations
-import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
+// Import AppTheme
+import 'package:provider/provider.dart';
 
 class StudentManagementScreen extends StatefulWidget {
   const StudentManagementScreen({super.key});
@@ -15,8 +17,8 @@ class StudentManagementScreen extends StatefulWidget {
 }
 
 class _StudentManagementScreenState extends State<StudentManagementScreen> {
-  final StudentService _studentService = StudentService();
-  final AuthService _authService = AuthService();
+  late final StudentService _studentService;
+  late final AuthService _authService;
   List<Student> _students = [];
   bool _isLoading = true;
   int? _currentSchoolId;
@@ -24,6 +26,8 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
   @override
   void initState() {
     super.initState();
+    _studentService = Provider.of<StudentService>(context, listen: false);
+    _authService = Provider.of<AuthService>(context, listen: false);
     _fetchSchoolIdAndLoadStudents();
   }
 
@@ -33,7 +37,7 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
     if (_currentSchoolId != null) {
       await _loadStudents();
     } else {
-      // print("School ID not found for current user. Cannot load students."); // Removed print
+      // logger.w("School ID not found for current user. Cannot load students.");
       if(mounted) setState(() => _isLoading = false);
     }
   }
@@ -41,7 +45,7 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
   Future<void> _loadStudents() async {
     if (_currentSchoolId == null) return;
     setState(() => _isLoading = true);
-    _students = await _studentService.getStudentsBySchool(_currentSchoolId!);
+    _students = (await _studentService.getStudentsBySchool(_currentSchoolId!)).cast<Student>();
     if (mounted) {
       setState(() => _isLoading = false);
     }
@@ -128,44 +132,69 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
               onRefresh: _loadStudents,
               color: contextualAccentColor,
               child: _students.isEmpty
-                  ? Center(child: Text(l10n.noStudentsFound, style: theme.textTheme.bodyLarge)) 
+                  ? Center(child: Text(l10n.noStudentsFound, style: theme.textTheme.bodyLarge))
                   : ListView.builder(
                       itemCount: _students.length,
                       itemBuilder: (context, index) {
                         final student = _students[index];
-                        return Card( 
-                          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        return Card(
+                          margin: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          elevation: 4,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
                           child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
                             leading: CircleAvatar(
-                              backgroundColor: contextualAccentColor.withAlpha((255 * 0.2).round()),
-                              child: student.profilePhotoUrl != null && student.profilePhotoUrl!.isNotEmpty
+                              radius: 30,
+                              backgroundColor: contextualAccentColor
+                                  .withAlpha((255 * 0.2).round()),
+                              child: student.profilePhotoUrl != null &&
+                                      student.profilePhotoUrl!.isNotEmpty
                                   ? ClipOval(
                                       child: CachedNetworkImage(
                                         imageUrl: student.profilePhotoUrl!,
-                                        placeholder: (context, url) => CircularProgressIndicator(
-                                          valueColor: AlwaysStoppedAnimation<Color>(contextualAccentColor),
+                                        placeholder: (context, url) =>
+                                            CircularProgressIndicator(
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                  contextualAccentColor),
                                         ),
-                                        errorWidget: (context, url, error) => Icon(Icons.school_outlined, color: contextualAccentColor),
+                                        errorWidget: (context, url, error) =>
+                                            Icon(Icons.school_outlined,
+                                                color: contextualAccentColor),
                                         fit: BoxFit.cover,
-                                        width: 50,
-                                        height: 50,
+                                        width: 60,
+                                        height: 60,
                                       ),
                                     )
-                                  : Icon(Icons.school_outlined, color: contextualAccentColor),
+                                  : Icon(Icons.school_outlined,
+                                      color: contextualAccentColor),
                             ),
-                            title: Text(student.fullName, style: theme.textTheme.titleMedium),
-                            subtitle: Text('ID: ${student.id} - ${l10n.classLabel} ID: ${student.classId ?? l10n.not_specified}', style: theme.textTheme.bodySmall),
+                            title: Text(student.fullName,
+                                style: theme.textTheme.titleLarge),
+                            subtitle: Padding(
+                              padding: const EdgeInsets.only(top: 4.0),
+                              child: Text(
+                                  'ID: ${student.id} - ${l10n.classLabel} ID: ${student.classId ?? l10n.not_specified}',
+                                  style: theme.textTheme.bodyMedium),
+                            ),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  icon: Icon(Icons.edit, color: theme.iconTheme.color ?? textDarkGrey), 
-                                  tooltip: l10n.editButton, 
-                                  onPressed: () => _navigateToAddEditStudentScreen(student: student),
+                                  icon: Icon(Icons.edit,
+                                      color: theme.colorScheme.primary),
+                                  tooltip: l10n.editButton,
+                                  onPressed: () =>
+                                      _navigateToAddEditStudentScreen(
+                                          student: student),
                                 ),
                                 IconButton(
-                                  icon: Icon(Icons.delete, color: theme.colorScheme.error),
-                                  tooltip: l10n.deleteButton, 
+                                  icon: Icon(Icons.delete,
+                                      color: theme.colorScheme.error),
+                                  tooltip: l10n.deleteButton,
                                   onPressed: () => _deleteStudent(student.id),
                                 ),
                               ],

@@ -20,13 +20,13 @@ class Student {
 
   factory Student.fromMap(Map<String, dynamic> map) {
     return Student(
-      id: map['id'] as int,
-      schoolId: map['school_id'] as int,
-      classId: map['class_id'] as int?, 
-      fullName: map['full_name'] as String,
-      profilePhotoUrl: map['profile_photo_url'] as String?,
-      dateOfBirth: map['date_of_birth'] != null ? DateTime.tryParse(map['date_of_birth'] as String) : null,
-      gender: map['gender'] as String?, // Added gender from map
+      id: map['id'] ?? 0,
+      schoolId: map['school_id'] ?? 0,
+      classId: map['class_id'],
+      fullName: map['full_name'] ?? '',
+      profilePhotoUrl: map['profile_photo_url'],
+      dateOfBirth: DateTime.tryParse(map['date_of_birth'] ?? ''),
+      gender: map['gender'],
     );
   }
 

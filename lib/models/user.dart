@@ -15,14 +15,14 @@ class User {
     this.email,
   });
 
-  factory User.fromMap(Map<String, dynamic> map) {
+  factory User.fromJson(Map<String, dynamic> map) {
     return User(
-      id: map['id'] as String,
-      role: map['role'] as String,
-      profilePhotoUrl: map['profile_photo_url'] as String?,
-      fullName: map['full_name'] as String?,
-      schoolId: map['school_id'] as int?,
-      email: map['email'] as String?,
+      id: map['id'] ?? '',
+      role: map['role'] ?? 'user',
+      profilePhotoUrl: map['profile_photo_url'],
+      fullName: map['full_name'],
+      schoolId: map['school_id'],
+      email: map['email'],
     );
   }
 
