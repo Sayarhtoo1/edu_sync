@@ -5,7 +5,7 @@ import 'package:edu_sync/models/announcement.dart';
 import 'package:edu_sync/services/announcement_service.dart';
 import 'package:edu_sync/providers/school_provider.dart';
 import 'package:edu_sync/services/auth_service.dart';
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
 import 'package:edu_sync/services/notification_service.dart';
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
 
@@ -49,7 +49,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
         if (mounted) {
           setState(() {
             _isLoading = false;
-            _errorMessage = AppLocalizations.of(context).error_school_not_selected_or_found;
+            _errorMessage = AppLocalizations.of(context)?.error_school_not_selected_or_found ?? 'Error: School not selected or found';
           });
         }
       });
@@ -106,7 +106,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
     } catch (e) {
       if (mounted) {
         final l10n = AppLocalizations.of(context);
-        setState(() => _errorMessage = "${l10n.errorOccurredPrefix}: ${e.toString()}");
+        setState(() => _errorMessage = "${l10n?.errorOccurredPrefix ?? 'Error'}: ${e.toString()}");
       }
     } finally {
        if (mounted && _isLoading) { // Ensure isLoading is reset if an error occurred before it was set to false
@@ -118,12 +118,15 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    if (l10n == null) {
+      return const SizedBox.shrink(); // Or a placeholder widget
+    }
     final theme = Theme.of(context);
     final Color contextualAccentColor = AppTheme.getAccentColorForContext('announcement');
 
     return Scaffold(
       appBar: AppBar( // Theme applied globally
-        title: Text(l10n.announcementsTitle),
+        title: Text(l10n.announcementsTitle ?? 'Announcements'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -136,7 +139,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
           : _errorMessage != null
               ? Center(child: Padding(padding: const EdgeInsets.all(16.0), child: Text(_errorMessage!, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.error))))
               : _announcements.isEmpty
-                  ? Center(child: Text(l10n.noAnnouncementsFound, style: theme.textTheme.bodyLarge)) 
+                  ? Center(child: Text(l10n.noAnnouncementsFound ?? 'No announcements found', style: theme.textTheme.bodyLarge))
                   : RefreshIndicator(
                       onRefresh: _loadAnnouncements,
                       color: contextualAccentColor,
@@ -156,7 +159,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                                   Text(announcement.content, style: theme.textTheme.bodyMedium),
                                   const SizedBox(height: 8),
                                   Text(
-                                    '${l10n.postedOn} ${DateFormat.yMMMd(l10n.localeName).format(announcement.createdAt)}',
+                                    '${l10n.postedOn ?? 'Posted On'} ${DateFormat.yMMMd(l10n.localeName ?? 'en').format(announcement.createdAt)}',
                                     style: theme.textTheme.bodySmall?.copyWith(color: textLightGrey), // Use top-level constant
                                   ),
                                 ],

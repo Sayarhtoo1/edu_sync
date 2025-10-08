@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:edu_sync/models/school_class.dart'; // Import Class model
-import 'package:edu_sync/l10n/app_localizations.dart'; // For localization
+import 'package:edu_sync/l10n/gen/app_localizations.dart'; // For localization
 
 class TeacherClassOverviewCard extends StatelessWidget {
   final SchoolClass classItem;
@@ -17,6 +17,9 @@ class TeacherClassOverviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    if (l10n == null) {
+      return const SizedBox.shrink(); // Or a placeholder widget
+    }
 
     return GestureDetector(
       onTap: onTap,
@@ -45,7 +48,7 @@ class TeacherClassOverviewCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      "${l10n.students}: $studentCount", // Localize "Students"
+                      "${l10n.students ?? 'Students'}: $studentCount", // Localize "Students"
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                     ),
                   ],

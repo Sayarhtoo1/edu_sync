@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:edu_sync/models/custom_form.dart';
 import 'package:edu_sync/models/form_field_item.dart';
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
 import 'package:edu_sync/theme/app_theme.dart';
 import 'package:edu_sync/screens/parent/daily_report_screen_components/form_field_widget.dart';
 
@@ -31,8 +31,14 @@ class FormFieldsBuilder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    if (l10n == null) {
+      return const SizedBox.shrink(); // Or a placeholder widget
+    }
     final theme = Theme.of(context);
     final Color contextualAccentColor = AppTheme.getAccentColorForContext('form');
+    if (selectedForm == null) {
+      return Expanded(child: Center(child: Text("Form not found", style: theme.textTheme.bodyLarge)));
+    }
     String submissionKey = "${selectedForm!.id}_${DateFormat('yyyy-MM-dd').format(DateTime.now())}";
     bool isSubmitted = submittedForms[submissionKey] ?? false;
 

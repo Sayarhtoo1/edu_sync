@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../models/attendance_report.dart';
 import '../../services/attendance_service.dart';
@@ -8,7 +7,6 @@ import '../../services/class_service.dart';
 import '../../services/student_service.dart';
 import '../../models/school_class.dart' as app_class;
 import '../../models/student.dart';
-import '../../theme/app_theme.dart';
 import 'attendance_report_components/date_range_selector.dart';
 import 'attendance_report_components/report_display.dart';
 import 'attendance_report_components/export_button.dart';

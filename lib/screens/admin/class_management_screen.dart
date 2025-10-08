@@ -4,7 +4,7 @@ import 'package:edu_sync/services/class_service.dart';
 import 'package:edu_sync/services/auth_service.dart';
 import 'add_edit_class_screen.dart';
 import 'package:provider/provider.dart';
-import 'package:edu_sync/l10n/app_localizations.dart'; // Import AppLocalizations
+import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Import AppLocalizations
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
 
 class ClassManagementScreen extends StatefulWidget {
@@ -78,14 +78,14 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog( 
-        title: Text(l10n.confirmDeleteTitle),
-        content: Text(l10n.confirmDeleteClassText), // Use specific key
+        title: Text(l10n?.confirmDeleteTitle ?? 'Confirm Delete'),
+        content: Text(l10n?.confirmDeleteClassText ?? 'Are you sure you want to delete this class?'), // Use specific key
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n?.cancel ?? 'Cancel')),
           TextButton(
             style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
             onPressed: () => Navigator.of(context).pop(true), 
-            child: Text(l10n.delete)
+            child: Text(l10n?.delete ?? 'Delete')
           ),
         ],
       ),
@@ -93,13 +93,13 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
 
     if (confirm == true) {
       setState(() => _isLoading = true);
-      final success = await _classService.deleteClass(classId);
-      if (success) {
+      try {
+        await _classService.deleteClass(classId);
         _loadClasses(); // Refresh list
-      } else {
-         if (mounted) {
+      } catch (e) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to delete class.')),
+            SnackBar(content: Text('Failed to delete class: ${e.toString()}')),
           );
           setState(() => _isLoading = false);
         }
@@ -115,11 +115,11 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
 
     return Scaffold(
       appBar: AppBar( 
-        title: Text(l10n.manageClassesTitle), 
+        title: Text(l10n?.manageClassesTitle ?? 'Manage Classes'),
         actions: [
           IconButton(
             icon: Icon(Icons.add, color: contextualAccentColor),
-            tooltip: l10n.addClassButton, 
+            tooltip: l10n?.addClassButton ?? 'Add Class',
             onPressed: () => _navigateToAddEditClassScreen(),
           ),
         ],
@@ -130,15 +130,15 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
               onRefresh: _loadClasses,
               color: contextualAccentColor,
               child: _classes.isEmpty
-                  ? Center(child: Text(l10n.noClassesFound, style: theme.textTheme.bodyLarge)) 
+                  ? Center(child: Text(l10n?.noClassesFound ?? 'No classes found', style: theme.textTheme.bodyLarge))
                   : ListView.builder(
                       itemCount: _classes.length,
                       itemBuilder: (context, index) {
                         final classItem = _classes[index];
                         // TODO: Fetch teacher name based on classItem.teacherId for a better display
                         String teacherDisplay = classItem.teacherId != null
-                            ? '${l10n.teacherLabel}: ${classItem.teacherId}'
-                            : l10n.noTeacherAssigned;
+                            ? '${l10n?.teacherLabel ?? 'Teacher'}: ${classItem.teacherId}'
+                            : l10n?.noTeacherAssigned ?? 'No Teacher Assigned';
 
                         return Card( 
                           margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -151,18 +151,18 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
                               children: [
                                 IconButton(
                                   icon: Icon(Icons.edit, color: theme.iconTheme.color ?? textDarkGrey), 
-                                  tooltip: l10n.editButton, 
+                                  tooltip: l10n?.editButton ?? 'Edit',
                                   onPressed: () => _navigateToAddEditClassScreen(classDetails: classItem),
                                 ),
                                 IconButton(
                                   icon: Icon(Icons.delete, color: theme.colorScheme.error),
-                                  tooltip: l10n.deleteButton, 
+                                  tooltip: l10n?.deleteButton ?? 'Delete',
                                   onPressed: () {
                                     if (classItem.id != null) {
                                       _deleteClass(classItem.id!); 
                                     } else {
                                       ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text(l10n.cannotDeleteMissingIdError)) 
+                                        SnackBar(content: Text(l10n?.cannotDeleteMissingIdError ?? 'Cannot delete class: ID is missing'))
                                       );
                                     }
                                   },

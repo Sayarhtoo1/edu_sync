@@ -30,9 +30,6 @@
   "saturday": "Saturday",
   "sunday": "Sunday",
   "unknown_subject": "Unknown Subject",
-  "classLabel": "Class",
-  "unknown_class": "Unknown Class",
-  "time": "Time",
   "room": "Room",
   "not_specified": "Not Specified",
   "markAttendanceTitle": "Mark Attendance",
@@ -109,9 +106,10 @@
   "failedToLoadClassesError": "Failed to load classes.",
   "failedToUpdateStudentError": "Failed to update student.",
   "failedToCreateStudentError": "Failed to create student.",
+  "studentAddedSuccess": "Student added successfully.",
+  "studentUpdatedSuccess": "Student updated successfully.",
   "editTimetableEntryTitle": "Edit Timetable Entry",
   "addTimetableEntryTitle": "Add Timetable Entry",
-  "subjectNameLabel": "Subject Name",
   "subjectNameValidator": "Please enter subject name",
   "selectDayOfWeekHint": "Select Day of Week",
   "dayValidator": "Please select a day",
@@ -154,7 +152,6 @@
   "updateButton": "Update",
   "addButton": "Add",
   "failedToSaveRecordError": "Failed to save record.",
-  "categoryLabel": "Category",
   "categoryValidator": "Please enter a category.",
   "announcementsTitle": "Announcements",
   "noAnnouncementsFound": "No announcements found.",
@@ -311,7 +308,6 @@
   "updateFormButton": "Update Form",
   "optionTextValidator": "Option text cannot be empty",
   "categoryLabel": "Category",
-  "categoryValidator": "Please enter a category.",
   "saveButton": "Save",
   "phoneNumberLabel": "Phone Number",
   "addressLabel": "Address",
@@ -370,10 +366,8 @@
   "noUsersFoundTextPart1": "No",
   "noUsersFoundTextPart2": "found. Add one!",
   "confirmDeleteUserTextPart1": "Are you sure you want to delete this",
-  "forgotPassword": "Forgot Password",
   "forgotPasswordInstructions": "Enter your email to receive a password reset link.",
   "passwordResetEmailSent": "Password reset email sent to {email}. Please check your inbox.",
-  "resetPassword": "Reset Password",
   "forgotPasswordButtonLabel": "Forgot Password?",
   "registerNewSchoolButtonLabel": "Register New School (Admin)",
   "adminFullNameLabel": "Admin's Full Name",
@@ -627,5 +621,300 @@
         "example": "Monday"
       }
     }
-  }
+  },
+  "allClasses": "All Classes",
+  "schoolLocationSettingsTitle": "School Location Settings",
+  "markStaffAttendanceTitle": "Mark Staff Attendance",
+  "selectExamAndSubject": "Please select an exam and a subject.",
+  "marksSavedSuccessfully": "Marks saved successfully!",
+  "inputMarks": "Input Marks",
+  "selectExam": "Select Exam",
+  "selectSubject": "Select Subject",
+  "marks": "Marks",
+  "saveMarks": "Save Marks",
+  "marksExceedMax": "{studentName} marks cannot exceed {maxMarks}.",
+  "@marksExceedMax": {
+    "description": "Error message when entered marks exceed maximum marks.",
+    "placeholders": {
+      "studentName": {
+        "type": "String"
+      },
+      "maxMarks": {
+        "type": "int"
+      }
+    }
+  },
+  "addSubjectTitle": "Add Subject",
+  "editSubjectTitle": "Edit Subject",
+  "subjectNameLabel": "Subject Name",
+  "manageSubjectsTitle": "Manage Subjects",
+  "noSubjectsFound": "No subjects found.",
+  "addSubjectTooltip": "Add New Subject",
+  "addGradeTitle": "Add Grade",
+  "editGradeTitle": "Edit Grade",
+  "gradeNameLabel": "Grade Name",
+  "minPercentageLabel": "Min Percentage",
+  "maxPercentageLabel": "Max Percentage",
+  "remarksLabel": "Remarks",
+  "manageGradesTitle": "Manage Grades",
+  "noGradesFound": "No grades found.",
+  "addGradeTooltip": "Add New Grade",
+  "failedToSaveExamError": "Failed to save exam.",
+  "addExamTitle": "Add Exam",
+  "editExamTitle": "Edit Exam",
+  "examNameLabel": "Exam Name",
+  "examNameValidator": "Please enter exam name",
+  "examinerNameLabel": "Examiner Name",
+  "examinerNameValidator": "Please enter examiner name",
+  "manageExamsTitle": "Manage Exams",
+  "noExamsFound": "No exams found.",
+  "addExamTooltip": "Add New Exam",
+  "confirmDeleteExamText": "Are you sure you want to delete this exam?",
+  "errorDeletingExam": "Error deleting exam.",
+  "dateLabel": "Date",
+  "dateNotSet": "Not Set",
+  "userManagementTitle": "User Management",
+  "studentManagementTitle": "Student Management",
+  "classManagementTitle": "Class Management",
+  "timetableManagementTitle": "Timetable Management",
+  "markSchoolAttendance": "Mark School Attendance",
+  "manageSchoolLessonPlans": "Manage School Lesson Plans",
+  "dashboardTitle": "Dashboard",
+  "myTimetableTitle": "My Timetable",
+  "lessonPlansTitle": "Lesson Plans",
+  "viewStudentsTitle": "View Students",
+  "eduSyncUser": "EduSync User",
+  "appSettingsTitle": "App Settings",
+  "logoutButtonText": "Logout",
+  "reportCardTitle": "Report Card",
+  "@reportCardTitle": {
+    "description": "Title for the student report card screen."
+  },
+  "noReportCardData": "No report card data available.",
+  "@noReportCardData": {
+    "description": "Message displayed when no report card data is found for a student."
+  },
+  "studentNameLabel": "Student Name",
+  "@studentNameLabel": {
+    "description": "Label for student's name on the report card."
+  },
+  "subjectWisePerformance": "Subject-wise Performance",
+  "@subjectWisePerformance": {
+    "description": "Title for the section showing subject-wise performance on the report card."
+  },
+  "maxMarksLabel": "Max Marks",
+  "@maxMarksLabel": {
+    "description": "Label for maximum marks in a subject."
+  },
+  "passingMarksLabel": "Passing Marks",
+  "@passingMarksLabel": {
+    "description": "Label for passing marks in a subject."
+  },
+  "marksObtainedLabel": "Marks Obtained",
+  "@marksObtainedLabel": {
+    "description": "Label for marks obtained by a student in a subject."
+  },
+  "passStatus": "Pass",
+  "@passStatus": {
+    "description": "Status indicating a student has passed a subject or overall."
+  },
+  "failStatus": "Fail",
+  "@failStatus": {
+    "description": "Status indicating a student has failed a subject or overall."
+  },
+  "overallSummary": "Overall Summary",
+  "@overallSummary": {
+    "description": "Title for the section showing overall performance summary on the report card."
+  },
+  "totalMaxMarksLabel": "Total Max Marks",
+  "@totalMaxMarksLabel": {
+    "description": "Label for total maximum marks across all subjects."
+  },
+  "totalMarksObtainedLabel": "Total Marks Obtained",
+  "@totalMarksObtainedLabel": {
+    "description": "Label for total marks obtained across all subjects."
+  },
+  "percentageLabel": "Percentage",
+  "@percentageLabel": {
+    "description": "Label for overall percentage on the report card."
+  },
+  "overallGradeLabel": "Overall Grade",
+  "@overallGradeLabel": {
+    "description": "Label for overall grade on the report card."
+  },
+  "overallStatusLabel": "Overall Status",
+  "@overallStatusLabel": {
+    "description": "Label for overall pass/fail status on the report card."
+  },
+    "manageExamSubjectsTitle": "Manage Exam Subjects",
+  "@manageExamSubjectsTitle": {
+    "description": "Title for the screen to manage subjects within an exam."
+  },
+  "marksExceedMax": "{studentName} marks cannot exceed {maxMarks}.",
+  "@marksExceedMax": {
+    "description": "Error message when entered marks exceed maximum marks.",
+    "placeholders": {
+      "studentName": {
+        "type": "String"
+      },
+      "maxMarks": {
+        "type": "int"
+      }
+    }
+  },
+  "reportCardTitle": "Report Card",
+  "@reportCardTitle": {
+    "description": "Title for the student report card screen."
+  },
+  "noReportCardData": "No report card data available.",
+  "@noReportCardData": {
+    "description": "Message displayed when no report card data is found for a student."
+  },
+  "studentNameLabel": "Student Name",
+  "@studentNameLabel": {
+    "description": "Label for student's name on the report card."
+  },
+  "examNameLabel": "Exam Name",
+  "@examNameLabel": {
+    "description": "Label for exam name on the report card."
+  },
+  "subjectWisePerformance": "Subject-wise Performance",
+  "@subjectWisePerformance": {
+    "description": "Title for the section showing subject-wise performance on the report card."
+  },
+  "maxMarksLabel": "Max Marks",
+  "@maxMarksLabel": {
+    "description": "Label for maximum marks in a subject."
+  },
+  "passingMarksLabel": "Passing Marks",
+  "@passingMarksLabel": {
+    "description": "Label for passing marks in a subject."
+  },
+  "marksObtainedLabel": "Marks Obtained",
+  "@marksObtainedLabel": {
+    "description": "Label for marks obtained by a student in a subject."
+  },
+  "passStatus": "Pass",
+  "@passStatus": {
+    "description": "Status indicating a student has passed a subject or overall."
+  },
+  "failStatus": "Fail",
+  "@failStatus": {
+    "description": "Status indicating a student has failed a subject or overall."
+  },
+  "overallSummary": "Overall Summary",
+  "@overallSummary": {
+    "description": "Title for the section showing overall performance summary on the report card."
+  },
+  "totalMaxMarksLabel": "Total Max Marks",
+  "@totalMaxMarksLabel": {
+    "description": "Label for total maximum marks across all subjects."
+  },
+  "totalMarksObtainedLabel": "Total Marks Obtained",
+  "@totalMarksObtainedLabel": {
+    "description": "Label for total marks obtained across all subjects."
+  },
+  "percentageLabel": "Percentage",
+  "@percentageLabel": {
+    "description": "Label for overall percentage on the report card."
+  },
+  "overallGradeLabel": "Overall Grade",
+  "@overallGradeLabel": {
+    "description": "Label for overall grade on the report card."
+  },
+  "overallStatusLabel": "Overall Status",
+  "@overallStatusLabel": {
+    "description": "Label for overall pass/fail status on the report card."
+  },
+  "gradeLabel": "Grade",
+  "@gradeLabel": {
+    "description": "Label for the grade obtained in a subject."
+  },
+  "grades": "Grades",
+  "@grades": {
+    "description": "Label for grades in charts."
+  },
+  "noTopStudents": "No top performing students found.",
+  "@noTopStudents": {
+    "description": "Message displayed when no top students are found."
+  },
+  "analyticsDashboardTitle": "Analytics Dashboard",
+  "@analyticsDashboardTitle": {
+    "description": "Title for the analytics dashboard screen."
+  },
+  "overallPerformanceTab": "Overall Performance",
+  "@overallPerformanceTab": {
+    "description": "Tab title for overall performance section."
+  },
+  "subjectAnalysisTab": "Subject Analysis",
+  "@subjectAnalysisTab": {
+    "description": "Tab title for subject analysis section."
+  },
+  "studentProgressTab": "Student Progress",
+  "@studentProgressTab": {
+    "description": "Tab title for student progress section."
+  },
+  "filterByClass": "Filter by Class",
+  "@filterByClass": {
+    "description": "Label for the class filter dropdown."
+  },
+  "allClasses": "All Classes",
+  "@allClasses": {
+    "description": "Option to select all classes in the filter."
+  },
+  "averageMarks": "Average Marks",
+  "@averageMarks": {
+    "description": "Label for average marks metric."
+  },
+  "passRate": "Pass Rate",
+  "@passRate": {
+    "description": "Label for pass rate metric."
+  },
+  "gradeDistribution": "Grade Distribution",
+  "@gradeDistribution": {
+    "description": "Title for grade distribution section."
+  },
+  "gradeDistributionChart": "Grade Distribution Chart Placeholder",
+  "@gradeDistributionChart": {
+    "description": "Placeholder text for grade distribution chart."
+  },
+  "topPerformingStudents": "Top Performing Students",
+  "@topPerformingStudents": {
+    "description": "Title for top performing students section."
+  },
+  "topStudentsTable": "Top Students Table Placeholder",
+  "@topStudentsTable": {
+    "description": "Placeholder text for top students table."
+  },
+  "averageMarksPerSubject": "Average Marks per Subject",
+  "@averageMarksPerSubject": {
+    "description": "Title for average marks per subject section."
+  },
+  "averageMarksChart": "Average Marks Chart Placeholder",
+  "@averageMarksChart": {
+    "description": "Placeholder text for average marks chart."
+  },
+  "passFailRatePerSubject": "Pass/Fail Rate per Subject",
+  "@passFailRatePerSubject": {
+    "description": "Title for pass/fail rate per subject section."
+  },
+  "passFailChart": "Pass/Fail Chart Placeholder",
+  "@passFailChart": {
+    "description": "Placeholder text for pass/fail chart."
+  },
+  "selectStudentForProgress": "Select a student to view their progress.",
+  "@selectStudentForProgress": {
+    "description": "Message prompting user to select a student for progress view."
+  },
+  "studentProgress": "Student Progress",
+  "selectStudent": "Select Student",
+  "overallAverage": "Overall Average",
+  "marksPerSubject": "Marks Per Subject",
+  "financeOverviewTitle": "Finance Overview",
+  "@financeOverviewTitle": {
+    "description": "Title for the finance overview screen."
+  },
+  "createExam": "Create Exam",
+  "updateExam": "Update Exam"
+
 }

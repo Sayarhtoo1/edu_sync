@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart'; // For IconData, Color, etc.
+// For IconData, Color, etc.
 import 'package:intl/intl.dart'; // For DateFormat
 import '../models/schedule_summary.dart';
 import '../models/timetable.dart' as timetable_model;
 import '../models/timetable_status.dart';
-import '../models/user.dart'; // For User model, assuming Teacher extends User or similar
+// For User model, assuming Teacher extends User or similar
 import '../screens/teacher/teacher_timetable_components/timetable_helpers.dart'; // For getTimetableStatus
 import 'timetable_service.dart';
 import 'auth_service.dart';
@@ -65,7 +65,7 @@ class ScheduleSummaryService {
     List<ScheduleSummary> summaries = [];
 
     for (var teacher in allTeachers) {
-      final summary = await getDailyScheduleSummary(teacher.id!, date);
+      final summary = await getDailyScheduleSummary(teacher.id, date);
       summaries.add(ScheduleSummary(
         currentEntry: summary.currentEntry,
         nextEntry: summary.nextEntry,

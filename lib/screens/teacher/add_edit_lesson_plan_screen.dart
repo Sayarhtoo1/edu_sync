@@ -9,7 +9,7 @@ import 'package:edu_sync/services/class_service.dart';
 import 'package:edu_sync/services/auth_service.dart'; // Import AuthService
 import 'package:edu_sync/services/timetable_service.dart'; // To get subjects
 // For subjects
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Import AppLocalizations
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
 
 
@@ -127,7 +127,7 @@ class _AddEditLessonPlanScreenState extends State<AddEditLessonPlanScreen> {
     } catch (e) {
       if(mounted) {
         final l10n = AppLocalizations.of(context);
-        setState(() => _errorMessage = l10n.failedToLoadInitialData);
+        setState(() => _errorMessage = l10n?.failedToLoadInitialData ?? 'Failed to load initial data.');
       }
     }
     if(mounted) setState(() => _isLoadingInitialData = false);
@@ -159,7 +159,7 @@ class _AddEditLessonPlanScreenState extends State<AddEditLessonPlanScreen> {
     } catch (e) {
        if(mounted) {
          final l10n = AppLocalizations.of(context);
-         setState(() => _errorMessage = l10n.failedToLoadSubjects);
+         setState(() => _errorMessage = l10n?.failedToLoadSubjects ?? 'Failed to load subjects.');
        }
     }
     if(mounted) setState(() => _isLoading = false);
@@ -204,7 +204,7 @@ class _AddEditLessonPlanScreenState extends State<AddEditLessonPlanScreen> {
     final l10n = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) return;
     if (_selectedClass == null || _selectedClass!.id == null || _selectedSubjectName == null || _selectedDate == null) {
-      setState(() => _errorMessage = l10n.fillAllRequiredFields); 
+      setState(() => _errorMessage = l10n?.fillAllRequiredFields ?? 'Please fill all required fields.'); 
       return;
     }
     _formKey.currentState!.save();
@@ -232,13 +232,13 @@ class _AddEditLessonPlanScreenState extends State<AddEditLessonPlanScreen> {
       if (success) {
         if(mounted) Navigator.of(context).pop(true); 
       } else {
-        throw Exception(l10n.failedToSaveLessonPlanError); 
+        throw Exception(l10n?.failedToSaveLessonPlanError ?? 'Failed to save lesson plan.'); 
       }
     } catch (e) {
       if(mounted) {
         setState(() {
           _isLoading = false;
-          _errorMessage = '${l10n.errorOccurredPrefix}: ${e.toString()}';
+          _errorMessage = '${l10n?.errorOccurredPrefix ?? 'Error'}: ${e.toString()}';
         });
       }
     }
@@ -259,8 +259,8 @@ class _AddEditLessonPlanScreenState extends State<AddEditLessonPlanScreen> {
     final Color contextualAccentColor = AppTheme.getAccentColorForContext('teachers');
 
     final String appBarTitle = _isEditing 
-        ? l10n.editLessonPlanTitle 
-        : l10n.addLessonPlanTitle;  
+        ? l10n?.editLessonPlanTitle ?? 'Edit Lesson Plan'
+        : l10n?.addLessonPlanTitle ?? 'Add Lesson Plan';  
 
     return Scaffold( // Scaffold uses appBackgroundColor from theme
       appBar: AppBar( // AppBar uses appBarTheme from theme
@@ -276,13 +276,13 @@ class _AddEditLessonPlanScreenState extends State<AddEditLessonPlanScreen> {
                 children: [
                   TextFormField(
                     controller: _titleController,
-                    decoration: InputDecoration(labelText: l10n.titleLabel), // Uses global inputDecorationTheme
-                    validator: (value) => (value == null || value.isEmpty) ? l10n.titleValidator : null,
+                    decoration: InputDecoration(labelText: l10n?.titleLabel ?? 'Title'), // Uses global inputDecorationTheme
+                    validator: (value) => (value == null || value.isEmpty) ? l10n?.titleValidator ?? 'Title cannot be empty.' : null,
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<app_class.SchoolClass>(
                     value: _selectedClass,
-                    hint: Text(l10n.selectClassHint),
+                    hint: Text(l10n?.selectClassHint ?? 'Select Class'),
                     items: _availableClasses.map((app_class.SchoolClass cls) {
                       return DropdownMenuItem<app_class.SchoolClass>(
                         value: cls,
@@ -299,14 +299,14 @@ class _AddEditLessonPlanScreenState extends State<AddEditLessonPlanScreen> {
                         _loadSubjectsForClass();
                       }
                     },
-                    validator: (value) => value == null ? l10n.pleaseSelectClass : null,
-                    decoration: InputDecoration(labelText: l10n.classLabel), // Uses global inputDecorationTheme
+                    validator: (value) => value == null ? l10n?.pleaseSelectClass ?? 'Please select a class.' : null,
+                    decoration: InputDecoration(labelText: l10n?.classLabel ?? 'Class'), // Uses global inputDecorationTheme
                   ),
                   const SizedBox(height: 16),
                    _availableSubjects.isNotEmpty
                     ? DropdownButtonFormField<String>(
                         value: _selectedSubjectName,
-                        hint: Text(l10n.selectSubjectHint), 
+                        hint: Text(l10n?.selectSubjectHint ?? 'Select Subject'), 
                         items: _availableSubjects.map((String subject) {
                           return DropdownMenuItem<String>(
                             value: subject,
@@ -318,13 +318,13 @@ class _AddEditLessonPlanScreenState extends State<AddEditLessonPlanScreen> {
                             _selectedSubjectName = newValue;
                           });
                         },
-                        validator: (value) => value == null ? l10n.subjectValidator : null, 
-                        decoration: InputDecoration(labelText: l10n.subjectLabel), // Uses global inputDecorationTheme
+                        validator: (value) => value == null ? l10n?.subjectValidator ?? 'Subject cannot be empty.' : null, 
+                        decoration: InputDecoration(labelText: l10n?.subjectLabel ?? 'Subject'), // Uses global inputDecorationTheme
                       )
                     : Column( // Fallback display if no subjects
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(l10n.subjectLabel, style: theme.textTheme.labelLarge?.copyWith(color: theme.inputDecorationTheme.labelStyle?.color)), 
+                          Text(l10n?.subjectLabel ?? 'Subject', style: theme.textTheme.labelLarge?.copyWith(color: theme.inputDecorationTheme.labelStyle?.color)), 
                           const SizedBox(height: 8),
                           Container(
                             width: double.infinity,
@@ -335,8 +335,8 @@ class _AddEditLessonPlanScreenState extends State<AddEditLessonPlanScreen> {
                             ),
                             child: Text(
                               _selectedClass == null 
-                                  ? l10n.pleaseSelectClassFirstForSubjects 
-                                  : l10n.noSubjectsFoundForClass, 
+                                  ? l10n?.pleaseSelectClassFirstForSubjects ?? 'Please select a class first to see subjects.'
+                                  : l10n?.noSubjectsFoundForClass ?? 'No subjects found for this class.', 
                               style: theme.textTheme.bodyLarge?.copyWith(color: theme.inputDecorationTheme.hintStyle?.color),
                             ),
                           )
@@ -346,19 +346,19 @@ class _AddEditLessonPlanScreenState extends State<AddEditLessonPlanScreen> {
                   TextFormField(
                     controller: _dateController,
                     decoration: InputDecoration(
-                      labelText: l10n.recordDateLabel, 
-                      hintText: l10n.dateOfBirthHint, 
+                      labelText: l10n?.recordDateLabel ?? 'Record Date', 
+                      hintText: l10n?.dateOfBirthHint ?? 'YYYY-MM-DD', 
                     ), 
                     readOnly: true,
                     onTap: () => _selectDate(context),
-                    validator: (value) => (value == null || value.isEmpty) ? l10n.dateValidator : null,
+                    validator: (value) => (value == null || value.isEmpty) ? l10n?.dateValidator ?? 'Date cannot be empty.' : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _descriptionController, 
-                    decoration: InputDecoration(labelText: l10n.descriptionLabel), 
+                    decoration: InputDecoration(labelText: l10n?.descriptionLabel ?? 'Description'), 
                     maxLines: 5,
-                    validator: (value) => (value == null || value.isEmpty) ? l10n.descriptionValidator : null, 
+                    validator: (value) => (value == null || value.isEmpty) ? l10n?.descriptionValidator ?? 'Description cannot be empty.' : null, 
                   ),
                   const SizedBox(height: 24),
                   _isLoading
@@ -366,7 +366,7 @@ class _AddEditLessonPlanScreenState extends State<AddEditLessonPlanScreen> {
                       : ElevatedButton.icon( // Changed to ElevatedButton for consistency with theme
                           icon: Icon(_isEditing ? Icons.save_as_outlined : Icons.add_circle_outline),
                           onPressed: _saveLessonPlan,
-                          label: Text(_isEditing ? l10n.updateButton : l10n.addButton),
+                          label: Text(_isEditing ? l10n?.updateButton ?? 'Update' : l10n?.addButton ?? 'Add'),
                           style: ElevatedButton.styleFrom( // Use ElevatedButton.styleFrom
                             backgroundColor: contextualAccentColor, 
                             foregroundColor: Colors.white,

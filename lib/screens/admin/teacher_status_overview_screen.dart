@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
 import 'package:edu_sync/models/timetable.dart' as timetable_model;
 import 'package:edu_sync/utils/timetable_status_helper.dart';
 import 'package:edu_sync/screens/admin/admin_panel_constants.dart';
@@ -58,7 +57,7 @@ class _TeacherStatusOverviewScreenState extends State<TeacherStatusOverviewScree
         elevation: 0,
         iconTheme: const IconThemeData(color: textDarkGrey),
         title: Text(
-          l10n.teacherStatusOverviewTitle,
+          l10n?.teacherStatusOverviewTitle ?? 'Teacher Status Overview',
           style: textTheme.titleLarge?.copyWith(color: textDarkGrey, fontWeight: FontWeight.w600),
         ),
       ),
@@ -74,7 +73,7 @@ class _TeacherStatusOverviewScreenState extends State<TeacherStatusOverviewScree
                     child: TextField(
                       controller: _searchController,
                       decoration: InputDecoration(
-                        labelText: l10n.searchTeacherHint,
+                        labelText: l10n?.searchTeacherHint ?? 'Search Teacher',
                         prefixIcon: const Icon(Icons.search),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -98,14 +97,14 @@ class _TeacherStatusOverviewScreenState extends State<TeacherStatusOverviewScree
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: Text(l10n.viewWholeSchoolScheduleButton),
+                      child: Text(l10n?.viewWholeSchoolScheduleButton ?? 'View Whole School Schedule'),
                     ),
                   ),
                   Expanded(
                     child: filteredTeachers.isEmpty && _searchQuery.isEmpty
-                        ? Center(child: Text(l10n.noTeachersFoundText, style: textTheme.bodyMedium))
+                        ? Center(child: Text(l10n?.noTeachersFoundText ?? 'No teachers found', style: textTheme.bodyMedium))
                         : filteredTeachers.isEmpty && _searchQuery.isNotEmpty
-                            ? Center(child: Text(l10n.noTeachersMatchingSearch, style: textTheme.bodyMedium))
+                            ? Center(child: Text(l10n?.noTeachersMatchingSearch ?? 'No teachers matching search', style: textTheme.bodyMedium))
                             : ListView.separated(
                                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                                 itemCount: filteredTeachers.length,
@@ -144,14 +143,14 @@ class _TeacherStatusOverviewScreenState extends State<TeacherStatusOverviewScree
                                   timetable_model.Timetable? nextUpcomingEntry;
 
                                   if (overallStatus == TimetableStatus.inProcess) {
-                                    statusText = l10n.teachingNowStatus;
+                                    statusText = l10n?.teachingNowStatus ?? 'Teaching Now';
                                     statusColor = Colors.green;
                                     if (currentEntry != null) {
-                                      final className = classMap[currentEntry.classId]?.name ?? l10n.not_specified;
-                                      detailsText = '${l10n.classLabel}: $className, ${l10n.subjectLabel}: ${currentEntry.subjectName}';
+                                      final className = classMap[currentEntry.classId]?.name ?? (l10n?.not_specified ?? 'Not Specified');
+                                      detailsText = '${l10n?.classLabel ?? 'Class'}: $className, ${l10n?.subjectLabel ?? 'Subject'}: ${currentEntry.subjectName}';
                                     }
                                   } else {
-                                    statusText = l10n.freeStatus;
+                                    statusText = l10n?.freeStatus ?? 'Free';
                                     statusColor = Colors.grey;
 
                                     // Find the next upcoming class for today
@@ -163,10 +162,10 @@ class _TeacherStatusOverviewScreenState extends State<TeacherStatusOverviewScree
 
                                     if (upcomingEntries.isNotEmpty) {
                                       nextUpcomingEntry = upcomingEntries.first;
-                                      final className = classMap[nextUpcomingEntry.classId]?.name ?? l10n.not_specified;
-                                      detailsText = '${l10n.nextLabel}: $className, ${l10n.subjectLabel}: ${nextUpcomingEntry.subjectName} at ${nextUpcomingEntry.startTimeString}';
+                                      final className = classMap[nextUpcomingEntry.classId]?.name ?? (l10n?.not_specified ?? 'Not Specified');
+                                      detailsText = '${l10n?.nextLabel ?? 'Next'}: $className, ${l10n?.subjectLabel ?? 'Subject'}: ${nextUpcomingEntry.subjectName} at ${nextUpcomingEntry.startTimeString}';
                                     } else {
-                                      detailsText = l10n.noScheduledClassesToday;
+                                      detailsText = l10n?.noScheduledClassesToday ?? 'No scheduled classes today';
                                     }
                                   }
 
@@ -194,7 +193,7 @@ class _TeacherStatusOverviewScreenState extends State<TeacherStatusOverviewScree
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  teacher.fullName ?? l10n.unknownTeacher,
+                                                  teacher.fullName ?? (l10n?.unknownTeacher ?? 'Unknown Teacher'),
                                                   style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                                                   overflow: TextOverflow.ellipsis,
                                                 ),

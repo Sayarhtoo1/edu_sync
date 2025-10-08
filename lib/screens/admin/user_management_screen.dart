@@ -5,7 +5,7 @@ import 'package:edu_sync/models/user.dart' as app_user;
 import 'package:provider/provider.dart';
 import 'add_edit_teacher_screen.dart';
 import 'add_edit_parent_screen.dart';
-import 'package:edu_sync/l10n/app_localizations.dart'; // Import AppLocalizations
+import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Import AppLocalizations
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
 
 class UserManagementScreen extends StatefulWidget {
@@ -114,14 +114,14 @@ class _UserManagementScreenState extends State<UserManagementScreen> with Single
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog( 
-        title: Text(l10n.confirmDeleteTitle),
-        content: Text('${l10n.confirmDeleteUserTextPart1} ${_currentRoleView.toLowerCase()}?'), 
+        title: Text(l10n?.confirmDeleteTitle ?? 'Confirm Delete'),
+        content: Text('${l10n?.confirmDeleteUserTextPart1 ?? 'Are you sure you want to delete this'} ${_currentRoleView.toLowerCase()}?'), 
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n?.cancel ?? 'Cancel')),
           TextButton(
             style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
             onPressed: () => Navigator.of(context).pop(true), 
-            child: Text(l10n.delete)
+            child: Text(l10n?.delete ?? 'Delete')
           ),
         ],
       ),
@@ -159,21 +159,21 @@ class _UserManagementScreenState extends State<UserManagementScreen> with Single
 
     return Scaffold(
       appBar: AppBar( 
-        title: Text('${l10n.manageUsersTitle} (${_currentRoleView == 'Teacher' ? l10n.teachers : l10n.parents})'), 
+        title: Text('${l10n?.manageUsersTitle ?? 'Manage Users'} (${_currentRoleView == 'Teacher' ? l10n?.teachers ?? 'Teachers' : l10n?.parents ?? 'Parents'})'), 
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: currentAccent,
           labelColor: currentAccent,
           unselectedLabelColor: textLightGrey,
           tabs: [
-            Tab(text: l10n.teachers),
-            Tab(text: l10n.parents),
+            Tab(text: l10n?.teachers ?? 'Teachers'),
+            Tab(text: l10n?.parents ?? 'Parents'),
           ],
         ),
         actions: [
           IconButton(
             icon: Icon(Icons.add, color: currentAccent),
-            tooltip: _currentRoleView == 'Teacher' ? l10n.addTeacherButton : l10n.addParentButton, 
+            tooltip: _currentRoleView == 'Teacher' ? l10n?.addTeacherButton ?? 'Add Teacher' : l10n?.addParentButton ?? 'Add Parent', 
             onPressed: () => _navigateToAddEditUserScreen(),
           ),
         ],
@@ -184,7 +184,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> with Single
               onRefresh: _loadStaffData,
               color: currentAccent,
               child: _staffList.isEmpty
-                  ? Center(child: Text('${l10n.noUsersFoundTextPart1} ${_currentRoleView.toLowerCase()}s ${l10n.noUsersFoundTextPart2}', style: theme.textTheme.bodyLarge)) 
+                  ? Center(child: Text('${l10n?.noUsersFoundTextPart1 ?? 'No'} ${_currentRoleView.toLowerCase()}s ${l10n?.noUsersFoundTextPart2 ?? 'found.'}', style: theme.textTheme.bodyLarge)) 
                   : ListView.builder(
                       itemCount: _staffList.length,
                       itemBuilder: (context, index) {
@@ -209,12 +209,12 @@ class _UserManagementScreenState extends State<UserManagementScreen> with Single
                               children: [
                                 IconButton(
                                   icon: Icon(Icons.edit, color: theme.iconTheme.color ?? textDarkGrey),
-                                  tooltip: l10n.editButton,
+                                  tooltip: l10n?.editButton ?? 'Edit',
                                   onPressed: () => _navigateToAddEditUserScreen(user: user),
                                 ),
                                 IconButton(
                                   icon: Icon(Icons.delete, color: theme.colorScheme.error),
-                                  tooltip: l10n.deleteButton, 
+                                  tooltip: l10n?.deleteButton ?? 'Delete', 
                                   onPressed: () => _deleteUser(user.id),
                                 ),
                               ],

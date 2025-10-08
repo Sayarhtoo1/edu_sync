@@ -24,6 +24,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' as _i4;
 // ignore_for_file: unnecessary_parenthesis
 // ignore_for_file: camel_case_types
 // ignore_for_file: subtype_of_sealed_class
+// ignore_for_file: invalid_use_of_internal_member
 
 /// A class which mocks [AuthService].
 ///
@@ -32,6 +33,12 @@ class MockAuthService extends _i1.Mock implements _i2.AuthService {
   MockAuthService() {
     _i1.throwOnMissingStub(this);
   }
+
+  @override
+  void listenToAuthChanges() => super.noSuchMethod(
+    Invocation.method(#listenToAuthChanges, []),
+    returnValueForMissingStub: null,
+  );
 
   @override
   _i3.Future<_i4.User?> signUp(
@@ -68,6 +75,15 @@ class MockAuthService extends _i1.Mock implements _i2.AuthService {
   _i3.Future<void> signOut() =>
       (super.noSuchMethod(
             Invocation.method(#signOut, []),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
+
+  @override
+  _i3.Future<void> resetPassword(String? email) =>
+      (super.noSuchMethod(
+            Invocation.method(#resetPassword, [email]),
             returnValue: _i3.Future<void>.value(),
             returnValueForMissingStub: _i3.Future<void>.value(),
           )
@@ -114,6 +130,7 @@ class MockAuthService extends _i1.Mock implements _i2.AuthService {
     required String? password,
     required String? role,
     required int? schoolId,
+    required String? schoolName,
     String? fullName,
     String? profilePhotoUrl,
   }) =>
@@ -123,6 +140,7 @@ class MockAuthService extends _i1.Mock implements _i2.AuthService {
               #password: password,
               #role: role,
               #schoolId: schoolId,
+              #schoolName: schoolName,
               #fullName: fullName,
               #profilePhotoUrl: profilePhotoUrl,
             }),

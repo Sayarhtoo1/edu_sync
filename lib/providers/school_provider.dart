@@ -3,21 +3,27 @@ import 'package:edu_sync/models/school.dart';
 import 'package:edu_sync/services/school_service.dart';
 import 'package:edu_sync/services/auth_service.dart';
 import 'package:edu_sync/utils/logger.dart';
-
-class SchoolProvider with ChangeNotifier {
-  School? _currentSchool;
-  bool _isLoading = false;
-  final SchoolService _schoolService;
-  final AuthService _authService;
-
-  SchoolProvider(this._schoolService, this._authService);
-
-  School? get currentSchool => _currentSchool;
-  bool get isLoading => _isLoading;
-
-  Future<void> fetchCurrentSchool() async {
-    _isLoading = true;
-    notifyListeners();
+import 'package:edu_sync/models/school_class.dart'; // Import SchoolClass model
+import 'package:edu_sync/models/student.dart'; // Import Student model
+ 
+ class SchoolProvider with ChangeNotifier {
+   School? _currentSchool;
+   bool _isLoading = false;
+   final SchoolService _schoolService;
+   final AuthService _authService;
+   List<SchoolClass> _schoolClasses = []; // Add list for school classes
+   List<Student> _students = []; // Add list for students
+ 
+   SchoolProvider(this._schoolService, this._authService);
+ 
+   School? get currentSchool => _currentSchool;
+   bool get isLoading => _isLoading;
+   List<SchoolClass> get schoolClasses => _schoolClasses; // Getter for school classes
+   List<Student> get students => _students; // Getter for students
+ 
+   Future<void> fetchCurrentSchool() async {
+     _isLoading = true;
+     notifyListeners();
 
     final user = _authService.getCurrentUser();
     if (user != null) {
@@ -58,4 +64,20 @@ class SchoolProvider with ChangeNotifier {
      _isLoading = false;
     notifyListeners();
   }
-}
+ 
+   Future<void> fetchClasses(int schoolId) async {
+     _isLoading = true;
+     notifyListeners();
+     _schoolClasses = await _schoolService.getClassesBySchoolId(schoolId);
+     _isLoading = false;
+     notifyListeners();
+   }
+
+  Future<void> fetchStudents(int schoolId) async {
+    _isLoading = true;
+    notifyListeners();
+    _students = await _schoolService.getStudentsBySchoolId(schoolId); // Assuming this service method exists
+    _isLoading = false;
+    notifyListeners();
+  }
+ }

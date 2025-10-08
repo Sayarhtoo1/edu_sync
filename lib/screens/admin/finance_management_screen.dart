@@ -5,7 +5,7 @@ import 'package:edu_sync/models/income.dart';
 import 'package:edu_sync/models/expense.dart';
 import 'package:edu_sync/services/finance_service.dart';
 import 'package:edu_sync/providers/school_provider.dart';
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
 import 'add_edit_income_expense_screen.dart'; 
 import 'package:edu_sync/services/auth_service.dart'; 
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
@@ -47,7 +47,7 @@ class _FinanceManagementScreenState extends State<FinanceManagementScreen> with 
     _adminUserId = _authService.getCurrentUser()?.id; // Get admin user ID
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final l10n = AppLocalizations.of(context);
+      final l10n = AppLocalizations.of(context)!; // Assert non-null
       if (_schoolId != null && _adminUserId != null) {
         _loadFinanceData();
       } else {
@@ -55,8 +55,8 @@ class _FinanceManagementScreenState extends State<FinanceManagementScreen> with 
           setState(() {
             _isLoading = false;
             _errorMessage = _schoolId == null 
-                ? l10n.error_school_not_selected_or_found
-                : l10n.error_user_not_found; 
+                ? (l10n.error_school_not_selected_or_found)
+                : (l10n.error_user_not_found);
           });
         }
       }
@@ -71,7 +71,7 @@ class _FinanceManagementScreenState extends State<FinanceManagementScreen> with 
       _expenseRecords = await _financeService.getExpenses(_schoolId!);
     } catch (e) {
       if (mounted) {
-        final l10n = AppLocalizations.of(context);
+        final l10n = AppLocalizations.of(context)!; // Assert non-null
         setState(() => _errorMessage = "${l10n.errorOccurredPrefix}: ${e.toString()}");
       }
     }
@@ -81,10 +81,10 @@ class _FinanceManagementScreenState extends State<FinanceManagementScreen> with 
   }
 
   void _navigateToAddEditRecord(String type, [dynamic record]) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!; // Assert non-null
     if (_schoolId == null || _adminUserId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.actionRequiresSchoolAndAdminContext)), // Re-use existing key
+        SnackBar(content: Text(l10n.actionRequiresSchoolAndAdminContext)),
       );
       return;
     }
@@ -105,19 +105,19 @@ class _FinanceManagementScreenState extends State<FinanceManagementScreen> with 
   }
 
   Future<void> _deleteRecord(String type, int recordId) async {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!; // Assert non-null
     final theme = Theme.of(context);
 
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog( // DialogTheme applied globally
-        title: Text(l10n.confirmDeleteTitle), 
-        content: Text(type == 'income' ? l10n.confirmDeleteIncomeText : l10n.confirmDeleteExpenseText), 
+        title: Text(l10n.confirmDeleteTitle),
+        content: Text(type == 'income' ? l10n.confirmDeleteIncomeText : l10n.confirmDeleteExpenseText),
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
           TextButton(
             style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
-            onPressed: () => Navigator.of(context).pop(true), 
+            onPressed: () => Navigator.of(context).pop(true),
             child: Text(l10n.delete)
           ),
         ],
@@ -138,7 +138,7 @@ class _FinanceManagementScreenState extends State<FinanceManagementScreen> with 
       } else {
          if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(type == 'income' ? l10n.errorDeletingIncome : l10n.errorDeletingExpense)), 
+              SnackBar(content: Text(type == 'income' ? l10n.errorDeletingIncome : l10n.errorDeletingExpense)),
             );
             setState(() => _isLoading = false);
          }
@@ -155,9 +155,9 @@ class _FinanceManagementScreenState extends State<FinanceManagementScreen> with 
   Widget _buildFinancialList(String type, List<dynamic> records, AppLocalizations l10n) {
     final theme = Theme.of(context);
     if (records.isEmpty) {
-      return Center(child: Text(type == 'income' ? l10n.noIncomeRecordsFound : l10n.noExpenseRecordsFound, style: theme.textTheme.bodyLarge)); 
+      return Center(child: Text(type == 'income' ? l10n.noIncomeRecordsFound : l10n.noExpenseRecordsFound, style: theme.textTheme.bodyLarge));
     }
-    final currencyFormat = NumberFormat.currency(locale: l10n.localeName, symbol: ''); 
+    final currencyFormat = NumberFormat.currency(locale: l10n.localeName, symbol: '');
 
     return ListView.builder(
       itemCount: records.length,
@@ -178,12 +178,12 @@ class _FinanceManagementScreenState extends State<FinanceManagementScreen> with 
                 Text(amount, style: TextStyle(color: type == 'income' ? iconColorEarnings : theme.colorScheme.error, fontWeight: FontWeight.bold)),
                 IconButton(
                   icon: Icon(Icons.edit, size: 20, color: theme.iconTheme.color ?? textDarkGrey),
-                  tooltip: l10n.editButton, 
+                  tooltip: l10n.editButton,
                   onPressed: () => _navigateToAddEditRecord(type, record),
                 ),
                 IconButton(
                   icon: Icon(Icons.delete, color: theme.colorScheme.error, size: 20),
-                  tooltip: l10n.deleteButton, 
+                  tooltip: l10n.deleteButton,
                   onPressed: () => _deleteRecord(type, record.id),
                 ),
               ],
@@ -196,7 +196,7 @@ class _FinanceManagementScreenState extends State<FinanceManagementScreen> with 
   
   Widget _buildSummaryCard(AppLocalizations l10n) {
     final theme = Theme.of(context);
-    final currencyFormat = NumberFormat.currency(locale: l10n.localeName, symbol: ''); 
+    final currencyFormat = NumberFormat.currency(locale: l10n.localeName, symbol: '');
     return Card( // CardTheme applied globally
       margin: const EdgeInsets.all(8.0),
       child: Padding(
@@ -218,21 +218,21 @@ class _FinanceManagementScreenState extends State<FinanceManagementScreen> with 
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!; // Assert non-null
     final theme = Theme.of(context);
     final Color contextualAccentColor = AppTheme.getAccentColorForContext('finance');
 
     return Scaffold(
       appBar: AppBar( // Theme applied globally
-        title: Text(l10n.financeManagementTitle), 
+        title: Text(l10n.financeManagementTitle),
         bottom: TabBar( 
           controller: _tabController,
           indicatorColor: contextualAccentColor, 
           labelColor: contextualAccentColor, 
           unselectedLabelColor: textLightGrey, // Use top-level constant
           tabs: [
-            Tab(text: l10n.incomeTabLabel), 
-            Tab(text: l10n.expensesTabLabel), 
+            Tab(text: l10n.incomeTabLabel),
+            Tab(text: l10n.expensesTabLabel),
           ],
         ),
       ),
@@ -260,7 +260,7 @@ class _FinanceManagementScreenState extends State<FinanceManagementScreen> with 
           final type = _tabController.index == 0 ? 'income' : 'expense';
           _navigateToAddEditRecord(type);
         },
-        tooltip: _tabController.index == 0 ? l10n.addIncomeTooltip : l10n.addExpenseTooltip, 
+        tooltip: _tabController.index == 0 ? l10n.addIncomeTooltip : l10n.addExpenseTooltip,
         child: const Icon(Icons.add, color: Colors.white), // Ensure icon contrasts
       ),
     );

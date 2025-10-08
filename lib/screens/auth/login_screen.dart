@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_svg/flutter_svg.dart'; // Import for SVG
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
 // import 'package:edu_sync/theme/app_theme.dart'; // Unused Import
 
 class LoginScreen extends StatefulWidget {
@@ -27,7 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
     _authService = Provider.of<AuthService>(context, listen: false);
   }
 
-  Future<void> _login(AppLocalizations l10n) async {
+  Future<void> _login(AppLocalizations? l10n) async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       if (mounted) {
@@ -40,7 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
         if (user == null) {
           if (mounted) {
             setState(() {
-              _errorMessage = l10n.loginFailedError;
+              _errorMessage = l10n?.loginFailedError ?? 'Login failed';
             });
           }
         }
@@ -48,7 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
       } catch (e) {
         if (mounted) {
           setState(() {
-            _errorMessage = '${l10n.errorOccurredPrefix}: ${e.toString()}';
+            _errorMessage = '${l10n?.errorOccurredPrefix ?? 'Error'}: ${e.toString()}';
           });
         }
       }
@@ -85,7 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   SizedBox(height: screenHeight * 0.02),
                   Text(
-                    l10n.appTitle,
+                    l10n?.appTitle ?? 'EduSync',
                     style: theme.textTheme.headlineMedium?.copyWith(
                       color: theme.colorScheme.onPrimary,
                       fontWeight: FontWeight.bold,
@@ -93,7 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   SizedBox(height: screenHeight * 0.01),
                   Text(
-                    l10n.appTagline,
+                    l10n?.appTagline ?? 'Your Partner in Education',
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: theme.colorScheme.onPrimary.withOpacity(0.8),
                     ),
@@ -109,7 +109,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            l10n.login,
+                            l10n?.login ?? 'Login',
                             style: theme.textTheme.headlineSmall?.copyWith(
                               color: theme.colorScheme.primary,
                               fontWeight: FontWeight.bold,
@@ -118,7 +118,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           const SizedBox(height: 24),
                           TextFormField(
                             decoration: InputDecoration(
-                              labelText: l10n.email,
+                              labelText: l10n?.email ?? 'Email',
                               prefixIcon: Icon(Icons.email, color: theme.colorScheme.primary),
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                               focusedBorder: OutlineInputBorder(
@@ -127,13 +127,13 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             keyboardType: TextInputType.emailAddress,
-                            validator: (value) => (value == null || value.isEmpty) ? l10n.emailValidator : null,
+                            validator: (value) => (value == null || value.isEmpty) ? (l10n?.emailValidator ?? 'Email cannot be empty') : null,
                             onSaved: (value) => _email = value!,
                           ),
                           const SizedBox(height: 16),
                           TextFormField(
                             decoration: InputDecoration(
-                              labelText: l10n.password,
+                              labelText: l10n?.password ?? 'Password',
                               prefixIcon: Icon(Icons.lock, color: theme.colorScheme.primary),
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                               focusedBorder: OutlineInputBorder(
@@ -142,7 +142,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             obscureText: true,
-                            validator: (value) => (value == null || value.isEmpty) ? l10n.passwordRequiredValidator : null,
+                            validator: (value) => (value == null || value.isEmpty) ? (l10n?.passwordRequiredValidator ?? 'Password is required') : null,
                             onSaved: (value) => _password = value!,
                           ),
                           const SizedBox(height: 24),
@@ -156,7 +156,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               ),
                               child: Text(
-                                l10n.login,
+                                l10n?.login ?? 'Login',
                                 style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onPrimary),
                               ),
                             ),
@@ -167,7 +167,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()));
                             },
                             child: Text(
-                              l10n.forgotPasswordButtonLabel,
+                              l10n?.forgotPasswordButtonLabel ?? 'Forgot Password?',
                               style: TextStyle(color: theme.colorScheme.primary),
                             ),
                           ),
@@ -186,7 +186,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RegisterScreen()));
                             },
                             child: Text(
-                              l10n.registerNewSchoolButtonLabel,
+                              l10n?.registerNewSchoolButtonLabel ?? 'Register New School',
                               style: TextStyle(color: theme.colorScheme.secondary),
                             ),
                           ),

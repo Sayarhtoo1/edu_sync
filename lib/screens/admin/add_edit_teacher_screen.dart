@@ -3,10 +3,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:edu_sync/models/user_role.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:edu_sync/services/school_service.dart';
 import 'package:edu_sync/models/user.dart' as app_user;
 import 'package:edu_sync/services/auth_service.dart';
 import 'package:provider/provider.dart';
-import 'package:edu_sync/l10n/app_localizations.dart'; // Import AppLocalizations
+import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Import AppLocalizations
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
 import 'package:edu_sync/utils/logger.dart';
 
@@ -23,6 +24,7 @@ class AddEditTeacherScreen extends StatefulWidget {
 class _AddEditTeacherScreenState extends State<AddEditTeacherScreen> {
   final _formKey = GlobalKey<FormState>();
   late final AuthService _authService;
+  late final SchoolService _schoolService;
   final ImagePicker _picker = ImagePicker();
 
   late TextEditingController _nameController;
@@ -39,6 +41,7 @@ class _AddEditTeacherScreenState extends State<AddEditTeacherScreen> {
   void initState() {
     super.initState();
     _authService = Provider.of<AuthService>(context, listen: false);
+    _schoolService = Provider.of<SchoolService>(context, listen: false);
     _nameController = TextEditingController(text: widget.teacher?.fullName ?? '');
     _emailController = TextEditingController(text: widget.teacher?.id != null ? _getEmailFromSupabaseUser(widget.teacher!.id) : ''); // Fetch email if editing
     _passwordController = TextEditingController();
@@ -65,6 +68,18 @@ class _AddEditTeacherScreenState extends State<AddEditTeacherScreen> {
     return widget.teacher?.id ?? ''; // Placeholder, ideally fetch actual email
   }
 
+  Future<String> _getSchoolName(int? schoolId) async {
+    if (schoolId == null) {
+      return 'Unknown School';
+    }
+    try {
+      final school = await _schoolService.getSchoolById(schoolId);
+      return school?.name ?? 'Unknown School';
+    } catch (e) {
+      logger.e("Error fetching school name: $e");
+      return 'Unknown School';
+    }
+  }
 
   Future<void> _fetchUserDetails(String userId) async {
     // If email is not part of your app_user.User model and you need to display it for editing,
@@ -123,15 +138,16 @@ class _AddEditTeacherScreenState extends State<AddEditTeacherScreen> {
       } else {
         // Adding new teacher
         if (_passwordController.text.isEmpty) {
-           setState(() { _isLoading = false; _errorMessage = AppLocalizations.of(context).passwordRequiredForNewTeacherError; });
+           setState(() { _isLoading = false; _errorMessage = AppLocalizations.of(context)?.passwordRequiredForNewTeacherError ?? 'Password is required for a new teacher.'; });
            return;
         }
         // Adding new teacher
         if (_passwordController.text.isEmpty) {
-           setState(() { _isLoading = false; _errorMessage = AppLocalizations.of(context).passwordRequiredForNewTeacherError; });
+           setState(() { _isLoading = false; _errorMessage = AppLocalizations.of(context)?.passwordRequiredForNewTeacherError ?? 'Password is required for a new teacher.'; });
            return;
         }
 
+        final schoolName = await _getSchoolName(widget.schoolId);
         // Create user via Edge Function
         final newTeacher = await _authService.createUserViaEdgeFunction(
           email: _emailController.text,
@@ -139,12 +155,13 @@ class _AddEditTeacherScreenState extends State<AddEditTeacherScreen> {
           role: UserRole.Teacher.name,
           schoolId: widget.schoolId,
           fullName: _nameController.text,
-          profilePhotoUrl: photoUrl, // This might be null if photo is uploaded after user creation
+          profilePhotoUrl: photoUrl,
+          schoolName: schoolName, // This might be null if photo is uploaded after user creation
         );
 
         if (newTeacher == null) {
           // Error is already printed by AuthService, or rethrow specific error
-          throw Exception(AppLocalizations.of(context).failedToCreateTeacherError);
+          throw Exception(AppLocalizations.of(context)?.failedToCreateTeacherError ?? 'Failed to create teacher.');
         }
         resultUser = newTeacher;
 
@@ -171,15 +188,15 @@ class _AddEditTeacherScreenState extends State<AddEditTeacherScreen> {
       final l10n = AppLocalizations.of(context);
       String specificError = e.toString();
       if (e.toString().contains('Profile photo upload failed')) {
-        specificError = l10n.profilePhotoUploadFailedError;
+        specificError = l10n?.profilePhotoUploadFailedError ?? 'Profile photo upload failed.';
       } else if (e.toString().contains('Failed to update teacher')) { 
-        specificError = l10n.failedToUpdateTeacherError;
-      } else if (e.toString().contains(l10n.failedToCreateTeacherError) || e.toString().contains('Failed to create user')) {
-        specificError = l10n.failedToCreateTeacherError;
+        specificError = l10n?.failedToUpdateTeacherError ?? 'Failed to update teacher.';
+      } else if (e.toString().contains(l10n?.failedToCreateTeacherError ?? 'Failed to create teacher') || e.toString().contains('Failed to create user')) {
+        specificError = l10n?.failedToCreateTeacherError ?? 'Failed to create teacher.';
       }
       setState(() {
         _isLoading = false;
-        _errorMessage = '${l10n.errorOccurredPrefix}: $specificError';
+        _errorMessage = '${l10n?.errorOccurredPrefix ?? 'Error'}: $specificError';
       });
     }
   }
@@ -199,7 +216,7 @@ class _AddEditTeacherScreenState extends State<AddEditTeacherScreen> {
     final Color contextualAccentColor = AppTheme.getAccentColorForContext('teachers');
 
     return Scaffold(
-      appBar: AppBar(title: Text(_isEditing ? l10n.editTeacherTitle : l10n.addTeacherTitle)), // Theme applied globally
+      appBar: AppBar(title: Text(_isEditing ? l10n?.editTeacherTitle ?? 'Edit Teacher' : l10n?.addTeacherTitle ?? 'Add Teacher')), // Theme applied globally
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -208,26 +225,26 @@ class _AddEditTeacherScreenState extends State<AddEditTeacherScreen> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: InputDecoration(labelText: l10n.fullNameLabel),
-                validator: (value) => (value == null || value.isEmpty) ? l10n.fullNameValidator : null,
+                decoration: InputDecoration(labelText: l10n?.fullNameLabel ?? 'Full Name'),
+                validator: (value) => (value == null || value.isEmpty) ? l10n?.fullNameValidator ?? 'Full name cannot be empty.' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _emailController,
-                decoration: InputDecoration(labelText: l10n.emailLabel),
+                decoration: InputDecoration(labelText: l10n?.emailLabel ?? 'Email'),
                 keyboardType: TextInputType.emailAddress,
-                validator: (value) => (value == null || value.isEmpty) ? l10n.emailValidator : null,
+                validator: (value) => (value == null || value.isEmpty) ? l10n?.emailValidator ?? 'Email cannot be empty.' : null,
                 readOnly: _isEditing, // Email usually not editable after creation
               ),
               const SizedBox(height: 16),
               if (!_isEditing) // Password field only for adding new teacher
                 TextFormField(
                   controller: _passwordController,
-                  decoration: InputDecoration(labelText: l10n.passwordLabel),
+                  decoration: InputDecoration(labelText: l10n?.passwordLabel ?? 'Password'),
                   obscureText: true,
                   validator: (value) {
-                    if (!_isEditing && (value == null || value.isEmpty)) return l10n.passwordRequiredValidator;
-                    if (value != null && value.isNotEmpty && value.length < 6) return l10n.passwordTooShortValidator;
+                    if (!_isEditing && (value == null || value.isEmpty)) return l10n?.passwordRequiredValidator ?? 'Password is required.';
+                    if (value != null && value.isNotEmpty && value.length < 6) return l10n?.passwordTooShortValidator ?? 'Password is too short.';
                     return null;
                   },
                 ),
@@ -251,16 +268,16 @@ class _AddEditTeacherScreenState extends State<AddEditTeacherScreen> {
                                   height: 90,
                                   fit: BoxFit.contain,
                                   placeholder: (context, url) => CircularProgressIndicator(),
-                                  errorWidget: (context, url, error) => Text(l10n.couldNotLoadImage, style: theme.textTheme.bodySmall),
+                                  errorWidget: (context, url, error) => Text(l10n?.couldNotLoadImage ?? 'Could not load image.', style: theme.textTheme.bodySmall),
                                 )
-                              : Text(l10n.noProfilePhoto, style: theme.textTheme.bodyMedium?.copyWith(color: textLightGrey))),
+                              : Text(l10n?.noProfilePhoto ?? 'No profile photo.', style: theme.textTheme.bodyMedium?.copyWith(color: textLightGrey))),
                     )
                   ),
                   const SizedBox(width: 16),
                   TextButton.icon(
                     style: TextButton.styleFrom(foregroundColor: contextualAccentColor),
                     icon: const Icon(Icons.image),
-                    label: Text(l10n.selectPhotoButton),
+                    label: Text(l10n?.selectPhotoButton ?? 'Select Photo'),
                     onPressed: _pickProfilePhoto,
                   ),
                 ],
@@ -274,7 +291,7 @@ class _AddEditTeacherScreenState extends State<AddEditTeacherScreen> {
                         foregroundColor: Colors.white,
                       ),
                       onPressed: _saveTeacher,
-                      child: Text(_isEditing ? l10n.updateTeacherButton : l10n.addTeacherButton),
+                      child: Text(_isEditing ? l10n?.updateTeacherButton ?? 'Update Teacher' : l10n?.addTeacherButton ?? 'Add Teacher'),
                     ),
               if (_errorMessage.isNotEmpty)
                 Padding(

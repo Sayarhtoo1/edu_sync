@@ -4,10 +4,13 @@ import 'package:edu_sync/models/student.dart';
 import 'package:edu_sync/theme/app_theme.dart';
 import 'package:edu_sync/services/student_service.dart';
 import 'package:edu_sync/services/auth_service.dart';
+import 'package:edu_sync/services/class_service.dart'; // New import
+import 'package:edu_sync/models/school_class.dart'; // New import
 import 'add_edit_student_screen.dart';
-import 'package:edu_sync/l10n/app_localizations.dart'; // Import AppLocalizations
+import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Import AppLocalizations
 // Import AppTheme
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 
 class StudentManagementScreen extends StatefulWidget {
   const StudentManagementScreen({super.key});
@@ -19,7 +22,10 @@ class StudentManagementScreen extends StatefulWidget {
 class _StudentManagementScreenState extends State<StudentManagementScreen> {
   late final StudentService _studentService;
   late final AuthService _authService;
+  late final ClassService _classService; // New variable
   List<Student> _students = [];
+  List<SchoolClass> _availableClasses = []; // New variable
+  int? _selectedClassId; // New variable
   bool _isLoading = true;
   int? _currentSchoolId;
 
@@ -28,13 +34,15 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
     super.initState();
     _studentService = Provider.of<StudentService>(context, listen: false);
     _authService = Provider.of<AuthService>(context, listen: false);
-    _fetchSchoolIdAndLoadStudents();
+    _classService = Provider.of<ClassService>(context, listen: false); // Initialize ClassService
+    _fetchSchoolIdAndLoadData(); // Renamed method
   }
 
-  Future<void> _fetchSchoolIdAndLoadStudents() async {
+  Future<void> _fetchSchoolIdAndLoadData() async { // Renamed method
     setState(() => _isLoading = true);
     _currentSchoolId = await _authService.getCurrentUserSchoolId();
     if (_currentSchoolId != null) {
+      await _loadAvailableClasses(); // New call
       await _loadStudents();
     } else {
       // logger.w("School ID not found for current user. Cannot load students.");
@@ -42,13 +50,32 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
     }
   }
 
-  Future<void> _loadStudents() async {
+  Future<void> _loadAvailableClasses() async {
     if (_currentSchoolId == null) return;
     setState(() => _isLoading = true);
-    _students = (await _studentService.getStudentsBySchool(_currentSchoolId!)).cast<Student>();
+    _availableClasses = await _classService.getClasses(_currentSchoolId!);
     if (mounted) {
       setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _loadStudents() async {
+    if (_currentSchoolId == null) return;
+    setState(() => _isLoading = true);
+    _students = (await _studentService.getStudentsBySchool(
+      _currentSchoolId!,
+      classId: _selectedClassId, // Pass selected class ID
+    )).cast<Student>();
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _onClassFilterChanged(int? classId) {
+    setState(() {
+      _selectedClassId = classId;
+    });
+    _loadStudents();
   }
 
   void _navigateToAddEditStudentScreen({Student? student}) async {
@@ -80,14 +107,14 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog( 
-        title: Text(l10n.confirmDeleteTitle),
-        content: Text(l10n.confirmDeleteStudentText), 
+        title: Text(l10n?.confirmDeleteTitle ?? 'Confirm Delete'),
+        content: Text(l10n?.confirmDeleteStudentText ?? 'Are you sure you want to delete this student?'), 
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n?.cancel ?? 'Cancel')),
           TextButton(
             style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
             onPressed: () => Navigator.of(context).pop(true), 
-            child: Text(l10n.delete)
+            child: Text(l10n?.delete ?? 'Delete')
           ),
         ],
       ),
@@ -117,11 +144,26 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
 
     return Scaffold(
       appBar: AppBar( 
-        title: Text(l10n.manageStudentsTitle), 
+        title: Text(l10n?.manageStudentsTitle ?? 'Manage Students'), 
         actions: [
+          DropdownButton<int?>(
+            value: _selectedClassId,
+            hint: Text(l10n?.allClasses ?? 'All Classes'),
+            onChanged: _onClassFilterChanged,
+            items: [
+              DropdownMenuItem<int?>(
+                value: null,
+                child: Text(l10n?.allClasses ?? 'All Classes'),
+              ),
+              ..._availableClasses.map((schoolClass) => DropdownMenuItem<int?>(
+                value: schoolClass.id,
+                child: Text(schoolClass.name),
+              )),
+            ],
+          ),
           IconButton(
             icon: Icon(Icons.add, color: contextualAccentColor),
-            tooltip: l10n.addStudentButton,
+            tooltip: l10n?.addStudentButton ?? 'Add Student',
             onPressed: () => _navigateToAddEditStudentScreen(),
           ),
         ],
@@ -132,12 +174,14 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
               onRefresh: _loadStudents,
               color: contextualAccentColor,
               child: _students.isEmpty
-                  ? Center(child: Text(l10n.noStudentsFound, style: theme.textTheme.bodyLarge))
+                  ? Center(child: Text(l10n?.noStudentsFound ?? 'No students found.', style: theme.textTheme.bodyLarge))
                   : ListView.builder(
                       itemCount: _students.length,
                       itemBuilder: (context, index) {
                         final student = _students[index];
-                        return Card(
+                        return GestureDetector(
+                          onTap: () => context.push('/student/profile', extra: student),
+                          child: Card(
                           margin: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 8),
                           elevation: 4,
@@ -177,7 +221,7 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                             subtitle: Padding(
                               padding: const EdgeInsets.only(top: 4.0),
                               child: Text(
-                                  'ID: ${student.id} - ${l10n.classLabel} ID: ${student.classId ?? l10n.not_specified}',
+                                  'ID: ${student.id} - ${l10n?.classLabel ?? 'Class'} ID: ${student.classId ?? l10n?.not_specified ?? 'Not Specified'}',
                                   style: theme.textTheme.bodyMedium),
                             ),
                             trailing: Row(
@@ -186,7 +230,7 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                                 IconButton(
                                   icon: Icon(Icons.edit,
                                       color: theme.colorScheme.primary),
-                                  tooltip: l10n.editButton,
+                                  tooltip: l10n?.editButton ?? 'Edit',
                                   onPressed: () =>
                                       _navigateToAddEditStudentScreen(
                                           student: student),
@@ -194,13 +238,13 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                                 IconButton(
                                   icon: Icon(Icons.delete,
                                       color: theme.colorScheme.error),
-                                  tooltip: l10n.deleteButton,
+                                  tooltip: l10n?.deleteButton ?? 'Delete',
                                   onPressed: () => _deleteStudent(student.id),
                                 ),
                               ],
                             ),
                           ),
-                        );
+                        ),);
                       },
                     ),
             ),

@@ -6,21 +6,24 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 
+import 'package:edu_sync/services/notification_service.dart';
 import 'auth_service_test.mocks.dart';
 
-@GenerateMocks([SupabaseClient, SharedPreferences, Connectivity, GoTrueClient])
+@GenerateMocks([SupabaseClient, SharedPreferences, Connectivity, GoTrueClient, NotificationService])
 void main() {
   late AuthService authService;
   late MockSupabaseClient mockSupabaseClient;
   late MockSharedPreferences mockSharedPreferences;
   late MockConnectivity mockConnectivity;
   late MockGoTrueClient mockGoTrueClient;
+  late MockNotificationService mockNotificationService;
 
   setUp(() async {
     mockSupabaseClient = MockSupabaseClient();
     mockSharedPreferences = MockSharedPreferences();
     mockConnectivity = MockConnectivity();
     mockGoTrueClient = MockGoTrueClient();
+    mockNotificationService = MockNotificationService();
 
     when(mockSupabaseClient.auth).thenReturn(mockGoTrueClient);
 
@@ -28,6 +31,7 @@ void main() {
       supabaseClient: mockSupabaseClient,
       sharedPreferences: mockSharedPreferences,
       connectivity: mockConnectivity,
+      notificationService: mockNotificationService,
     );
   });
 

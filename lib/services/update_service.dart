@@ -2,10 +2,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // For MethodChannel
-import 'package:dio/dio.dart' as dio_lib; // Add prefix for dio
+// Add prefix for dio
 import 'dart:io'; // Import for Platform
 import 'package:path_provider/path_provider.dart';
-import 'package:open_file/open_file.dart'; // Keep for now, might remove later if not needed
+// Keep for now, might remove later if not needed
 import 'package:permission_handler/permission_handler.dart';
 
 class UpdateService {

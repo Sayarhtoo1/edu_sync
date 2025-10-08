@@ -1,17 +1,22 @@
-import 'dart:async'; // For Timer
+import 'dart:async'; // For Timer and StreamSubscription
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart'; // For Provider
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Import AppLocalizations
 import 'package:edu_sync/widgets/dashboard_screen.dart';
 import 'package:edu_sync/widgets/admin_action_card.dart'; // Reusing AdminActionCard for quick actions
 import 'package:edu_sync/screens/teacher/teacher_timetable_screen.dart';
 import 'package:edu_sync/screens/teacher/attendance_marking_screen.dart';
 import 'package:edu_sync/screens/common/attendance_report_screen.dart';
+import 'package:edu_sync/screens/staff/staff_attendance_screen.dart'; // Import StaffAttendanceScreen
 import 'package:edu_sync/widgets/hijri_calendar_card.dart'; // Import HijriCalendarCard
 import 'package:edu_sync/models/schedule_summary.dart'; // Import ScheduleSummary
 import 'package:edu_sync/services/schedule_summary_service.dart'; // Import ScheduleSummaryService
 import 'package:edu_sync/services/auth_service.dart'; // Import AuthService
-import 'package:edu_sync/models/timetable.dart' as timetable_model; // Import timetable_model
+import 'package:edu_sync/services/notification_service.dart'; // Import NotificationService
+import 'package:edu_sync/widgets/in_app_notification_popup.dart'; // Import InAppNotificationPopup
+import 'package:edu_sync/screens/teacher/exam/input_marks_screen.dart';
+// Import timetable_model
 
 class TeacherDashboardScreen extends StatefulWidget {
   const TeacherDashboardScreen({super.key});
@@ -25,32 +30,58 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
   Timer? _timer;
   late final ScheduleSummaryService _scheduleSummaryService;
   late final AuthService _authService;
-  String? _currentUserId;
+  late String _currentUserId;
 
   @override
   void initState() {
     super.initState();
     _scheduleSummaryService = Provider.of<ScheduleSummaryService>(context, listen: false);
     _authService = Provider.of<AuthService>(context, listen: false);
-    _currentUserId = _authService.getCurrentUser()?.id;
+    _currentUserId = _authService.getCurrentUser()?.id ?? ''; // Initialize with empty string if null
 
-    _updateScheduleSummary(); // Fetch initial data
-    _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
-      _updateScheduleSummary(); // Update every minute
+    if (_currentUserId.isNotEmpty) {
+      _updateScheduleSummary(); // Fetch initial data only if user ID is available
+      _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
+        _updateScheduleSummary(); // Update every minute
+      });
+    }
+    _subscribeToInAppAnnouncements();
+  }
+
+  StreamSubscription? _announcementSubscription;
+
+  void _subscribeToInAppAnnouncements() {
+    final notificationService = Provider.of<NotificationService>(context, listen: false);
+    _announcementSubscription = notificationService.inAppAnnouncements.listen((announcement) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: InAppNotificationPopup(
+            announcement: announcement,
+            onDismiss: () {
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            },
+          ),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
+      );
     });
   }
 
   @override
+  @override
   void dispose() {
     _timer?.cancel(); // Cancel timer to prevent memory leaks
+    _announcementSubscription?.cancel(); // Cancel the subscription
     super.dispose();
   }
 
   Future<void> _updateScheduleSummary() async {
-    if (_currentUserId == null) return;
+    if (_currentUserId.isEmpty) return; // Check if user ID is empty
 
     final summary = await _scheduleSummaryService.getDailyScheduleSummary(
-      _currentUserId!,
+      _currentUserId,
       DateTime.now(),
     );
     setState(() {
@@ -74,7 +105,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
 
     final quickActions = [
       {
-        'title': l10n.teacherTimetable,
+        'title': l10n?.teacherTimetable ?? 'Teacher Timetable',
         'icon': Icons.calendar_today_outlined,
         'bgColor': accentTeachers.withAlpha(100),
         'iconBgColor': iconBgTeachers,
@@ -82,7 +113,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TeacherTimetableScreen())),
       },
       {
-        'title': l10n.markAttendance,
+        'title': l10n?.markAttendance ?? 'Mark Attendance',
         'icon': Icons.check_circle_outline,
         'bgColor': accentStudents.withAlpha(100),
         'iconBgColor': iconBgStudents,
@@ -96,6 +127,22 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         'iconBgColor': iconBgStudents,
         'iconFgColor': iconColorStudents,
         'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AttendanceReportScreen())),
+      },
+      {
+        'title': "Staff Attendance",
+        'icon': Icons.location_on_outlined,
+        'bgColor': accentTeachers.withAlpha(100),
+        'iconBgColor': iconBgTeachers,
+        'iconFgColor': iconColorTeachers,
+        'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const StaffAttendanceScreen())),
+      },
+      {
+        'title': "Input Marks",
+        'icon': Icons.edit_note_outlined,
+        'bgColor': accentStudents.withAlpha(100),
+        'iconBgColor': iconBgStudents,
+        'iconFgColor': iconColorStudents,
+        'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => InputMarksScreen())),
       },
     ];
 
@@ -115,14 +162,14 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         bgColor = Colors.green.shade50.withAlpha(100);
         iconBgColor = Colors.green.shade100;
         iconFgColor = Colors.green.shade700;
-        title = l10n.youAreFreeNow;
+        title = l10n?.youAreFreeNow ?? 'You are free now';
       } else if (_scheduleSummary!.currentEntry != null) {
         final entry = _scheduleSummary!.currentEntry!;
         icon = Icons.school;
         bgColor = Colors.blue.shade50.withAlpha(100);
         iconBgColor = Colors.blue.shade100;
         iconFgColor = Colors.blue.shade700;
-        title = '${l10n.currentSubject}: ${entry.subjectName} - ${entry.className}';
+        title = '${l10n?.currentSubject ?? 'Current Subject'}: ${entry.subjectName} - ${entry.className}';
         subtitle = '${entry.startTimeString} - ${entry.endTimeString}';
       } else if (_scheduleSummary!.nextEntry != null) {
         final entry = _scheduleSummary!.nextEntry!;
@@ -131,13 +178,13 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         iconBgColor = Colors.orange.shade100;
         iconFgColor = Colors.orange.shade700;
         title = '${entry.subjectName} - ${entry.className}';
-        subtitle = '${l10n.nextSubject}: ${entry.startTimeString} - ${entry.endTimeString}';
+        subtitle = '${l10n?.nextSubject ?? 'Next Subject'}: ${entry.startTimeString} - ${entry.endTimeString}';
       } else {
         icon = Icons.event_busy;
         bgColor = Colors.grey.shade50.withAlpha(100);
         iconBgColor = Colors.grey.shade100;
         iconFgColor = Colors.grey.shade700;
-        title = l10n.noScheduleToday;
+        title = l10n?.noScheduleToday ?? 'No schedule today';
       }
 
       scheduleDisplayWidget = Container(
@@ -197,8 +244,48 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     }
 
     return DashboardScreen(
-      title: l10n.teacherDashboardTitle,
-      welcomeMessage: l10n.teacherDashboardWelcomeMessage,
+      title: l10n?.teacherDashboardTitle ?? 'Teacher Dashboard',
+      welcomeMessage: l10n?.teacherDashboardWelcomeMessage ?? 'Welcome back!',
+      appBarActions: [
+        Consumer<NotificationService>(
+          builder: (context, notificationService, child) {
+            return Stack(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.notifications_none_outlined),
+                  onPressed: () {
+                    context.go('/teacher/announcements');
+                  },
+                ),
+                if (notificationService.hasNewAnnouncements)
+                  Positioned(
+                    right: 11,
+                    top: 11,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 12,
+                        minHeight: 12,
+                      ),
+                      child: const Text(
+                        '',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+      ],
       headerWidget: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -211,7 +298,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            l10n.quickActions,
+            l10n?.quickActions ?? 'Quick Actions',
             style: textTheme.titleLarge?.copyWith(color: textDarkGrey, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 16),

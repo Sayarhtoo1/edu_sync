@@ -8,11 +8,11 @@ import 'package:edu_sync/services/custom_form_service.dart';
 import 'package:edu_sync/services/class_service.dart'; // For fetching classes
 // For fetching students
 import 'package:edu_sync/models/school_class.dart' as app_class;
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Import AppLocalizations
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
 import 'package:collection/collection.dart'; // Import collection package
-import 'package:provider/provider.dart'; // Import provider
-import 'package:edu_sync/database/app_database.dart'; // Import AppDatabase
+// Import provider
+// Import AppDatabase
 
 class AddEditCustomFormScreen extends StatefulWidget {
   final int schoolId;
@@ -76,7 +76,7 @@ class _AddEditCustomFormScreenState extends State<AddEditCustomFormScreen> {
       _selectedStudentIds = List<int>.from(widget.form!.assignedStudentIds);
       _loadFieldsForEditing();
     }
-    _classService = ClassService(context.read<AppDatabase>());
+    _classService = ClassService();
     _loadAssignableEntities();
   }
 
@@ -154,15 +154,15 @@ class _AddEditCustomFormScreenState extends State<AddEditCustomFormScreen> {
     final l10n = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) return;
     if (_activeFromDate == null || _activeToDate == null) {
-      if (mounted) setState(() => _errorMessage = l10n.pleaseSelectActiveDatesError); 
+      if (mounted) setState(() => _errorMessage = l10n?.pleaseSelectActiveDatesError ?? 'Please select active dates.');
       return;
     }
     if (_activeToDate!.isBefore(_activeFromDate!)) {
-      if (mounted) setState(() => _errorMessage = l10n.activeToDateError); 
+      if (mounted) setState(() => _errorMessage = l10n?.activeToDateError ?? 'Active to date cannot be before active from date.');
       return;
     }
     if (_fields.isEmpty) {
-       if (mounted) setState(() => _errorMessage = l10n.addAtLeastOneQuestionError); 
+       if (mounted) setState(() => _errorMessage = l10n?.addAtLeastOneQuestionError ?? 'Please add at least one question.');
       return;
     }
 
@@ -245,27 +245,27 @@ class _AddEditCustomFormScreenState extends State<AddEditCustomFormScreen> {
       if (success) {
         if(mounted) Navigator.of(context).pop(true); 
       } else {
-        if(mounted) setState(() => _errorMessage = l10n.failedToSaveFormError); 
+        if(mounted) setState(() => _errorMessage = l10n?.failedToSaveFormError ?? 'Failed to save form.');
       }
     } catch (e) {
-      if(mounted) setState(() => _errorMessage = "${l10n.errorOccurredPrefix}: ${e.toString()}");
+      if(mounted) setState(() => _errorMessage = "${l10n?.errorOccurredPrefix ?? 'Error'}: ${e.toString()}");
     } finally {
       if(mounted) setState(() => _isLoading = false);
     }
   }
   
-  String formFieldTypeToString(FormFieldType type, AppLocalizations l10n) {
+  String formFieldTypeToString(FormFieldType type, AppLocalizations? l10n) {
     switch (type) {
       case FormFieldType.text:
-        return l10n.fieldType_text;
+        return l10n?.fieldType_text ?? 'Text';
       case FormFieldType.yesNo:
-        return l10n.fieldType_yesNo;
+        return l10n?.fieldType_yesNo ?? 'Yes/No';
       case FormFieldType.multipleChoice:
-        return l10n.fieldType_multipleChoice;
+        return l10n?.fieldType_multipleChoice ?? 'Multiple Choice';
       case FormFieldType.checkbox:
-        return l10n.fieldType_checkbox;
+        return l10n?.fieldType_checkbox ?? 'Checkbox';
       case FormFieldType.number:
-        return l10n.fieldType_number;
+        return l10n?.fieldType_number ?? 'Number';
     }
     // The default clause is removed as all enum cases are covered.
   }
@@ -290,7 +290,7 @@ class _AddEditCustomFormScreenState extends State<AddEditCustomFormScreen> {
           builder: (context, setDialogState) {
             final dialogTheme = Theme.of(context); // Get theme for dialog elements
             return AlertDialog(
-              title: Text(isEditingField ? l10n.editQuestionTitle : l10n.addQuestionTitle), 
+              title: Text(isEditingField ? l10n?.editQuestionTitle ?? 'Edit Question' : l10n?.addQuestionTitle ?? 'Add Question'),
               content: SingleChildScrollView(
                 child: Form(
                   key: dialogFormKey,
@@ -299,14 +299,14 @@ class _AddEditCustomFormScreenState extends State<AddEditCustomFormScreen> {
                     children: <Widget>[
                       TextFormField(
                         initialValue: question,
-                        decoration: InputDecoration(labelText: l10n.questionTextLabel), 
-                        validator: (value) => (value == null || value.isEmpty) ? l10n.questionTextValidator : null, 
+                        decoration: InputDecoration(labelText: l10n?.questionTextLabel ?? 'Question Text'),
+                        validator: (value) => (value == null || value.isEmpty) ? l10n?.questionTextValidator ?? 'Question text cannot be empty.' : null,
                         onSaved: (value) => question = value!,
                       ),
                       const SizedBox(height: 16),
                       DropdownButtonFormField<FormFieldType>(
                         value: type,
-                        decoration: InputDecoration(labelText: l10n.questionTypeLabel), 
+                        decoration: InputDecoration(labelText: l10n?.questionTypeLabel ?? 'Question Type'),
                         items: FormFieldType.values.map((FormFieldType value) {
                           return DropdownMenuItem<FormFieldType>(
                             value: value,
@@ -315,7 +315,7 @@ class _AddEditCustomFormScreenState extends State<AddEditCustomFormScreen> {
                         }).toList(),
                         onChanged: (FormFieldType? newValue) {
                           if (newValue != null) {
-                            setDialogState(() { 
+                            setDialogState(() {
                               type = newValue;
                             });
                           }
@@ -324,28 +324,28 @@ class _AddEditCustomFormScreenState extends State<AddEditCustomFormScreen> {
                       if (type == FormFieldType.multipleChoice || type == FormFieldType.checkbox)
                         TextFormField(
                           initialValue: optionsStr,
-                          decoration: InputDecoration(labelText: l10n.optionsLabel), 
+                          decoration: InputDecoration(labelText: l10n?.optionsLabel ?? 'Options (one per line)'),
                           maxLines: 3,
                           onSaved: (value) => optionsStr = value ?? '',
                            validator: (value) {
                             if (value == null || value.trim().isEmpty) {
-                              return l10n.optionsRequiredError; 
+                              return l10n?.optionsRequiredError ?? 'Options are required for this question type.';
                             }
                             if (value.trim().split('\n').where((s) => s.trim().isNotEmpty).length < 2) {
-                               return l10n.atLeastTwoOptionsError; 
+                               return l10n?.atLeastTwoOptionsError ?? 'Please provide at least two options.';
                             }
                             return null;
                           }
                         ),
                       SwitchListTile(
-                        title: Text(l10n.requiredLabel, style: dialogTheme.textTheme.bodyLarge), 
+                        title: Text(l10n?.requiredLabel ?? 'Required', style: dialogTheme.textTheme.bodyLarge),
                         value: required,
                         onChanged: (bool value) {
-                          setDialogState(() { 
+                          setDialogState(() {
                             required = value;
                           });
                         },
-                         activeColor: contextualAccentColor, 
+                         activeColor: contextualAccentColor,
                       ),
                     ],
                   ),
@@ -353,13 +353,13 @@ class _AddEditCustomFormScreenState extends State<AddEditCustomFormScreen> {
               ),
               actions: <Widget>[
                 TextButton(
-                  child: Text(l10n.cancel),
+                  child: Text(l10n?.cancel ?? 'Cancel'),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
                 ),
                 TextButton(
-                  child: Text(isEditingField ? l10n.updateButton : l10n.addButton), // Uses existing l10n keys
+                  child: Text(isEditingField ? l10n?.updateButton ?? 'Update' : l10n?.addButton ?? 'Add'), // Uses existing l10n keys
                   onPressed: () {
                     if (dialogFormKey.currentState!.validate()) {
                       dialogFormKey.currentState!.save();
@@ -405,11 +405,11 @@ class _AddEditCustomFormScreenState extends State<AddEditCustomFormScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditing ? l10n.editReportFormTitle : l10n.createReportFormTitle),
+        title: Text(_isEditing ? l10n?.editReportFormTitle ?? 'Edit Report Form' : l10n?.createReportFormTitle ?? 'Create Report Form'),
         actions: [
           IconButton(
-            icon: Icon(Icons.save, color: contextualAccentColor), 
-            tooltip: l10n.saveButton, 
+            icon: Icon(Icons.save, color: contextualAccentColor),
+            tooltip: l10n?.saveButton ?? 'Save',
             onPressed: _isLoading ? null : _saveForm
           ),
         ],
@@ -423,12 +423,12 @@ class _AddEditCustomFormScreenState extends State<AddEditCustomFormScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(l10n.formDetailsTitle, style: theme.textTheme.titleLarge),
+                    Text(l10n?.formDetailsTitle ?? 'Form Details', style: theme.textTheme.titleLarge),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _titleController,
-                      decoration: InputDecoration(labelText: l10n.titleLabel),
-                      validator: (value) => (value == null || value.isEmpty) ? l10n.titleValidator : null,
+                      decoration: InputDecoration(labelText: l10n?.titleLabel ?? 'Title'),
+                      validator: (value) => (value == null || value.isEmpty) ? l10n?.titleValidator ?? 'Title cannot be empty.' : null,
                     ),
                     const SizedBox(height: 16),
                     Row(
@@ -436,40 +436,40 @@ class _AddEditCustomFormScreenState extends State<AddEditCustomFormScreen> {
                         Expanded(
                           child: TextFormField(
                             controller: _activeFromController,
-                            decoration: InputDecoration(labelText: l10n.activeFrom),
+                            decoration: InputDecoration(labelText: l10n?.activeFrom ?? 'Active From'),
                             readOnly: true,
                             onTap: () => _selectDate(context, true),
-                            validator: (value) => (value == null || value.isEmpty) ? l10n.dateValidator : null,
+                            validator: (value) => (value == null || value.isEmpty) ? l10n?.dateValidator ?? 'Date cannot be empty.' : null,
                           ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
                           child: TextFormField(
                             controller: _activeToController,
-                            decoration: InputDecoration(labelText: l10n.activeTo),
+                            decoration: InputDecoration(labelText: l10n?.activeTo ?? 'Active To'),
                             readOnly: true,
                             onTap: () => _selectDate(context, false),
-                            validator: (value) => (value == null || value.isEmpty) ? l10n.dateValidator : null,
+                            validator: (value) => (value == null || value.isEmpty) ? l10n?.dateValidator ?? 'Date cannot be empty.' : null,
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 16),
                     SwitchListTile(
-                      title: Text(l10n.dailyReportLabel, style: theme.textTheme.bodyLarge),
+                      title: Text(l10n?.dailyReportLabel ?? 'Daily Report', style: theme.textTheme.bodyLarge),
                       value: _isDaily,
                       onChanged: (bool value) => setState(() => _isDaily = value),
                       activeColor: contextualAccentColor,
                     ),
                     const SizedBox(height: 16),
-                    Text(l10n.assignToLabel, style: theme.textTheme.titleMedium),
+                    Text(l10n?.assignToLabel ?? 'Assign To', style: theme.textTheme.titleMedium),
                     SwitchListTile(
-                      title: Text(l10n.assignToWholeSchoolLabel, style: theme.textTheme.bodyLarge),
+                      title: Text(l10n?.assignToWholeSchoolLabel ?? 'Assign to Whole School', style: theme.textTheme.bodyLarge),
                       value: _assignToWholeSchool,
                       onChanged: (bool value) {
                         setState(() {
                           _assignToWholeSchool = value;
-                          if (value) { 
+                          if (value) {
                             _selectedClassIds.clear();
                             _selectedStudentIds.clear();
                           }
@@ -479,109 +479,109 @@ class _AddEditCustomFormScreenState extends State<AddEditCustomFormScreen> {
                     ),
                     if (!_assignToWholeSchool) ...[
                       const SizedBox(height: 16),
-                      Text(l10n.assignToClassesLabel, style: theme.textTheme.titleMedium),
+                      Text(l10n?.assignToClassesLabel ?? 'Assign to Classes', style: theme.textTheme.titleMedium),
                       _availableClasses.isEmpty
                           ? Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
-                              child: Text(l10n.noClassesAvailableText, style: theme.textTheme.bodyMedium),
-                            )
-                          : ListView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: _availableClasses.length,
-                              itemBuilder: (context, index) {
-                                final appClass = _availableClasses[index];
-                                return CheckboxListTile(
-                                  title: Text(appClass.name, style: theme.textTheme.bodyLarge),
-                                  value: _selectedClassIds.contains(appClass.id), 
-                                  onChanged: (bool? selected) {
-                                    setState(() {
-                                      if (selected == true) {
-                                        if (appClass.id != null) _selectedClassIds.add(appClass.id!);
-                                      } else {
-                                        _selectedClassIds.remove(appClass.id);
-                                      }
-                                    });
-                                  },
-                                  activeColor: contextualAccentColor,
-                                );
-                              },
-                            ),
-                    ],
-                    
-                    const SizedBox(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(l10n.formQuestionsTitle, style: theme.textTheme.titleLarge),
-                        IconButton(
-                          icon: Icon(Icons.add_circle, color: contextualAccentColor, size: 28), 
-                          tooltip: l10n.addQuestionTooltip,
-                          onPressed: () => _showFormFieldDialog(),
-                        ),
-                      ],
-                    ),
-                    _fields.isEmpty
-                      ? Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 16.0),
-                          child: Center(child: Text(l10n.noQuestionsAddedText, style: theme.textTheme.bodyMedium)),
-                        )
-                      : ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(), 
-                          itemCount: _fields.length,
-                          itemBuilder: (context, index) {
-                            final field = _fields[index];
-                            return Card( 
-                              margin: const EdgeInsets.symmetric(vertical: 4.0),
-                              child: ListTile(
-                                title: Text(field.question, style: theme.textTheme.titleMedium),
-                                subtitle: Text(
-                                  "${l10n.questionTypeLabel}: ${formFieldTypeToString(field.type, l10n)}${field.required ? ' (${l10n.requiredLabel})' : ''}", 
-                                  style: theme.textTheme.bodySmall
-                                ),
-                                trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      icon: Icon(Icons.edit, size: 20, color: theme.iconTheme.color ?? textDarkGrey), 
-                                      tooltip: l10n.editButton, 
-                                      onPressed: () => _showFormFieldDialog(fieldToEdit: field, fieldIndex: index),
-                                    ),
-                                    IconButton(
-                                      icon: Icon(Icons.delete, color: theme.colorScheme.error, size: 20),
-                                      tooltip: l10n.deleteButton, 
-                                      onPressed: () {
-                                        setState(() {
-                                          if (_isEditing && !_fields[index].id.startsWith("temp_")) { // Check if it's an existing field from DB
-                                            _deletedFieldIds.add(_fields[index].id);
-                                          }
-                                          _fields.removeAt(index);
-                                        });
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                    
-                    if (_errorMessage != null) 
-                      Padding(
-                        padding: const EdgeInsets.only(top:16.0),
-                        child: Text(_errorMessage!, style: TextStyle(color: theme.colorScheme.error, fontSize: theme.textTheme.bodyMedium?.fontSize)),
-                      )
-                  ],
-                ),
-              ),
-            ),
-    );
-  }
-}
-
-// Helper extension for CustomForm to access fields (if not directly part of the model)
-// This is a placeholder; actual field management will be via _fields list in the state.
-extension CustomFormFields on CustomForm {
-  List<FormFieldItem> get fields => []; // This would be populated by service if needed
-}
+                               padding: const EdgeInsets.symmetric(vertical: 8.0),
+                               child: Text(l10n?.noClassesAvailableText ?? 'No classes available.', style: theme.textTheme.bodyMedium),
+                             )
+                           : ListView.builder(
+                               shrinkWrap: true,
+                               physics: const NeverScrollableScrollPhysics(),
+                               itemCount: _availableClasses.length,
+                               itemBuilder: (context, index) {
+                                 final appClass = _availableClasses[index];
+                                 return CheckboxListTile(
+                                   title: Text(appClass.name, style: theme.textTheme.bodyLarge),
+                                   value: _selectedClassIds.contains(appClass.id),
+                                   onChanged: (bool? selected) {
+                                     setState(() {
+                                       if (selected == true) {
+                                         if (appClass.id != null) _selectedClassIds.add(appClass.id!);
+                                       } else {
+                                         _selectedClassIds.remove(appClass.id);
+                                       }
+                                     });
+                                   },
+                                   activeColor: contextualAccentColor,
+                                 );
+                               },
+                             ),
+                     ],
+                     
+                     const SizedBox(height: 24),
+                     Row(
+                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                       children: [
+                         Text(l10n?.formQuestionsTitle ?? 'Form Questions', style: theme.textTheme.titleLarge),
+                         IconButton(
+                           icon: Icon(Icons.add_circle, color: contextualAccentColor, size: 28),
+                           tooltip: l10n?.addQuestionTooltip ?? 'Add Question',
+                           onPressed: () => _showFormFieldDialog(),
+                         ),
+                       ],
+                     ),
+                     _fields.isEmpty
+                       ? Padding(
+                           padding: const EdgeInsets.symmetric(vertical: 16.0),
+                           child: Center(child: Text(l10n?.noQuestionsAddedText ?? 'No questions added yet.', style: theme.textTheme.bodyMedium)),
+                         )
+                       : ListView.builder(
+                           shrinkWrap: true,
+                           physics: const NeverScrollableScrollPhysics(),
+                           itemCount: _fields.length,
+                           itemBuilder: (context, index) {
+                             final field = _fields[index];
+                             return Card(
+                               margin: const EdgeInsets.symmetric(vertical: 4.0),
+                               child: ListTile(
+                                 title: Text(field.question, style: theme.textTheme.titleMedium),
+                                 subtitle: Text(
+                                   "${l10n?.questionTypeLabel ?? 'Question Type'}: ${formFieldTypeToString(field.type, l10n)}${field.required ? ' (${l10n?.requiredLabel ?? 'Required'})' : ''}",
+                                   style: theme.textTheme.bodySmall
+                                 ),
+                                 trailing: Row(
+                                   mainAxisSize: MainAxisSize.min,
+                                   children: [
+                                     IconButton(
+                                       icon: Icon(Icons.edit, size: 20, color: theme.iconTheme.color ?? textDarkGrey),
+                                       tooltip: l10n?.editButton ?? 'Edit',
+                                       onPressed: () => _showFormFieldDialog(fieldToEdit: field, fieldIndex: index),
+                                     ),
+                                     IconButton(
+                                       icon: Icon(Icons.delete, color: theme.colorScheme.error, size: 20),
+                                       tooltip: l10n?.deleteButton ?? 'Delete',
+                                       onPressed: () {
+                                         setState(() {
+                                           if (_isEditing && !_fields[index].id.startsWith("temp_")) { // Check if it's an existing field from DB
+                                             _deletedFieldIds.add(_fields[index].id);
+                                           }
+                                           _fields.removeAt(index);
+                                         });
+                                       },
+                                     ),
+                                   ],
+                                 ),
+                               ),
+                             );
+                           },
+                         ),
+                     
+                     if (_errorMessage != null)
+                       Padding(
+                         padding: const EdgeInsets.only(top:16.0),
+                         child: Text(_errorMessage!, style: TextStyle(color: theme.colorScheme.error, fontSize: theme.textTheme.bodyMedium?.fontSize)),
+                       )
+                   ],
+                 ),
+               ),
+             ),
+     );
+   }
+ }
+ 
+ // Helper extension for CustomForm to access fields (if not directly part of the model)
+ // This is a placeholder; actual field management will be via _fields list in the state.
+ extension CustomFormFields on CustomForm {
+   List<FormFieldItem> get fields => []; // This would be populated by service if needed
+ }

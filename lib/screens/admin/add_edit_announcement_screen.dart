@@ -4,8 +4,9 @@ import 'package:edu_sync/models/school_class.dart' as app_class;
 import 'package:edu_sync/services/announcement_service.dart';
 import 'package:edu_sync/models/user_role.dart';
 import 'package:edu_sync/services/class_service.dart';
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart'; // For localization
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
+// Import AppDatabase
 // import 'package:provider/provider.dart'; // Removed unused import
 // import 'package:edu_sync/database/app_database.dart'; // Removed unused import
 
@@ -53,6 +54,7 @@ class _AddEditAnnouncementScreenState extends State<AddEditAnnouncementScreen> {
     _contentController = TextEditingController(text: widget.announcement?.content ?? '');
     _selectedTargetRole = widget.announcement?.targetRole ?? 'All'; 
     _selectedTargetClassId = widget.announcement?.targetClassId; // Announcement.targetClassId is int?
+    _classService = ClassService(); // Initialize _classService
 
  // schoolId should always be provided
     _loadClasses();
@@ -65,7 +67,7 @@ class _AddEditAnnouncementScreenState extends State<AddEditAnnouncementScreen> {
     } catch (e) {
       if(mounted) {
         final l10n = AppLocalizations.of(context);
-        setState(() => _errorMessage = l10n.failedToLoadClassesError);
+        setState(() => _errorMessage = l10n?.failedToLoadClassesError ?? 'Failed to load classes');
       }
     }
     if(mounted) setState(() => _isLoadingClasses = false);
@@ -76,7 +78,7 @@ class _AddEditAnnouncementScreenState extends State<AddEditAnnouncementScreen> {
     if (!_formKey.currentState!.validate()) return;
     
     if (_selectedTargetRole == 'SpecificClass' && _selectedTargetClassId == null) {
-      setState(() => _errorMessage = l10n.pleaseSelectClassForAnnouncement);
+      setState(() => _errorMessage = l10n?.pleaseSelectClassForAnnouncement ?? 'Please select a class for the announcement');
       return;
     }
     _formKey.currentState!.save();
@@ -108,12 +110,12 @@ class _AddEditAnnouncementScreenState extends State<AddEditAnnouncementScreen> {
         setState(() => _isLoading = false);
         Navigator.of(context).pop(true); // Indicate success to refresh previous screen
       } else {
-        throw Exception(l10n.failedToSaveAnnouncementError);
+        throw Exception(l10n?.failedToSaveAnnouncementError ?? 'Failed to save announcement');
       }
     } catch (e) {
       setState(() {
         _isLoading = false;
-        _errorMessage = '${l10n.errorOccurredPrefix}: ${e.toString()}';
+        _errorMessage = '${l10n?.errorOccurredPrefix ?? 'Error'}: ${e.toString()}';
       });
     }
   }
@@ -125,12 +127,12 @@ class _AddEditAnnouncementScreenState extends State<AddEditAnnouncementScreen> {
     super.dispose();
   }
 
-  String _getLocalizedTargetRoleDisplay(String roleKey, AppLocalizations l10n) {
+  String _getLocalizedTargetRoleDisplay(String roleKey, AppLocalizations? l10n) {
     switch (roleKey) {
-      case 'All': return l10n.all;
-      case 'Teacher': return l10n.teachers;
-      case 'Parent': return l10n.parents;
-      case 'SpecificClass': return l10n.specificclass;
+      case 'All': return l10n?.all ?? 'All';
+      case 'Teacher': return l10n?.teachers ?? 'Teachers';
+      case 'Parent': return l10n?.parents ?? 'Parents';
+      case 'SpecificClass': return l10n?.specificclass ?? 'Specific Class';
       default: return roleKey;
     }
   }
@@ -140,8 +142,8 @@ class _AddEditAnnouncementScreenState extends State<AddEditAnnouncementScreen> {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final String appBarTitle = _isEditing 
-        ? l10n.editAnnouncementTitle 
-        : l10n.addAnnouncementTitle;
+        ? (l10n?.editAnnouncementTitle ?? 'Edit Announcement')
+        : (l10n?.addAnnouncementTitle ?? 'Add Announcement');
     
     // Contextual color for announcements - using 'earnings' as a general positive/notification color
     final Color contextualAccentColor = AppTheme.getAccentColorForContext('announcement');
@@ -158,20 +160,20 @@ class _AddEditAnnouncementScreenState extends State<AddEditAnnouncementScreen> {
                 children: [
                   TextFormField(
                     controller: _titleController,
-                    decoration: InputDecoration(labelText: l10n.titleLabel),
-                    validator: (value) => (value == null || value.isEmpty) ? l10n.titleValidator : null,
+                    decoration: InputDecoration(labelText: l10n?.titleLabel ?? 'Title'),
+                    validator: (value) => (value == null || value.isEmpty) ? (l10n?.titleValidator ?? 'Title cannot be empty') : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _contentController,
-                    decoration: InputDecoration(labelText: l10n.contentLabel),
+                    decoration: InputDecoration(labelText: l10n?.contentLabel ?? 'Content'),
                     maxLines: 5,
-                    validator: (value) => (value == null || value.isEmpty) ? l10n.contentValidator : null,
+                    validator: (value) => (value == null || value.isEmpty) ? (l10n?.contentValidator ?? 'Content cannot be empty') : null,
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     value: _selectedTargetRole,
-                    hint: Text(l10n.selectTargetAudienceHint),
+                    hint: Text(l10n?.selectTargetAudienceHint ?? 'Select Target Audience'),
                     items: _targetRoleValues.map((String roleValue) {
                       return DropdownMenuItem<String>(
                         value: roleValue,
@@ -186,14 +188,14 @@ class _AddEditAnnouncementScreenState extends State<AddEditAnnouncementScreen> {
                         }
                       });
                     },
-                    validator: (value) => value == null ? l10n.targetAudienceValidator : null,
-                    decoration: InputDecoration(labelText: l10n.targetAudience),
+                    validator: (value) => value == null ? (l10n?.targetAudienceValidator ?? 'Please select a target audience') : null,
+                    decoration: InputDecoration(labelText: l10n?.targetAudience ?? 'Target Audience'),
                   ),
                   if (_selectedTargetRole == 'SpecificClass') ...[
                     const SizedBox(height: 16),
                     DropdownButtonFormField<int>( // Corrected to int 
                       value: _selectedTargetClassId, // This is int?
-                      hint: Text(l10n.selectClassHint), 
+                      hint: Text(l10n?.selectClassHint ?? 'Select Class'),
                       items: _availableClasses.map((app_class.SchoolClass cls) {
                         return DropdownMenuItem<int>( // Corrected to int
                           value: cls.id, // Class.id is int
@@ -201,8 +203,8 @@ class _AddEditAnnouncementScreenState extends State<AddEditAnnouncementScreen> {
                         );
                       }).toList(),
                       onChanged: (value) => setState(() => _selectedTargetClassId = value),
-                      validator: (value) => _selectedTargetRole == 'SpecificClass' && value == null ? l10n.pleaseSelectClassForAnnouncement : null, 
-                      decoration: InputDecoration(labelText: l10n.classLabel), 
+                      validator: (value) => _selectedTargetRole == 'SpecificClass' && value == null ? (l10n?.pleaseSelectClassForAnnouncement ?? 'Please select a class') : null,
+                      decoration: InputDecoration(labelText: l10n?.classLabel ?? 'Class'),
                     ),
                   ],
                   const SizedBox(height: 24),
@@ -214,7 +216,7 @@ class _AddEditAnnouncementScreenState extends State<AddEditAnnouncementScreen> {
                             foregroundColor: Colors.white, // Assuming white text on this accent
                           ),
                           onPressed: _saveAnnouncement,
-                          child: Text(_isEditing ? l10n.updateButton : l10n.addButton),
+                          child: Text(_isEditing ? (l10n?.updateButton ?? 'Update') : (l10n?.addButton ?? 'Add')),
                         ),
                   if (_errorMessage.isNotEmpty)
                     Padding(

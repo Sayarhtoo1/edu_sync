@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:edu_sync/models/income.dart';
 import 'package:edu_sync/models/expense.dart';
 import 'package:edu_sync/services/finance_service.dart';
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Import AppLocalizations
 import 'package:edu_sync/services/auth_service.dart'; // Import AuthService
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
 
@@ -111,7 +111,7 @@ class _AddEditIncomeExpenseScreenState extends State<AddEditIncomeExpenseScreen>
     if (amount == null || amount <= 0) {
       setState(() {
         _isLoading = false;
-        _errorMessage = l10n.invalidAmountError; 
+        _errorMessage = l10n?.invalidAmountError ?? 'Invalid amount'; 
       });
       return;
     }
@@ -156,12 +156,12 @@ class _AddEditIncomeExpenseScreenState extends State<AddEditIncomeExpenseScreen>
         setState(() => _isLoading = false);
         Navigator.of(context).pop(true); // Indicate success
       } else {
-        throw Exception(l10n.failedToSaveRecordError); 
+        throw Exception(l10n?.failedToSaveRecordError ?? 'Failed to save record'); 
       }
     } catch (e) {
       setState(() {
         _isLoading = false;
-        _errorMessage = '${l10n.errorOccurredPrefix}: ${e.toString()}';
+        _errorMessage = '${l10n?.errorOccurredPrefix ?? 'Error'}: ${e.toString()}';
       });
     }
   }
@@ -182,8 +182,8 @@ class _AddEditIncomeExpenseScreenState extends State<AddEditIncomeExpenseScreen>
     final Color contextualAccentColor = AppTheme.getAccentColorForContext('finance');
 
     final String title = _isEditing 
-        ? (widget.recordType == 'income' ? l10n.editIncomeTitle : l10n.editExpenseTitle) 
-        : (widget.recordType == 'income' ? l10n.addIncomeTitle : l10n.addExpenseTitle); 
+        ? (widget.recordType == 'income' ? l10n?.editIncomeTitle ?? 'Edit Income' : l10n?.editExpenseTitle ?? 'Edit Expense') 
+        : (widget.recordType == 'income' ? l10n?.addIncomeTitle ?? 'Add Income' : l10n?.addExpenseTitle ?? 'Add Expense'); 
 
     return Scaffold(
       appBar: AppBar(title: Text(title)), // Theme applied globally
@@ -195,33 +195,33 @@ class _AddEditIncomeExpenseScreenState extends State<AddEditIncomeExpenseScreen>
             children: [
               TextFormField(
                 controller: _descriptionController,
-                decoration: InputDecoration(labelText: l10n.descriptionLabel),
-                validator: (value) => (value == null || value.isEmpty) ? l10n.descriptionValidator : null,
+                decoration: InputDecoration(labelText: l10n?.descriptionLabel ?? 'Description'),
+                validator: (value) => (value == null || value.isEmpty) ? l10n?.descriptionValidator ?? 'Description cannot be empty' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _categoryController,
-                decoration: InputDecoration(labelText: l10n.categoryLabel),
-                validator: (value) => (value == null || value.isEmpty) ? l10n.categoryValidator : null,
+                decoration: InputDecoration(labelText: l10n?.categoryLabel ?? 'Category'),
+                validator: (value) => (value == null || value.isEmpty) ? l10n?.categoryValidator ?? 'Category cannot be empty' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _amountController,
-                decoration: InputDecoration(labelText: l10n.amountLabel), 
+                decoration: InputDecoration(labelText: l10n?.amountLabel ?? 'Amount'), 
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 validator: (value) {
-                  if (value == null || value.isEmpty) return l10n.amountValidator; 
-                  if (double.tryParse(value) == null || double.parse(value) <= 0) return l10n.invalidAmountError; 
+                  if (value == null || value.isEmpty) return l10n?.amountValidator ?? 'Amount cannot be empty'; 
+                  if (double.tryParse(value) == null || double.parse(value) <= 0) return l10n?.invalidAmountError ?? 'Invalid amount'; 
                   return null;
                 },
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _dateController,
-                decoration: InputDecoration(labelText: l10n.recordDateLabel, hintText: l10n.dateOfBirthHint), // Using recordDateLabel
+                decoration: InputDecoration(labelText: l10n?.recordDateLabel ?? 'Record Date', hintText: l10n?.dateOfBirthHint ?? 'YYYY-MM-DD'), // Using recordDateLabel
                 readOnly: true,
                 onTap: () => _selectDate(context),
-                validator: (value) => (value == null || value.isEmpty) ? l10n.dateValidator : null, 
+                validator: (value) => (value == null || value.isEmpty) ? l10n?.dateValidator ?? 'Date cannot be empty' : null, 
               ),
               const SizedBox(height: 24),
               _isLoading
@@ -232,7 +232,7 @@ class _AddEditIncomeExpenseScreenState extends State<AddEditIncomeExpenseScreen>
                         foregroundColor: Colors.white,
                       ),
                       onPressed: _saveRecord,
-                      child: Text(_isEditing ? l10n.updateButton : l10n.addButton), 
+                      child: Text(_isEditing ? l10n?.updateButton ?? 'Update' : l10n?.addButton ?? 'Add'), 
                     ),
               if (_errorMessage.isNotEmpty)
                 Padding(

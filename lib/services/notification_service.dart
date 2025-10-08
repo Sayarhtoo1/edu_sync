@@ -1,5 +1,7 @@
+import 'dart:async'; // Required for StreamController
 import 'package:flutter/material.dart'; // Import material for ChangeNotifier
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:go_router/go_router.dart'; // Import go_router for navigation
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:edu_sync/models/user_role.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -12,6 +14,14 @@ class NotificationService extends ChangeNotifier {
   static const String _lastSeenAnnouncementTimestampKey = 'last_seen_announcement_timestamp';
   final SupabaseClient _supabaseClient = Supabase.instance.client;
   RealtimeChannel? _announcementsChannel;
+
+  // StreamController for in-app announcements
+  final StreamController<Announcement> _inAppAnnouncementController =
+      StreamController<Announcement>.broadcast();
+  Stream<Announcement> get inAppAnnouncements => _inAppAnnouncementController.stream;
+
+  // GlobalKey for navigation
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   bool _hasNewAnnouncements = false;
   bool get hasNewAnnouncements => _hasNewAnnouncements;
@@ -26,9 +36,34 @@ class NotificationService extends ChangeNotifier {
   Future<void> initialize() async {
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
-    const InitializationSettings initializationSettings =
-        InitializationSettings(android: initializationSettingsAndroid);
-    await _flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
+    // iOS initialization settings
+    const DarwinInitializationSettings initializationSettingsDarwin =
+        DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+    );
+
+    final InitializationSettings initializationSettings =
+        InitializationSettings(
+      android: initializationSettingsAndroid,
+      iOS: initializationSettingsDarwin,
+    );
+
+    await _flutterLocalNotificationsPlugin.initialize(
+      initializationSettings,
+      onDidReceiveNotificationResponse: (NotificationResponse notificationResponse) async {
+        // Handle notification tap
+        if (notificationResponse.payload != null) {
+          logger.d('Notification payload: ${notificationResponse.payload}');
+          // Assuming payload indicates an announcement and we want to navigate to the announcements screen
+          if (notificationResponse.payload!.startsWith('announcement_')) {
+            navigatorKey.currentState?.context.go('/parent/announcements');
+          }
+        }
+      },
+    );
 
     // Request notification permission on Android 13+
     final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
@@ -51,8 +86,18 @@ class NotificationService extends ChangeNotifier {
       priority: Priority.high,
       showWhen: false,
     );
+    const DarwinNotificationDetails darwinPlatformChannelSpecifics =
+        DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
     const NotificationDetails platformChannelSpecifics =
-        NotificationDetails(android: androidPlatformChannelSpecifics);
+        NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+      iOS: darwinPlatformChannelSpecifics,
+    );
     await _flutterLocalNotificationsPlugin.show(
       id,
       title,
@@ -112,15 +157,21 @@ class NotificationService extends ChangeNotifier {
               // unless the user is an Admin. They will still see it when they load the announcements screen due to RLS.
 
               if (isTargeted) {
-                final lastSeen = await getLastSeenAnnouncementTimestamp();
-                if (lastSeen == null || newAnnouncement.createdAt.isAfter(lastSeen)) {
-                  logger.d("Setting hasNewAnnouncements to true for user role: $currentUserRole");
-                  _setHasNewAnnouncements(true);
+                logger.d("Setting hasNewAnnouncements to true for user role: $currentUserRole");
+                _setHasNewAnnouncements(true);
+                // Check if the app is in the foreground
+                final bool appInForeground = navigatorKey.currentState?.context != null;
+
+                if (appInForeground) {
+                  logger.d("App is in foreground, adding announcement to in-app stream.");
+                  _inAppAnnouncementController.add(newAnnouncement);
+                } else {
+                  logger.d("App is in background, showing local notification.");
                   // Show an immediate local notification
                   await showNotification(
-                    newAnnouncement.id, 
-                    "New Announcement: ${newAnnouncement.title}", 
-                    newAnnouncement.content.length > 50 ? "${newAnnouncement.content.substring(0,50)}..." : newAnnouncement.content, 
+                    newAnnouncement.id,
+                    "New Announcement: ${newAnnouncement.title}",
+                    newAnnouncement.content.length > 50 ? "${newAnnouncement.content.substring(0,50)}..." : newAnnouncement.content,
                     "announcement_${newAnnouncement.id}"
                   );
                 }
@@ -149,6 +200,7 @@ class NotificationService extends ChangeNotifier {
   @override
   void dispose() {
     unsubscribeFromAnnouncements();
+    _inAppAnnouncementController.close(); // Close the StreamController
     super.dispose();
   }
 }

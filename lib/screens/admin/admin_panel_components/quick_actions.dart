@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
 import 'package:edu_sync/screens/admin/manage_custom_forms_screen.dart';
 import 'package:edu_sync/screens/admin/admin_announcements_screen.dart';
 import 'package:edu_sync/screens/teacher/teacher_timetable_screen.dart';
@@ -58,7 +58,7 @@ class QuickActionsSection extends StatelessWidget {
 
     final actions = [
       {
-        'title': l10n.manageFormsAction,
+        'title': l10n?.manageFormsAction ?? 'Manage Forms',
         'icon': Icons.folder_open_outlined,
         'bgColor': Colors.green.withAlpha(100),
         'iconBgColor': Colors.green.shade100,
@@ -66,7 +66,7 @@ class QuickActionsSection extends StatelessWidget {
         'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ManageCustomFormsScreen())),
       },
       {
-        'title': l10n.announcementsAction,
+        'title': l10n?.announcementsAction ?? 'Announcements',
         'icon': Icons.campaign_outlined,
         'bgColor': Colors.purple.withAlpha(100),
         'iconBgColor': Colors.purple.shade100,
@@ -74,7 +74,7 @@ class QuickActionsSection extends StatelessWidget {
         'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminAnnouncementsScreen())),
       },
       {
-        'title': l10n.teacherTimetableAction,
+        'title': l10n?.teacherTimetableAction ?? 'Teacher Timetable',
         'icon': Icons.schedule,
         'bgColor': Colors.blue.withAlpha(100),
         'iconBgColor': Colors.blue.shade100,
@@ -82,7 +82,7 @@ class QuickActionsSection extends StatelessWidget {
         'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TeacherTimetableScreen())),
       },
       {
-        'title': l10n.markAttendanceTitle,
+        'title': l10n?.markAttendanceTitle ?? 'Mark Attendance',
         'icon': Icons.check_circle_outline,
         'bgColor': Colors.green.withAlpha(100),
         'iconBgColor': Colors.green.shade100,
@@ -90,7 +90,7 @@ class QuickActionsSection extends StatelessWidget {
         'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AttendanceMarkingScreen())),
       },
       {
-        'title': l10n.addStudent,
+        'title': l10n?.addStudent ?? 'Add Student',
         'icon': Icons.person_add,
         'bgColor': Colors.orange.withAlpha(100),
         'iconBgColor': Colors.orange.shade100,
@@ -98,7 +98,7 @@ class QuickActionsSection extends StatelessWidget {
         'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => AddEditStudentScreen(schoolId: schoolId))),
       },
       {
-        'title': l10n.addParent,
+        'title': l10n?.addParent ?? 'Add Parent',
         'icon': Icons.person_add_alt_1,
         'bgColor': Colors.teal.withAlpha(100),
         'iconBgColor': Colors.teal.shade100,
@@ -111,7 +111,7 @@ class QuickActionsSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          l10n.quickActions,
+          l10n?.quickActions ?? 'Quick Actions',
           style: textTheme.titleLarge?.copyWith(color: Colors.black87, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 16),

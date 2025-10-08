@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart'; // Import for date formatting
 
-import '../../l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Corrected import
 import '../../models/timetable.dart' as timetable_model; // Aliasing to avoid conflict if any
 import '../../models/school_class.dart' as app_class; // Import SchoolClass
 import '../../services/timetable_service.dart';
@@ -10,8 +10,6 @@ import '../../services/class_service.dart'; // Import ClassService
 import '../../providers/school_provider.dart';
 import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart'; // Import AppTheme
-import '../../models/timetable_status.dart';
-import 'teacher_timetable_components/timetable_helpers.dart';
 import 'teacher_timetable_components/timetable_entry_card.dart';
 
 class TeacherTimetableScreen extends StatefulWidget {
@@ -63,7 +61,7 @@ class _TeacherTimetableScreenState extends State<TeacherTimetableScreen> {
     if (_currentUserId.isEmpty) {
       setState(() {
         _isLoading = false;
-        _errorMessage = AppLocalizations.of(context).error_user_not_found;
+        _errorMessage = AppLocalizations.of(context)!.error_user_not_found; // Assert non-null
       });
       return;
     }
@@ -71,7 +69,7 @@ class _TeacherTimetableScreenState extends State<TeacherTimetableScreen> {
     if (_currentSchoolId == null) {
       setState(() {
         _isLoading = false;
-        _errorMessage = AppLocalizations.of(context).error_school_not_selected_or_found;
+        _errorMessage = AppLocalizations.of(context)!.error_school_not_selected_or_found; // Assert non-null
       });
       return;
     }
@@ -110,7 +108,7 @@ class _TeacherTimetableScreenState extends State<TeacherTimetableScreen> {
     } catch (e) {
       setState(() {
         _isLoading = false;
-        _errorMessage = '${AppLocalizations.of(context).error_fetching_timetable}: ${e.toString()}';
+        _errorMessage = '${AppLocalizations.of(context)!.error_fetching_timetable}: ${e.toString()}'; // Assert non-null
       });
     }
   }
@@ -125,7 +123,7 @@ class _TeacherTimetableScreenState extends State<TeacherTimetableScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!; // Assert non-null
     final theme = Theme.of(context);
     final Color contextualAccentColor = AppTheme.getAccentColorForContext('teachers');
 
@@ -234,15 +232,4 @@ class _TeacherTimetableScreenState extends State<TeacherTimetableScreen> {
   }
 
 
-  Color _getColorForStatus(TimetableStatus status) {
-    switch (status) {
-      case TimetableStatus.upcoming:
-        return Colors.blue;
-      case TimetableStatus.inProcess:
-        return Colors.green;
-      case TimetableStatus.done:
-        return Colors.grey;
-      }
-    
-    }
 }

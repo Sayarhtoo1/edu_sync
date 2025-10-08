@@ -8,7 +8,7 @@ import 'package:edu_sync/services/class_service.dart';
 import 'package:edu_sync/models/user.dart' as app_user;
 import 'package:edu_sync/models/user_role.dart';
 import 'package:edu_sync/services/auth_service.dart';
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:edu_sync/theme/app_theme.dart';
 import 'package:provider/provider.dart';
@@ -87,9 +87,10 @@ class _AddEditStudentScreenState extends State<AddEditStudentScreen> {
       _availableClasses = await _classService.getClasses(widget.schoolId);
     } catch (e) {
       logger.e("Error loading classes: $e");
-      if (mounted)
+      if (mounted) {
         setState(() => _errorMessage =
-            AppLocalizations.of(context).failedToLoadClassesError);
+            AppLocalizations.of(context)?.failedToLoadClassesError ?? 'Failed to load classes');
+      }
     }
   }
 
@@ -100,8 +101,9 @@ class _AddEditStudentScreenState extends State<AddEditStudentScreen> {
           await _authService.getUsersByRole(UserRole.Parent, widget.schoolId);
     } catch (e) {
       logger.e("Error loading parents: $e");
-      if (mounted)
+      if (mounted) {
         setState(() => _errorMessage = "Failed to load parents."); // TODO: Localize
+      }
     }
     if (mounted) setState(() => _isLoadingParents = false);
   }
@@ -112,49 +114,68 @@ class _AddEditStudentScreenState extends State<AddEditStudentScreen> {
       _initialLinkedParentIds = List.from(_linkedParentIds);
     } catch (e) {
       logger.e("Error loading linked parents: $e");
-      if (mounted)
+      if (mounted) {
         setState(() => _errorMessage = "Failed to load linked parents."); // TODO: Localize
+      }
     }
   }
 
   Future<void> _pickProfilePhoto() async {
+    logger.d("Attempting to pick a profile photo.");
     final l10n = AppLocalizations.of(context);
-    final source = await showModalBottomSheet<ImageSource>(
-      backgroundColor: Colors.transparent,
-      context: context,
-      builder: (BuildContext context) {
-        return Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(20),
-              topRight: Radius.circular(20),
+    try {
+      final source = await showModalBottomSheet<ImageSource>(
+        backgroundColor: Colors.transparent,
+        context: context,
+        builder: (BuildContext context) {
+          return Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
             ),
-          ),
-          child: Wrap(
-            children: <Widget>[
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: Text(l10n.gallery),
-                onTap: () => Navigator.of(context).pop(ImageSource.gallery),
-              ),
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: Text(l10n.camera),
-                onTap: () => Navigator.of(context).pop(ImageSource.camera),
-              ),
-            ],
-          ),
-        );
-      },
-    );
+            child: Wrap(
+              children: <Widget>[
+                ListTile(
+                  leading: const Icon(Icons.photo_library),
+                  title: Text(l10n?.gallery ?? 'Gallery'),
+                  onTap: () => Navigator.of(context).pop(ImageSource.gallery),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.camera_alt),
+                  title: Text(l10n?.camera ?? 'Camera'),
+                  onTap: () => Navigator.of(context).pop(ImageSource.camera),
+                ),
+              ],
+            ),
+          );
+        },
+      );
 
-    if (source != null) {
+      if (source == null) {
+        logger.d("User cancelled image source selection.");
+        return;
+      }
+
+      logger.d("Image source selected: $source");
       final XFile? pickedFile = await _picker.pickImage(source: source);
+
       if (pickedFile != null) {
+        logger.d("Image picked successfully: ${pickedFile.path}");
         setState(() {
           _profilePhotoFile = File(pickedFile.path);
           _currentProfilePhotoUrl = null;
+        });
+      } else {
+        logger.d("User cancelled image picking.");
+      }
+    } catch (e) {
+      logger.e("Error picking profile photo: $e");
+      if (mounted) {
+        setState(() {
+          _errorMessage = "Failed to pick image."; // TODO: Localize
         });
       }
     }
@@ -264,9 +285,10 @@ class _AddEditStudentScreenState extends State<AddEditStudentScreen> {
         }
 
         final success = await _studentService.updateStudent(studentData);
-        if (!success)
+        if (!success) {
           throw Exception(
-              AppLocalizations.of(context).failedToUpdateStudentError);
+              AppLocalizations.of(context)?.failedToUpdateStudentError ?? 'Failed to update student');
+        }
 
         await _updateParentLinks(widget.student!.id);
       } else {
@@ -294,9 +316,10 @@ class _AddEditStudentScreenState extends State<AddEditStudentScreen> {
           );
         }
 
-        if (newStudentId == null)
+        if (newStudentId == null) {
           throw Exception(
-              AppLocalizations.of(context).failedToCreateStudentError);
+              AppLocalizations.of(context)?.failedToCreateStudentError ?? 'Failed to create student');
+        }
 
         if (_profilePhotoFile != null) {
           final fileName = 'profile.${_profilePhotoFile!.path.split('.').last}';
@@ -311,22 +334,28 @@ class _AddEditStudentScreenState extends State<AddEditStudentScreen> {
       }
 
       if (mounted) {
-        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_isEditing
+                ? (AppLocalizations.of(context)?.studentUpdatedSuccess ?? 'Student updated successfully')
+                : (AppLocalizations.of(context)?.studentAddedSuccess ?? 'Student added successfully')),
+            backgroundColor: Colors.green,
+          ),
+        );
         Navigator.of(context).pop(true);
       }
-    } catch (e) {
-      final l10n = AppLocalizations.of(context);
-      String specificError = e.toString();
-      if (e.toString().contains(l10n.failedToUpdateStudentError)) {
-        specificError = l10n.failedToUpdateStudentError;
-      } else if (e.toString().contains(l10n.failedToCreateStudentError)) {
-        specificError = l10n.failedToCreateStudentError;
-      }
+    } catch (e, stackTrace) {
+      logger.e('Failed to save student', error: e, stackTrace: stackTrace);
       if (mounted) {
         setState(() {
-          _isLoading = false;
-          _errorMessage = '${l10n.errorOccurredPrefix}: $specificError';
+          _errorMessage = _isEditing
+              ? (AppLocalizations.of(context)?.failedToUpdateStudentError ?? 'Failed to update student')
+              : (AppLocalizations.of(context)?.failedToCreateStudentError ?? 'Failed to create student');
         });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
       }
     }
   }
@@ -347,7 +376,7 @@ class _AddEditStudentScreenState extends State<AddEditStudentScreen> {
 
     return Scaffold(
       appBar: AppBar(
-          title: Text(_isEditing ? l10n.editStudentTitle : l10n.addStudentTitle)),
+          title: Text(_isEditing ? (l10n?.editStudentTitle ?? 'Edit Student') : (l10n?.addStudentTitle ?? 'Add Student'))),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -402,8 +431,8 @@ class _AddEditStudentScreenState extends State<AddEditStudentScreen> {
                       ),
                       onPressed: _saveStudent,
                       child: Text(_isEditing
-                          ? l10n.updateStudentButton
-                          : l10n.addStudentButton),
+                          ? (l10n?.updateStudentButton ?? 'Update Student')
+                          : (l10n?.addStudentButton ?? 'Add Student')),
                     ),
               if (_errorMessage.isNotEmpty)
                 Padding(

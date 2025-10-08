@@ -10,8 +10,8 @@ import 'package:edu_sync/screens/teacher/lesson_plan_management_screen.dart';
 import 'package:edu_sync/screens/admin/admin_announcements_screen.dart';
 import 'package:edu_sync/screens/admin/manage_custom_forms_screen.dart';
 import 'package:edu_sync/screens/admin/view_form_responses_screen.dart';
-import 'package:edu_sync/screens/admin/finance_overview_screen.dart';
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
+import 'package:go_router/go_router.dart';
 
 const Color drawerIconColor = Color(0xFF7A6FF0);
 const Color drawerTextDarkGrey = Color(0xFF2C2C2C);
@@ -70,10 +70,18 @@ class AdminDrawerItems extends StatelessWidget {
         ),
         ListTile(
           leading: const Icon(Icons.monetization_on, color: drawerIconColor),
-          title: Text('Finance Overview', style: TextStyle(color: drawerTextDarkGrey)),
+          title: Text(l10n?.financeOverviewTitle ?? 'Finance Overview', style: TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => FinanceOverviewScreen()));
+            context.go('/admin/finance-overview');
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.analytics_outlined, color: drawerIconColor),
+          title: Text(l10n?.analyticsDashboardTitle ?? 'Analytics Dashboard', style: TextStyle(color: drawerTextDarkGrey)),
+          onTap: () {
+            Navigator.pop(context);
+            context.go('/analytics-dashboard');
           },
         ),
         const Divider(indent: 16, endIndent: 16),
@@ -95,7 +103,7 @@ class AdminDrawerItems extends StatelessWidget {
         ),
         ListTile(
           leading: const Icon(Icons.campaign_outlined, color: drawerIconColor),
-          title: Text(l10n.manageAnnouncementsDrawerItem, style: TextStyle(color: drawerTextDarkGrey)),
+          title: Text(l10n?.manageAnnouncementsDrawerItem ?? 'Manage Announcements', style: TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
             Navigator.of(context).push(MaterialPageRoute(builder: (_) => AdminAnnouncementsScreen()));
@@ -103,7 +111,7 @@ class AdminDrawerItems extends StatelessWidget {
         ),
         ListTile(
           leading: const Icon(Icons.assignment_outlined, color: drawerIconColor),
-          title: Text(l10n.manageDailyReportsDrawerItem, style: TextStyle(color: drawerTextDarkGrey)),
+          title: Text(l10n?.manageDailyReportsDrawerItem ?? 'Manage Daily Reports', style: TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
             Navigator.of(context).push(MaterialPageRoute(builder: (_) => ManageCustomFormsScreen()));
@@ -111,14 +119,40 @@ class AdminDrawerItems extends StatelessWidget {
         ),
         ListTile(
           leading: const Icon(Icons.list_alt_outlined, color: drawerIconColor),
-          title: Text(l10n.viewFormResponsesTitle, style: TextStyle(color: drawerTextDarkGrey)),
+          title: Text(l10n?.viewFormResponsesTitle ?? 'View Form Responses', style: TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
             if (school != null) {
               Navigator.of(context).push(MaterialPageRoute(builder: (_) => ViewFormResponsesScreen(schoolId: school!.id)));
             } else {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.error_school_not_selected_or_found)));
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n?.error_school_not_selected_or_found ?? 'School not selected or found')));
             }
+          },
+        ),
+        const Divider(indent: 16, endIndent: 16),
+        // Exam Module Section
+        ListTile(
+          leading: const Icon(Icons.assignment_outlined, color: drawerIconColor),
+          title: Text('Exam Overview', style: TextStyle(color: drawerTextDarkGrey)),
+          onTap: () {
+            Navigator.pop(context);
+            context.go('/admin/exam-overview');
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.assignment_turned_in_outlined, color: drawerIconColor),
+          title: Text('Exam Management', style: TextStyle(color: drawerTextDarkGrey)),
+          onTap: () {
+            Navigator.pop(context);
+            context.go('/admin/exam-management');
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.add_box_outlined, color: drawerIconColor),
+          title: Text('Create Exam', style: TextStyle(color: drawerTextDarkGrey)),
+          onTap: () {
+            Navigator.pop(context);
+            context.push('/admin/exam-form');
           },
         ),
       ],

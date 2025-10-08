@@ -1,10 +1,12 @@
 class User {
-  final String id; // Changed to String to match Supabase UUID
+  final String id;
   final String role;
   final String? profilePhotoUrl;
-  final String? fullName; // Changed from name to fullName for clarity
-  final int? schoolId; // Added schoolId
+  final String? fullName;
+  final int? schoolId;
   final String? email;
+  final String? phoneNumber;
+  final double? salary;
 
   User({
     required this.id,
@@ -13,6 +15,8 @@ class User {
     this.fullName,
     this.schoolId,
     this.email,
+    this.phoneNumber,
+    this.salary,
   });
 
   factory User.fromJson(Map<String, dynamic> map) {
@@ -23,10 +27,11 @@ class User {
       fullName: map['full_name'],
       schoolId: map['school_id'],
       email: map['email'],
+      phoneNumber: map['phone_number'],
+      salary: map['salary'] != null ? (map['salary'] as num).toDouble() : null,
     );
   }
 
-  // Add copyWith for easier updates
   User copyWith({
     String? id,
     String? role,
@@ -34,6 +39,8 @@ class User {
     String? fullName,
     int? schoolId,
     String? email,
+    String? phoneNumber,
+    double? salary,
   }) {
     return User(
       id: id ?? this.id,
@@ -42,6 +49,8 @@ class User {
       fullName: fullName ?? this.fullName,
       schoolId: schoolId ?? this.schoolId,
       email: email ?? this.email,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      salary: salary ?? this.salary,
     );
   }
 
@@ -53,6 +62,8 @@ class User {
       'full_name': fullName,
       'school_id': schoolId,
       'email': email,
+      'phone_number': phoneNumber,
+      'salary': salary,
     };
   }
 }

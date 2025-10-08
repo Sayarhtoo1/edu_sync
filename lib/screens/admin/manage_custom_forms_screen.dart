@@ -4,7 +4,7 @@ import 'package:edu_sync/models/custom_form.dart';
 import 'package:edu_sync/services/custom_form_service.dart';
 import 'package:edu_sync/services/auth_service.dart';
 import 'package:edu_sync/providers/school_provider.dart';
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
 import 'package:intl/intl.dart'; 
 import 'add_edit_custom_form_screen.dart'; 
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
@@ -45,7 +45,7 @@ class _ManageCustomFormsScreenState extends State<ManageCustomFormsScreen> {
     if (_userId == null || _userRole == null || _schoolId == null) {
       setState(() {
         _isLoading = false;
-        _errorMessage = AppLocalizations.of(context).actionRequiresSchoolAndAdminContext;
+        _errorMessage = AppLocalizations.of(context)?.actionRequiresSchoolAndAdminContext ?? 'Action requires school and admin context';
       });
       return;
     }
@@ -59,7 +59,7 @@ class _ManageCustomFormsScreenState extends State<ManageCustomFormsScreen> {
       _forms = await _customFormService.getManageableForms(_userId!, _userRole!, _schoolId!);
     } catch (e) {
       if(mounted) {
-        setState(() => _errorMessage = AppLocalizations.of(context).errorOccurredPrefix + e.toString());
+        setState(() => _errorMessage = (AppLocalizations.of(context)?.errorOccurredPrefix ?? 'Error') + e.toString());
       }
     }
   }
@@ -82,19 +82,22 @@ class _ManageCustomFormsScreenState extends State<ManageCustomFormsScreen> {
 
   Future<void> _deleteForm(String formId) async {
     final l10n = AppLocalizations.of(context);
+    if (l10n == null) {
+      return; // Or handle the null case appropriately
+    }
     final theme = Theme.of(context);
 
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog( 
-        title: Text(l10n.confirmDeleteTitle),
-        content: Text(l10n.confirmDeleteCustomFormText),
+        title: Text(l10n.confirmDeleteTitle ?? 'Confirm Delete'),
+        content: Text(l10n.confirmDeleteCustomFormText ?? 'Are you sure you want to delete this custom form?'),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel ?? 'Cancel')),
           TextButton(
             style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
             onPressed: () => Navigator.of(context).pop(true), 
-            child: Text(l10n.delete)
+            child: Text(l10n.delete ?? 'Delete')
           ),
         ],
       ),
@@ -108,7 +111,7 @@ class _ManageCustomFormsScreenState extends State<ManageCustomFormsScreen> {
       } else {
         if(mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.errorDeletingCustomFormText)), 
+            SnackBar(content: Text(l10n.errorDeletingCustomFormText ?? 'Error deleting custom form')),
           );
         }
       }
@@ -119,19 +122,22 @@ class _ManageCustomFormsScreenState extends State<ManageCustomFormsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    if (l10n == null) {
+      return const SizedBox.shrink(); // Or a placeholder widget
+    }
     final theme = Theme.of(context);
     final Color contextualAccentColor = AppTheme.getAccentColorForContext('form');
 
     return Scaffold(
       appBar: AppBar( 
-        title: Text(l10n.manageDailyReportFormsTitle), 
+        title: Text(l10n.manageDailyReportFormsTitle ?? 'Manage Daily Report Forms'),
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(contextualAccentColor)))
           : _errorMessage != null
               ? Center(child: Padding(padding: const EdgeInsets.all(16), child: Text(_errorMessage!, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.error))))
               : _forms.isEmpty
-                  ? Center(child: Text(l10n.noCustomFormsFoundText, style: theme.textTheme.bodyLarge))
+                  ? Center(child: Text(l10n.noCustomFormsFoundText ?? 'No custom forms found', style: theme.textTheme.bodyLarge))
                   : ListView.builder(
                       itemCount: _forms.length,
                       itemBuilder: (context, index) {
@@ -141,14 +147,14 @@ class _ManageCustomFormsScreenState extends State<ManageCustomFormsScreen> {
                           child: ListTile(
                             title: Text(form.title, style: theme.textTheme.titleMedium),
                             subtitle: Text(
-                                "${l10n.activeFrom}: ${DateFormat.yMMMd(l10n.localeName).format(form.activeFrom)} - ${l10n.activeTo}: ${DateFormat.yMMMd(l10n.localeName).format(form.activeTo)}\n"
-                                "${l10n.daily}: ${form.isDaily ? l10n.yes : l10n.no}",
+                                "${l10n.activeFrom ?? 'Active From'}: ${DateFormat.yMMMd(l10n.localeName ?? 'en').format(form.activeFrom)} - ${l10n.activeTo ?? 'Active To'}: ${DateFormat.yMMMd(l10n.localeName ?? 'en').format(form.activeTo)}\n"
+                                "${l10n.daily ?? 'Daily'}: ${form.isDaily ? (l10n.yes ?? 'Yes') : (l10n.no ?? 'No')}",
                                 style: theme.textTheme.bodySmall
                             ),
                             isThreeLine: true,
                             trailing: IconButton(
                               icon: Icon(Icons.delete, color: theme.colorScheme.error),
-                              tooltip: l10n.deleteButton, 
+                              tooltip: l10n.deleteButton ?? 'Delete',
                               onPressed: () => _deleteForm(form.id),
                             ),
                             onTap: () => _navigateToAddEditForm(form),
@@ -159,7 +165,7 @@ class _ManageCustomFormsScreenState extends State<ManageCustomFormsScreen> {
       floatingActionButton: FloatingActionButton( 
         backgroundColor: contextualAccentColor,
         onPressed: () => _navigateToAddEditForm(),
-        tooltip: l10n.addCustomFormTooltip, 
+        tooltip: l10n.addCustomFormTooltip ?? 'Add Custom Form',
         child: const Icon(Icons.add, color: Colors.white), 
       ),
     );

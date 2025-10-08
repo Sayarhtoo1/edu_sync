@@ -1,3 +1,4 @@
+import 'package:edu_sync/screens/admin/staff_management_screen.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -11,7 +12,6 @@ import 'package:edu_sync/models/school.dart' as app_school;
 import 'package:edu_sync/models/user_role.dart';
 import 'package:edu_sync/providers/school_provider.dart'; // Corrected import
 import 'package:edu_sync/services/auth_service.dart';
-import 'package:edu_sync/services/notification_service.dart';
 
 import 'package:edu_sync/screens/splash_screen.dart';
 import 'package:edu_sync/screens/auth/login_screen.dart';
@@ -38,6 +38,17 @@ import 'package:edu_sync/screens/parent/child_schedule_screen.dart';
 import 'package:edu_sync/screens/parent/announcements_screen.dart';
 import 'package:edu_sync/screens/parent/daily_report_screen.dart';
 import 'package:edu_sync/screens/settings/app_settings_screen.dart';
+import 'package:edu_sync/screens/common/analytics_dashboard_screen.dart';
+import 'package:edu_sync/screens/student/exam/modern_report_card_screen.dart';
+import 'package:edu_sync/screens/student/student_profile_screen.dart';
+import 'package:edu_sync/screens/staff/staff_profile_screen.dart';
+import 'package:edu_sync/models/staff.dart' as model;
+import 'package:edu_sync/models/student.dart' as model;
+
+// Import new exam screens
+import 'package:edu_sync/screens/admin/exam/exam_overview_screen.dart';
+import 'package:edu_sync/screens/admin/exam/exam_list_screen.dart';
+import 'package:edu_sync/screens/admin/exam/exam_form_screen.dart';
 
 // A class that converts a stream into a listenable for GoRouter.
 class GoRouterRefreshStream extends ChangeNotifier {
@@ -62,7 +73,6 @@ GoRouter initializeRouter() {
       final authService = Provider.of<AuthService>(context, listen: false);
       final schoolProvider = Provider.of<SchoolProvider>(context, listen: false);
       final connectivity = Provider.of<Connectivity>(context, listen: false);
-      final notificationService = Provider.of<NotificationService>(context, listen: false);
 
       // Handle deep links for password recovery.
       // Only check the initial link when we're on the splash route ('/') to avoid repeated async work
@@ -106,14 +116,9 @@ GoRouter initializeRouter() {
       // If logged in, but going to login or reset password, redirect to dashboard
       if (loggedIn && state.matchedLocation == '/') {
         final connectivityResult = await connectivity.checkConnectivity();
-        if (connectivityResult != ConnectivityResult.none) {
+        if (!connectivityResult.contains(ConnectivityResult.none)) {
           await schoolProvider.fetchCurrentSchool();
           final role = await authService.getUserRole();
-          final schoolId = schoolProvider.currentSchool?.id;
-
-          if (role != null && schoolId != null) {
-            notificationService.subscribeToAnnouncements(schoolId, authService.getCurrentUser()!.id, role);
-          }
 
           if (role == UserRole.Admin.name) {
             return '/admin';
@@ -131,14 +136,9 @@ GoRouter initializeRouter() {
 
       if (loggedIn && goingToLogin) {
         final connectivityResult = await connectivity.checkConnectivity();
-        if (connectivityResult != ConnectivityResult.none) {
+        if (!connectivityResult.contains(ConnectivityResult.none)) {
           await schoolProvider.fetchCurrentSchool();
           final role = await authService.getUserRole();
-          final schoolId = schoolProvider.currentSchool?.id;
-
-          if (role != null && schoolId != null) {
-            notificationService.subscribeToAnnouncements(schoolId, authService.getCurrentUser()!.id, role);
-          }
 
           if (role == UserRole.Admin.name) {
             return '/admin';
@@ -197,6 +197,10 @@ GoRouter initializeRouter() {
       GoRoute(
         path: '/admin/user-management',
         builder: (context, state) => const UserManagementScreen(),
+      ),
+      GoRoute(
+        path: '/admin/staff-management',
+        builder: (context, state) => const StaffManagementScreen(),
       ),
       GoRoute(
         path: '/admin/student-management',
@@ -261,6 +265,42 @@ GoRouter initializeRouter() {
       GoRoute(
         path: '/app-settings',
         builder: (context, state) => const AppSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/analytics-dashboard',
+        builder: (context, state) => const AnalyticsDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/parent/report-card/:studentId/:examId',
+        builder: (context, state) {
+          final studentId = state.pathParameters['studentId']!;
+          final examId = state.pathParameters['examId']!;
+          return ModernReportCardScreen(studentId: studentId, examId: examId);
+        },
+      ),
+      GoRoute(
+        path: '/student/profile',
+        builder: (context, state) => StudentProfileScreen(student: state.extra as model.Student),
+      ),
+      GoRoute(
+        path: '/staff/profile',
+        builder: (context, state) => StaffProfileScreen(staff: state.extra as model.Staff),
+      ),
+      // New exam module routes
+      GoRoute(
+        path: '/admin/exam-overview',
+        name: 'exam-overview',
+        builder: (context, state) => const ExamOverviewScreen(),
+      ),
+      GoRoute(
+        path: '/admin/exam-management',
+        name: 'exam-management',
+        builder: (context, state) => const ExamListScreen(),
+      ),
+      GoRoute(
+        path: '/admin/exam-form',
+        name: 'exam-form',
+        builder: (context, state) => ExamFormScreen(exam: state.extra as dynamic),
       ),
     ],
   );

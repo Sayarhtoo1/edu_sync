@@ -4,7 +4,7 @@ import 'package:edu_sync/models/user.dart' as app_user;
 import 'package:edu_sync/models/user_role.dart';
 import 'package:edu_sync/services/class_service.dart';
 import 'package:edu_sync/services/auth_service.dart'; // To fetch teachers
-import 'package:edu_sync/l10n/app_localizations.dart'; // Import AppLocalizations
+import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Import AppLocalizations
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
 import 'package:provider/provider.dart';
 // For generating UUIDs
@@ -60,7 +60,7 @@ class _AddEditClassScreenState extends State<AddEditClassScreen> {
       }
     } catch (e) {
       logger.e("Error loading teachers: $e");
-      if(mounted) setState(() => _errorMessage = AppLocalizations.of(context).failedToLoadTeachersError);
+      if(mounted) setState(() => _errorMessage = AppLocalizations.of(context)?.failedToLoadTeachersError ?? 'Failed to load teachers');
     }
     if(mounted) setState(() => _isLoading = false);
   }
@@ -79,24 +79,26 @@ class _AddEditClassScreenState extends State<AddEditClassScreen> {
         section: _sectionControllerText,
       );
 
-      bool success;
       if (_isEditing) {
-        success = await _classService.updateClass(classData);
+        await _classService.updateClass(
+          classData.id!,
+          classData.name,
+          classData.teacherId,
+        );
       } else {
-        final newClass = await _classService.createClass(classData);
-        success = newClass != null;
+        await _classService.createClass(
+          classData.name,
+          classData.schoolId,
+          classData.teacherId,
+        );
       }
 
-      if (success) {
-        if(mounted) Navigator.of(context).pop(true); // Indicate success
-      } else {
-        throw Exception(AppLocalizations.of(context).failedToSaveClassError);
-      }
+      if (mounted) Navigator.of(context).pop(true); // Indicate success
     } catch (e) {
       if(mounted) {
         setState(() {
           _isLoading = false;
-          _errorMessage = '${AppLocalizations.of(context).errorOccurredPrefix}: ${e.toString()}';
+          _errorMessage = '${AppLocalizations.of(context)?.errorOccurredPrefix ?? 'Error'}: ${e.toString()}';
         });
       }
     }
@@ -116,7 +118,7 @@ class _AddEditClassScreenState extends State<AddEditClassScreen> {
     final Color contextualAccentColor = AppTheme.getAccentColorForContext('students');
 
     return Scaffold(
-      appBar: AppBar(title: Text(_isEditing ? l10n.editClassTitle : l10n.addClassTitle)), // Theme applied globally
+      appBar: AppBar(title: Text(_isEditing ? (l10n?.editClassTitle ?? 'Edit Class') : (l10n?.addClassTitle ?? 'Add Class'))), // AppBar theme applied globally
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -125,8 +127,8 @@ class _AddEditClassScreenState extends State<AddEditClassScreen> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: InputDecoration(labelText: l10n.classNameLabel),
-                validator: (value) => (value == null || value.isEmpty) ? l10n.classNameValidator : null,
+                decoration: InputDecoration(labelText: l10n?.classNameLabel ?? 'Class Name'),
+                validator: (value) => (value == null || value.isEmpty) ? (l10n?.classNameValidator ?? 'Class name cannot be empty') : null,
               ),
               const SizedBox(height: 16),
               TextFormField( 
@@ -140,11 +142,11 @@ class _AddEditClassScreenState extends State<AddEditClassScreen> {
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 value: _selectedTeacherId,
-                hint: Text(l10n.selectClassTeacherHint),
+                hint: Text(l10n?.selectClassTeacherHint ?? 'Select Class Teacher'),
                 items: _availableTeachers.map((app_user.User teacher) {
                   return DropdownMenuItem<String>(
                     value: teacher.id, 
-                    child: Text(teacher.fullName ?? '${l10n.unnamedTeacher} (${teacher.id.substring(0,8)})'),
+                    child: Text(teacher.fullName ?? '${l10n?.unnamedTeacher ?? 'Unnamed Teacher'} (${teacher.id.substring(0,8)})'),
                   );
                 }).toList(),
                 onChanged: (value) {
@@ -153,7 +155,7 @@ class _AddEditClassScreenState extends State<AddEditClassScreen> {
                   });
                 },
                 // validator: (value) => value == null ? l10n.classTeacherValidator : null, // Teacher can be optional for a class
-                decoration: InputDecoration(labelText: l10n.classTeacherLabel),
+                decoration: InputDecoration(labelText: l10n?.classTeacherLabel ?? 'Class Teacher'),
               ),
               const SizedBox(height: 24),
               _isLoading
@@ -164,7 +166,7 @@ class _AddEditClassScreenState extends State<AddEditClassScreen> {
                         foregroundColor: Colors.white, // Assuming white text on this accent
                       ),
                       onPressed: _saveClass,
-                      child: Text(_isEditing ? l10n.updateClassButton : l10n.addClassButton),
+                      child: Text(_isEditing ? (l10n?.updateClassButton ?? 'Update Class') : (l10n?.addClassButton ?? 'Add Class')),
                     ),
               if (_errorMessage.isNotEmpty)
                 Padding(

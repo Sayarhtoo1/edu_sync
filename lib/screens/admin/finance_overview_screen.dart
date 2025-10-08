@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
+import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:edu_sync/services/finance_service.dart';
@@ -261,31 +261,21 @@ class _FinanceOverviewScreenState extends State<FinanceOverviewScreen> {
   }
 
   Widget _buildSparkline(bool isProfit) {
-    final spots = _chartData.asMap().entries.map((entry) {
-      final value = entry.value.totalIncome - entry.value.totalOutcome;
-      return FlSpot(entry.key.toDouble(), value);
-    }).toList();
-
-    return LineChart(
-      LineChartData(
-        gridData: const FlGridData(show: false),
-        titlesData: const FlTitlesData(show: false),
-        borderData: FlBorderData(show: false),
-        lineBarsData: [
-          LineChartBarData(
-            spots: spots,
-            isCurved: true,
-            color: isProfit ? const Color(0xFF48BB78) : const Color(0xFFF6AD55),
-            barWidth: 3,
-            isStrokeCapRound: true,
-            dotData: const FlDotData(show: false),
-            belowBarData: BarAreaData(
-              show: true,
-              color: (isProfit ? const Color(0xFF48BB78) : const Color(0xFFF6AD55)).withOpacity(0.3),
-            ),
-          ),
-        ],
-      ),
+    return SfCartesianChart(
+      primaryXAxis: NumericAxis(isVisible: false),
+      primaryYAxis: NumericAxis(isVisible: false),
+      series: <CartesianSeries>[
+        LineSeries<FinancialDataPoint, double>(
+          dataSource: _chartData,
+          xValueMapper: (FinancialDataPoint data, _) => data.date.millisecondsSinceEpoch.toDouble(),
+          yValueMapper: (FinancialDataPoint data, _) => data.totalIncome - data.totalOutcome,
+          color: isProfit ? const Color(0xFF48BB78) : const Color(0xFFF6AD55),
+          width: 3,
+          enableTooltip: true,
+        )
+      ],
+      plotAreaBorderColor: Colors.transparent,
+      margin: EdgeInsets.zero,
     );
   }
 }

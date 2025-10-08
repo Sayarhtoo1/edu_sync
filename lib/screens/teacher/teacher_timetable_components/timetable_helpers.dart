@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../../l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Import AppLocalizations
 import '../../../models/timetable.dart' as timetable_model;
 import '../../../models/timetable_status.dart';
 

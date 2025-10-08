@@ -2,27 +2,26 @@
   "@@locale": "my",
   "appTitle": "EduSync မြန်မာ",
   "login": "ဝင်မည်",
+  "logout": "ထွက်မည်",
   "email": "အီးမေးလ်",
   "password": "စကားဝှက်",
-  "adminPanel": "အက်မင် ပאנل",
-  "teacherDashboard": "ဆရာ ဒက်ရှ်ဘုတ်",
-  "parentDashboard": "မိဘ ဒက်ရှ်ဘုတ်",
-  "welcomeAdmin": "အက်မင်၊ ကြိုဆိုပါတယ်။",
-  "welcomeTeacher": "ဆရာ/မ၊ ကြိုဆိုပါတယ်။",
-  "welcomeParent": "မိဘ၊ ကြိုဆိုပါတယ်။",
-  "useDrawerToNavigate": "သွားလာရန် အံဆွဲကို အသုံးပြုပါ။",
-  "settings": "ဆက်တင်များ",
-  "language": "ဘာသာစကား",
-  "logout": "ထွက်မည်",
-  "teachers": "ဆရာများ",
-  "parents": "မိဘများ",
-  "students": "ကျောင်းသားများ",
-  "classes": "အတန်းများ",
+  "forgotPassword": "စကားဝှက် မေ့နေပါသလား။",
+  "resetPassword": "စကားဝှက် ပြန်လည်သတ်မှတ်ရန်",
+  "newPassword": "စကားဝှက်အသစ်",
+  "confirmNewPassword": "စကားဝှက်အသစ် အတည်ပြုပါ",
+  "setNewPassword": "စကားဝှက်အသစ် သတ်မှတ်ရန်",
+  "backToLogin": "ဝင်ရန် ပြန်သွားရန်",
   "error_user_not_found": "အမှားအယွင်း - အသုံးပြုသူကို ရှာမတွေ့ပါ။ ကျေးဇူးပြု၍ ပြန်လည်ဝင်ရောက်ပါ။",
   "error_school_not_selected_or_found": "အမှားအယွင်း - ကျောင်းကို ရွေးချယ်ထားခြင်း သို့မဟုတ် ရှာမတွေ့ပါ။ သင်၏အကောင့်နှင့် ကျောင်းတစ်ခု ချိတ်ဆက်ထားကြောင်း သေချာပါစေ။",
   "error_fetching_timetable": "အချိန်ဇယား ရယူရာတွင် အမှားအယွင်းဖြစ်ပွားခဲ့သည်။",
+  "no_timetable_entries_found": "ရွေးချယ်ထားသောနေ့အတွက် အချိန်ဇယား ထည့်သွင်းမှုများ မတွေ့ပါ။",
   "my_timetable_title": "ကျွန်ုပ်၏ အချိန်ဇယား",
-  "no_timetable_entries_found": "အချိန်ဇယား ထည့်သွင်းမှုများ မတွေ့ပါ။",
+  "classLabel": "အတန်း",
+  "unknown_class": "အမည်မသိ အတန်း",
+  "time": "အချိန်",
+  "upcoming": "လာမည့်",
+  "in_process": "ဆောင်ရွက်ဆဲ",
+  "done": "ပြီးစီး",
   "monday": "တနင်္လာ",
   "tuesday": "အင်္ဂါ",
   "wednesday": "ဗုဒ္ဓဟူး",
@@ -31,9 +30,6 @@
   "saturday": "စနေ",
   "sunday": "တနင်္ဂနွေ",
   "unknown_subject": "အမည်မသိ ဘာသာရပ်",
-  "classLabel": "အတန်း",
-  "unknown_class": "အမည်မသိ အတန်း",
-  "time": "အချိန်",
   "room": "အခန်း",
   "not_specified": "သတ်မှတ်မထားပါ",
   "markAttendanceTitle": "တက်ရောက်မှု မှတ်သားရန်",
@@ -47,6 +43,7 @@
   "attendanceStatusPresent": "ရောက်ရှိ",
   "attendanceStatusAbsent": "ပျက်ကွက်",
   "attendanceStatusLate": "နောက်ကျ",
+  "attendanceStatusLeave": "ခွင့်",
   "manageLessonPlansTitle": "သင်ခန်းစာ အစီအစဉ်များ စီမံရန်",
   "pleaseSelectClassToViewLessonPlans": "သင်ခန်းစာ အစီအစဉ်များ ကြည့်ရန် အတန်းတစ်ခု ရွေးပါ။",
   "noLessonPlansFound": "ဤအတန်းအတွက် သင်ခန်းစာ အစီအစဉ်များ မတွေ့ပါ။",
@@ -109,6 +106,8 @@
   "failedToLoadClassesError": "အတန်းများ စာရင်း ရယူခြင်း မအောင်မြင်ပါ။",
   "failedToUpdateStudentError": "ကျောင်းသား အချက်အလက် ပြင်ဆင်ခြင်း မအောင်မြင်ပါ။",
   "failedToCreateStudentError": "ကျောင်းသားသစ် ပြုလုပ်ခြင်း မအောင်မြင်ပါ။",
+  "studentAddedSuccess": "ကျောင်းသားကို အောင်မြင်စွာ ထည့်သွင်းပြီးပါပြီ။",
+  "studentUpdatedSuccess": "ကျောင်းသား အချက်အလက်ကို အောင်မြင်စွာ ပြင်ဆင်ပြီးပါပြီ။",
   "editTimetableEntryTitle": "အချိန်ဇယား ပြင်ရန်",
   "addTimetableEntryTitle": "အချိန်ဇယား ထည့်ရန်",
   "subjectNameLabel": "ဘာသာရပ်အမည်",
@@ -154,6 +153,8 @@
   "updateButton": "ပြင်ဆင်ရန်",
   "addButton": "ထည့်ရန်",
   "failedToSaveRecordError": "မှတ်တမ်း သိမ်းဆည်းခြင်း မအောင်မြင်ပါ။",
+  "categoryLabel": "အမျိုးအစား",
+  "categoryValidator": "ကျေးဇူးပြု၍ အမျိုးအစားတစ်ခု ထည့်ပါ။",
   "announcementsTitle": "ကြေညာချက်များ",
   "noAnnouncementsFound": "ကြေညာချက်များ မတွေ့ပါ။",
   "postedOn": "တင်သည့်ရက်",
@@ -173,7 +174,7 @@
   "addEditAnnouncementNotImplemented": "ကြေညာချက် ထည့်/ပြင်ရန် မျက်နှာပြင်ကို မပြုလုပ်ရသေးပါ။",
   "targetAudience": "ပစ်မှတ် အုပ်စု",
   "all": "အားလုံး",
-  "specificclass": "သီးသန့်အတန်း", 
+  "specificclass": "သီးသန့်အတန်း",
   "closeButtonLabel": "ပိတ်မည်",
   "pleaseSelectClassForAnnouncement": "ဤကြေညာချက်အတွက် အတန်းတစ်ခု ရွေးပါ။",
   "failedToSaveAnnouncementError": "ကြေညာချက် သိမ်းဆည်းခြင်း မအောင်မြင်ပါ။",
@@ -308,8 +309,6 @@
   "saveFormButton": "ပုံစံ သိမ်းဆည်းရန်",
   "updateFormButton": "ပုံစံ ပြင်ဆင်ရန်",
   "optionTextValidator": "ရွေးချယ်စရာ စာသား လိုအပ်သည်",
-  "categoryLabel": "အမျိုးအစား",
-  "categoryValidator": "ကျေးဇူးပြု၍ အမျိုးအစားတစ်ခုထည့်ပါ။",
   "saveButton": "သိမ်းမည်",
   "phoneNumberLabel": "ဖုန်းနံပါတ်",
   "addressLabel": "လိပ်စာ",
@@ -368,7 +367,8 @@
   "noUsersFoundTextPart1": "မရှိပါ",
   "noUsersFoundTextPart2": "မတွေ့ပါ။ တစ်ခုထည့်ရန်!",
   "confirmDeleteUserTextPart1": "ဤ",
-  "forgotPasswordButtonLabel": "စကားဝှက် မေ့နေပါသလား။",
+  "forgotPasswordInstructions": "စကားဝှက် ပြန်လည်သတ်မှတ်ရန် လင့်ခ်ရယူရန် သင်၏အီးမေးလ်ကို ထည့်ပါ။",
+  "passwordResetEmailSent": "{email} သို့ စကားဝှက် ပြန်လည်သတ်မှတ်ရန် အီးမေးလ် ပို့ပြီးပါပြီ။ သင်၏ဝင်စာပုံးကို စစ်ဆေးပါ။",
   "registerNewSchoolButtonLabel": "ကျောင်းအသစ် မှတ်ပုံတင်ရန် (အက်မင်)",
   "adminFullNameLabel": "အက်မင် အမည်အပြည့်အစုံ",
   "adminFullNameValidator": "ကျေးဇူးပြု၍ အက်မင် အမည်အပြည့်အစုံ ထည့်ပါ။",
@@ -382,7 +382,6 @@
   "selectLogoButton": "လိုဂို ရွေးပါ",
   "enableNotifications": "အသိပေးချက်များ ဖွင့်ရန်",
   "aboutAppTitle": "EduSync Myanmar အကြောင်း",
-  "versionLabel": "ဗားရှင်း",
   "appTagline": "ကျောင်းစီမံခန့်ခွဲမှုကို ရိုးရှင်းလွယ်ကူစေသည်။",
   "editButton": "ပြင်ရန်",
   "deleteButton": "ဖျက်မည်",
@@ -416,35 +415,150 @@
   "passwordsDoNotMatchValidator": "စကားဝှက်များ မတူညီပါ။",
   "registerButton": "မှတ်ပုံတင်မည်",
   "versionLabel": "ဗားရှင်း",
-  "editManagerTitle": "Edit Manager",
-  "addManagerTitle": "Add Manager",
-  "updateManagerButton": "Update Manager",
-  "addManagerButton": "Add Manager",
-  "teacherTimetableAction": "View Timetable",
-  "addStudent": "Add Student",
-  "addParent": "Add Parent",
-  "error_school_not_found": "School not found.",
-  "error_invalid_number": "Invalid number.",
-  "settingsSavedSuccessfully": "Settings saved successfully.",
-  "errorSavingSettings": "Error saving settings.",
-  "adminSettingsTitle": "Admin Settings",
-  "hijriCalendarSettingsTitle": "Hijri Calendar Settings",
-  "dayAdjustmentLabel": "Day Adjustment",
-  "dayAdjustmentHint": "e.g., -1, 0, 1",
-  "saveSettingsButton": "Save Settings",
-  "managerDashboardTitle": "Manager Dashboard",
-  "managerDashboardWelcomeMessage": "Welcome, Manager!",
-  "unassignedClass": "Unassigned",
+  "editManagerTitle": "မန်နေဂျာ ပြင်ရန်",
+  "addManagerTitle": "မန်နေဂျာ ထည့်ရန်",
+  "updateManagerButton": "မန်နေဂျာ အချက်အလက် ပြင်ရန်",
+  "addManagerButton": "မန်နေဂျာ ထည့်ရန်",
+  "teacherTimetableAction": "အချိန်ဇယား ကြည့်ရန်",
+  "teacherTimetable": "ဆရာ/မ အချိန်ဇယား",
+  "markAttendance": "တက်ရောက်မှု မှတ်သားရန်",
+  "addStudent": "ကျောင်းသား ထည့်ရန်",
+  "addParent": "မိဘ ထည့်ရန်",
+  "error_school_not_found": "ကျောင်း ရှာမတွေ့ပါ။",
+  "error_invalid_number": "နံပါတ် မမှန်ပါ။",
+  "settingsSavedSuccessfully": "ဆက်တင်များကို အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ။",
+  "errorSavingSettings": "ဆက်တင်များ သိမ်းဆည်းရာတွင် အမှားဖြစ်ပွားခဲ့သည်။",
+  "adminSettingsTitle": "အက်မင် ဆက်တင်များ",
+  "hijriCalendarSettingsTitle": "ဟီဂျရီ ပြက္ခဒိန် ဆက်တင်များ",
+  "dayAdjustmentLabel": "နေ့ ချိန်ညှိမှု",
+  "dayAdjustmentHint": "ဥပမာ၊ -1, 0, 1",
+  "saveSettingsButton": "ဆက်တင်များ သိမ်းဆည်းရန်",
+  "managerDashboardTitle": "မန်နေဂျာ ဒက်ရှ်ဘုတ်",
+  "managerDashboardWelcomeMessage": "မန်နေဂျာ၊ ကြိုဆိုပါတယ်။",
+  "unassignedClass": "သတ်မှတ်မထားသော",
   "gallery": "ဓာတ်ပုံများ",
   "camera": "ကင်မရာ",
+  "teachers": "ဆရာများ",
+  "parents": "မိဘများ",
+  "welcomeAdmin": "အက်မင်၊ ကြိုဆိုပါတယ်။",
+  "students": "ကျောင်းသားများ",
+  "language": "ဘာသာစကား",
+  "settings": "ဆက်တင်များ",
+  "youAreFreeNow": "သင် အားလပ်နေပါပြီ။",
+  "currentSubject": "လက်ရှိ ဘာသာရပ်",
+  "nextSubject": "နောက်လာမည့် ဘာသာရပ်",
+  "noScheduleToday": "ယနေ့အတွက် အချိန်ဇယား မရှိပါ။",
+  "@youAreFreeNow": {
+    "description": "Text displayed when a teacher has no current or upcoming schedule."
+  },
+  "@currentSubject": {
+    "description": "Label for the subject currently in progress."
+  },
+  "@nextSubject": {
+    "description": "Label for the next upcoming subject."
+  },
+  "@noScheduleToday": {
+    "description": "Text displayed when there is no schedule for the current day."
+  },
+  "teacherSchedulesSummary": "ဆရာ/မ အချိန်ဇယား အနှစ်ချုပ်",
+  "teachersTeachingNow": "လက်ရှိ သင်ကြားနေသော ဆရာ/မများ",
+  "teachersFreeNow": "အားလပ်နေသော ဆရာ/မများ",
+  "teachersUpcomingClasses": "လာမည့်အတန်းရှိသော ဆရာ/မများ",
+  "@teacherSchedulesSummary": {
+    "description": "Title for the summary of teacher schedules on the admin dashboard."
+  },
+  "@teachersTeachingNow": {
+    "description": "Label for the count of teachers currently teaching."
+  },
+  "@teachersFreeNow": {
+    "description": "Label for the count of teachers who are currently free."
+  },
+  "@teachersUpcomingClasses": {
+    "description": "Label for the count of teachers with upcoming classes."
+  },
+  "teacherTeaching": "{teacherName} သည် {className} တွင် {subjectName} ကို သင်ကြားနေသည်။",
+  "@teacherTeaching": {
+    "description": "Text displayed when a teacher is currently teaching.",
+    "placeholders": {
+      "teacherName": {
+        "type": "String"
+      },
+      "subjectName": {
+        "type": "String"
+      },
+      "className": {
+        "type": "String"
+      }
+    }
+  },
+  "teacherNextClass": "{teacherName} ၏ နောက်လာမည့်အတန်းမှာ {className} တွင် {subjectName} ဖြစ်သည်။",
+  "@teacherNextClass": {
+    "description": "Text displayed for a teacher's next upcoming class.",
+    "placeholders": {
+      "teacherName": {
+        "type": "String"
+      },
+      "subjectName": {
+        "type": "String"
+      },
+      "className": {
+        "type": "String"
+      }
+    }
+  },
+  "teacherFreeNow": "{teacherName} သည် အားလပ်နေသည်။",
+  "@teacherFreeNow": {
+    "description": "Text displayed when a teacher is currently free.",
+    "placeholders": {
+      "teacherName": {
+        "type": "String"
+      }
+    }
+  },
+  "teacherScheduleCardTitle": "ဆရာ/မ အချိန်ဇယား",
+  "@teacherScheduleCardTitle": {
+    "description": "Title for the teacher schedule card."
+  },
+  "noTeacherSchedulesFound": "ဆရာ/မ အချိန်ဇယားများ မတွေ့ပါ။",
+  "@noTeacherSchedulesFound": {
+    "description": "Text displayed when no teacher schedules are found."
+  },
   "teacherStatusOverviewTitle": "ဆရာ/မ အခြေအနေ အနှစ်ချုပ်",
+  "@teacherStatusOverviewTitle": {
+    "description": "Title for the teacher status overview section in admin panel."
+  },
   "noTeachersFoundText": "ဤကျောင်းတွင် ဆရာ/မများ မတွေ့ပါ။",
+  "@noTeachersFoundText": {
+    "description": "Text displayed when no teachers are found for the current school."
+  },
   "teachingNowStatus": "လက်ရှိ သင်ကြားနေသည်",
+  "@teachingNowStatus": {
+    "description": "Status for a teacher who is currently teaching."
+  },
   "upcomingClassStatus": "လာမည့် အတန်း",
+  "@upcomingClassStatus": {
+    "description": "Status for a teacher who has an upcoming class."
+  },
   "nextClassLabel": "နောက်လာမည့် အတန်း",
+  "@nextClassLabel": {
+    "description": "Label for the next upcoming class."
+  },
   "freeStatus": "အားလပ်သည်",
+  "@freeStatus": {
+    "description": "Status for a teacher who is currently free."
+  },
   "noScheduledClassesToday": "ယနေ့အတွက် အချိန်ဇယား မရှိပါ။",
+  "@noScheduledClassesToday": {
+    "description": "Text displayed when a teacher has no scheduled classes for the current day."
+  },
+  "nextLabel": "နောက်",
+  "@nextLabel": {
+    "description": "Label for the next upcoming item, e.g., 'Next: Class Name'."
+  },
   "unknownTeacher": "အမည်မသိ ဆရာ/မ",
+  "@unknownTeacher": {
+    "description": "Placeholder for a teacher whose name cannot be determined."
+  },
   "statusLabel": "အခြေအနေ",
   "teachersTeachingNowCount": "လက်ရှိ သင်ကြားနေသူ: {count} ဦး",
   "@teachersTeachingNowCount": {
@@ -465,5 +579,62 @@
     }
   },
   "studentInformationLabel": "ကျောင်းသား အချက်အလက်",
-  "profilePhotoLabel": "ပရိုဖိုင်ဓာတ်ပုံ"
+  "profilePhotoLabel": "ပရိုဖိုင်ဓာတ်ပုံ",
+  "searchTeacherHint": "ဆရာ/မ ရှာရန်",
+  "@searchTeacherHint": {
+    "description": "Hint text for searching teachers by name."
+  },
+  "noTeachersMatchingSearch": "သင်၏ရှာဖွေမှုနှင့် ကိုက်ညီသော ဆရာ/မများ မတွေ့ပါ။",
+  "@noTeachersMatchingSearch": {
+    "description": "Text displayed when no teachers match the search query."
+  },
+  "wholeSchoolScheduleTitle": "ကျောင်းတစ်ခုလုံး အချိန်ဇယား",
+  "@wholeSchoolScheduleTitle": {
+    "description": "Title for the whole school schedule screen."
+  },
+  "timeLabel": "အချိန်",
+  "@timeLabel": {
+    "description": "Label for time column in schedule."
+  },
+  "noClass": "အတန်းမရှိပါ",
+  "@noClass": {
+    "description": "Text displayed when there is no class scheduled for a specific slot."
+  },
+  "viewWholeSchoolScheduleButton": "ကျောင်းတစ်ခုလုံး အချိန်ဇယား ကြည့်ရန်",
+  "@viewWholeSchoolScheduleButton": {
+    "description": "Text for the button to navigate to the whole school schedule screen."
+  },
+  "errorLoadingSchoolData": "ကျောင်းအချက်အလက်များ တင်ရာတွင် အမှားဖြစ်ပွားခဲ့သည်။ ကျေးဇူးပြု၍ ထပ်ကြိုးစားပါ။",
+  "@errorLoadingSchoolData": {
+    "description": "Error message when school data cannot be loaded."
+  },
+  "noScheduleDataAvailable": "အချိန်ဇယား အချက်အလက် မရှိပါ။ ကျေးဇူးပြု၍ အက်မင် ပန်နယ်မှ ကျောင်းများ၊ ဆရာ/မများ၊ အတန်းများနှင့် အချိန်ဇယား ထည့်သွင်းမှုများ ထည့်ပါ။",
+  "@noScheduleDataAvailable": {
+    "description": "Message displayed when no whole school schedule data is found."
+  },
+  "noClassesForDay": "{day} အတွက် အတန်းများ မရှိပါ။",
+  "@noClassesForDay": {
+    "description": "Text displayed when there are no classes for a specific day.",
+    "placeholders": {
+      "day": {
+        "type": "String",
+        "example": "Monday"
+      }
+    }
+  },
+  "allClasses": "အတန်းအားလုံး",
+  "schoolLocationSettingsTitle": "ကျောင်းတည်နေရာ ဆက်တင်များ",
+  "markStaffAttendanceTitle": "ဝန်ထမ်း တက်ရောက်မှု မှတ်ရန်",
+  "grades": "အဆင့်များ",
+  "@grades": {
+    "description": "Label for grades in charts."
+  },
+  "noTopStudents": "ထိပ်တန်း ကျောင်းသားများ မတွေ့ပါ။",
+  "@noTopStudents": {
+    "description": "Message displayed when no top students are found."
+  },
+  "studentProgress": "ကျောင်းသား တိုးတက်မှု",
+  "selectStudent": "ကျောင်းသား ရွေးပါ",
+  "overallAverage": "ခြုံငုံ ပျမ်းမျှ",
+  "marksPerSubject": "ဘာသာရပ်အလိုက် အမှတ်များ"
 }

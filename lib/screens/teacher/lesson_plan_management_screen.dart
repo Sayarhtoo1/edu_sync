@@ -6,7 +6,7 @@ import 'package:edu_sync/services/class_service.dart';
 import 'package:edu_sync/models/user_role.dart';
 import 'package:edu_sync/services/lesson_plan_service.dart';
 import 'package:edu_sync/services/auth_service.dart';
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Import AppLocalizations
 import 'add_edit_lesson_plan_screen.dart';
 import 'package:edu_sync/theme/app_theme.dart'; // Ensure AppTheme is imported
 import 'package:provider/provider.dart';
@@ -99,9 +99,10 @@ class _LessonPlanManagementScreenState extends State<LessonPlanManagementScreen>
   }
 
   void _navigateToAddEditScreen([LessonPlan? lessonPlan]) {
+    final l10n = AppLocalizations.of(context);
     if (_selectedClass == null || _currentUserId == null || _currentSchoolId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).pleaseSelectClass)), 
+        SnackBar(content: Text(l10n?.pleaseSelectClass ?? 'Please select a class.')), 
       );
       return;
     }
@@ -128,14 +129,14 @@ class _LessonPlanManagementScreenState extends State<LessonPlanManagementScreen>
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog( // DialogTheme applied globally
-        title: Text(l10n.confirmDeleteTitle),
-        content: Text(l10n.confirmDeleteLessonPlanText),
+        title: Text(l10n?.confirmDeleteTitle ?? 'Confirm Delete'),
+        content: Text(l10n?.confirmDeleteLessonPlanText ?? 'Are you sure you want to delete this lesson plan?'),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n?.cancel ?? 'Cancel')),
           TextButton(
             style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
             onPressed: () => Navigator.of(context).pop(true), 
-            child: Text(l10n.delete)
+            child: Text(l10n?.delete ?? 'Delete')
           ),
         ],
       ),
@@ -149,7 +150,7 @@ class _LessonPlanManagementScreenState extends State<LessonPlanManagementScreen>
       } else {
          if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(AppLocalizations.of(context).errorDeletingLessonPlan)),
+              SnackBar(content: Text(AppLocalizations.of(context)?.errorDeletingLessonPlan ?? 'Error deleting lesson plan.')),
             );
             setState(() => _isLoadingLessonPlans = false);
          }
@@ -165,7 +166,7 @@ class _LessonPlanManagementScreenState extends State<LessonPlanManagementScreen>
 
     return Scaffold( // Scaffold uses appBackgroundColor from theme
       appBar: AppBar( // AppBar uses appBarTheme from theme
-        title: Text(l10n.manageLessonPlansTitle),
+        title: Text(l10n?.manageLessonPlansTitle ?? 'Manage Lesson Plans'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -181,7 +182,7 @@ class _LessonPlanManagementScreenState extends State<LessonPlanManagementScreen>
                   padding: const EdgeInsets.all(16.0), // Increased padding
                   child: DropdownButtonFormField<app_class.SchoolClass>(
                     value: _selectedClass,
-                    hint: Text(l10n.selectClassHint, style: theme.textTheme.bodyLarge), 
+                    hint: Text(l10n?.selectClassHint ?? 'Select Class', style: theme.textTheme.bodyLarge), 
                     items: _teacherClasses.map((app_class.SchoolClass cls) {
                       return DropdownMenuItem<app_class.SchoolClass>(
                         value: cls,
@@ -197,16 +198,16 @@ class _LessonPlanManagementScreenState extends State<LessonPlanManagementScreen>
                         _loadLessonPlansForClass();
                       }
                     },
-                    decoration: InputDecoration(labelText: l10n.selectClassHint), // Uses global inputDecorationTheme
+                    decoration: InputDecoration(labelText: l10n?.selectClassHint ?? 'Select Class'), // Uses global inputDecorationTheme
                   ),
                 ),
                 Expanded(
                   child: _isLoadingLessonPlans
                       ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(contextualAccentColor)))
                       : _selectedClass == null
-                          ? Center(child: Text(l10n.pleaseSelectClassToViewLessonPlans, style: theme.textTheme.bodyLarge))
+                          ? Center(child: Text(l10n?.pleaseSelectClassToViewLessonPlans ?? 'Please select a class to view lesson plans.', style: theme.textTheme.bodyLarge))
                           : _lessonPlans.isEmpty
-                              ? Center(child: Text(l10n.noLessonPlansFound, style: theme.textTheme.bodyLarge))
+                              ? Center(child: Text(l10n?.noLessonPlansFound ?? 'No lesson plans found.', style: theme.textTheme.bodyLarge))
                               : ListView.builder(
                                   padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0), // Adjusted padding
                                   itemCount: _lessonPlans.length,
@@ -218,7 +219,7 @@ class _LessonPlanManagementScreenState extends State<LessonPlanManagementScreen>
                                         leading: Icon(Icons.book_outlined, color: contextualAccentColor, size: 30),
                                         title: Text(plan.title, style: theme.textTheme.titleMedium),
                                         subtitle: Text(
-                                          '${l10n.subjectLabel}: ${plan.subjectName}\n${l10n.date}: ${DateFormat.yMMMd(l10n.localeName).format(plan.date)}',
+                                          '${l10n?.subjectLabel ?? 'Subject'}: ${plan.subjectName}\n${l10n?.date ?? 'Date'}: ${DateFormat.yMMMd(l10n?.localeName ?? 'en').format(plan.date)}',
                                           style: theme.textTheme.bodySmall
                                         ),
                                         trailing: Row(
@@ -226,12 +227,12 @@ class _LessonPlanManagementScreenState extends State<LessonPlanManagementScreen>
                                           children: [
                                             IconButton(
                                               icon: Icon(Icons.edit_outlined, color: theme.iconTheme.color ?? textDarkGrey), // Use top-level constant
-                                              tooltip: l10n.editLessonPlanTitle,
+                                              tooltip: l10n?.editLessonPlanTitle ?? 'Edit Lesson Plan',
                                               onPressed: () => _navigateToAddEditScreen(plan),
                                             ),
                                             IconButton(
                                               icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
-                                              tooltip: l10n.delete,
+                                              tooltip: l10n?.delete ?? 'Delete',
                                               onPressed: () {
                                                 if (plan.id != null) {
                                                   _deleteLessonPlan(plan.id!);
@@ -253,9 +254,9 @@ class _LessonPlanManagementScreenState extends State<LessonPlanManagementScreen>
             backgroundColor: contextualAccentColor, // Themed FAB
             foregroundColor: Colors.white,
             onPressed: () => _navigateToAddEditScreen(),
-            tooltip: l10n.addLessonPlanTooltip,
+            tooltip: l10n?.addLessonPlanTooltip ?? 'Add Lesson Plan',
             icon: const Icon(Icons.add),
-            label: Text(l10n.addLessonPlanTooltip), 
+            label: Text(l10n?.addLessonPlanTooltip ?? 'Add Lesson Plan'), 
           )
         : null,
     );

@@ -5,13 +5,13 @@ import 'package:edu_sync/services/auth_service.dart';
 import 'package:edu_sync/models/school_class.dart' as app_class;
 import 'package:edu_sync/services/class_service.dart';
 import 'add_edit_timetable_entry_screen.dart';
-import 'package:edu_sync/l10n/app_localizations.dart'; // Import AppLocalizations
+import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Import AppLocalizations
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
 import 'package:provider/provider.dart'; // Import provider
-import 'package:edu_sync/database/app_database.dart'; // Import AppDatabase
-import 'package:connectivity_plus/connectivity_plus.dart'; // Import Connectivity
-import 'package:shared_preferences/shared_preferences.dart'; // Import SharedPreferences
-import 'package:supabase_flutter/supabase_flutter.dart'; // Import Supabase
+// Import AppDatabase
+// Import Connectivity
+// Import SharedPreferences
+// Import Supabase
 
 class TimetableManagementScreen extends StatefulWidget {
   const TimetableManagementScreen({super.key});
@@ -21,7 +21,6 @@ class TimetableManagementScreen extends StatefulWidget {
 }
 
 class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
-  final _formKey = GlobalKey<FormState>();
   late final TimetableService _timetableService;
   late final AuthService _authService;
   late final ClassService _classService;
@@ -36,12 +35,8 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
   void initState() {
     super.initState();
     _timetableService = TimetableService();
-    _authService = AuthService(
-      supabaseClient: Supabase.instance.client,
-      sharedPreferences: context.read<SharedPreferences>(),
-      connectivity: context.read<Connectivity>(),
-    );
-    _classService = ClassService(context.read<AppDatabase>());
+    _authService = Provider.of<AuthService>(context, listen: false);
+    _classService = ClassService();
     _fetchInitialData();
   }
 
@@ -96,14 +91,14 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog( 
-        title: Text(l10n.confirmDeleteTitle),
-        content: Text(l10n.confirmDeleteTimetableEntryText), 
+        title: Text(l10n?.confirmDeleteTitle ?? 'Confirm Delete'),
+        content: Text(l10n?.confirmDeleteTimetableEntryText ?? 'Are you sure you want to delete this timetable entry?'),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n?.cancel ?? 'Cancel')),
           TextButton(
             style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
             onPressed: () => Navigator.of(context).pop(true), 
-            child: Text(l10n.delete)
+            child: Text(l10n?.delete ?? 'Delete')
           ),
         ],
       ),
@@ -126,11 +121,11 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
 
     return Scaffold(
       appBar: AppBar( 
-        title: Text(l10n.manageTimetablesTitle), 
+        title: Text(l10n?.manageTimetablesTitle ?? 'Manage Timetables'),
         actions: [
           IconButton(
             icon: Icon(Icons.add, color: contextualAccentColor),
-            tooltip: l10n.addEntryButton,
+            tooltip: l10n?.addEntryButton ?? 'Add Entry',
             onPressed: () => _navigateToAddEditEntry(),
           ),
         ],
@@ -144,7 +139,7 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
                     padding: const EdgeInsets.all(16.0),
                     child: DropdownButtonFormField<app_class.SchoolClass>(
                       value: _selectedClass,
-                      hint: Text(l10n.selectClassToViewTimetableHint, style: theme.textTheme.bodyLarge),
+                      hint: Text(l10n?.selectClassToViewTimetableHint ?? 'Select Class to View Timetable', style: theme.textTheme.bodyLarge),
                       items: _availableClasses.map((app_class.SchoolClass cls) {
                         return DropdownMenuItem<app_class.SchoolClass>(
                           value: cls,
@@ -163,9 +158,9 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
                   ),
                 Expanded(
                   child: _selectedClass == null
-                      ? Center(child: Text(l10n.pleaseSelectClassToViewTimetableText, style: theme.textTheme.bodyLarge))
+                      ? Center(child: Text(l10n?.pleaseSelectClassToViewTimetableText ?? 'Please select a class to view its timetable.', style: theme.textTheme.bodyLarge))
                       : _timetableEntries.isEmpty
-                          ? Center(child: Text('${l10n.noTimetableEntriesForText} ${_selectedClass!.name}. ${l10n.addOneText}', style: theme.textTheme.bodyLarge))
+                          ? Center(child: Text('${l10n?.noTimetableEntriesForText ?? 'No timetable entries for'} ${_selectedClass!.name}. ${l10n?.addOneText ?? 'Add one to get started!'}', style: theme.textTheme.bodyLarge))
                           : RefreshIndicator(
                                 onRefresh: _loadTimetableForSelectedClass,
                                 color: contextualAccentColor,
@@ -177,18 +172,18 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
                                       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                       child: ListTile(
                                         title: Text('${entry.subjectName} (${entry.dayOfWeek})', style: theme.textTheme.titleMedium),
-                                        subtitle: Text('${entry.startTimeString} - ${entry.endTimeString} (${l10n.teacherLabel} ID: ${entry.teacherId ?? l10n.not_specified})', style: theme.textTheme.bodySmall),
+                                        subtitle: Text('${entry.startTimeString} - ${entry.endTimeString} (${l10n?.teacherLabel ?? 'Teacher'} ID: ${entry.teacherId ?? (l10n?.not_specified ?? 'Not Specified')})', style: theme.textTheme.bodySmall),
                                         trailing: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             IconButton(
                                               icon: Icon(Icons.edit, color: theme.iconTheme.color ?? textDarkGrey),
-                                              tooltip: l10n.editButton,
+                                              tooltip: l10n?.editButton ?? 'Edit',
                                               onPressed: () => _navigateToAddEditEntry(entry: entry),
                                             ),
                                             IconButton(
                                               icon: Icon(Icons.delete, color: theme.colorScheme.error),
-                                              tooltip: l10n.deleteButton,
+                                              tooltip: l10n?.deleteButton ?? 'Delete',
                                               onPressed: () => _deleteEntry(entry.id),
                                             ),
                                           ],

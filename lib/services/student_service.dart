@@ -14,13 +14,18 @@ class StudentService {
   StudentService(this._appDatabase); // Initialize AppDatabase
 
   // Fetch all students for a school using the new view
-  Future<List<Student>> getStudentsBySchool(int schoolId) async {
+  Future<List<Student>> getStudentsBySchool(int schoolId, {int? classId}) async {
     try {
-      final response = await _supabaseClient
+      var query = _supabaseClient
           .from('school_students_view')
           .select()
           .eq('school_id', schoolId);
 
+      if (classId != null) {
+        query = query.eq('class_id', classId);
+      }
+
+      final response = await query;
       final students = response.map((data) => Student.fromMap(data)).toList();
       return students;
     } catch (e) {

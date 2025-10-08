@@ -1,13 +1,17 @@
 import 'package:edu_sync/screens/admin/admin_announcements_screen.dart';
-import 'package:edu_sync/screens/admin/manage_custom_forms_screen.dart';
-import 'package:edu_sync/screens/admin/user_management_screen.dart';
 import 'package:edu_sync/screens/common/attendance_report_screen.dart';
 import 'package:edu_sync/screens/teacher/attendance_marking_screen.dart';
 import 'package:edu_sync/screens/teacher/teacher_timetable_screen.dart';
 import 'package:edu_sync/screens/admin/teacher_status_overview_screen.dart'; // Import the new screen
+// import 'package:edu_sync/screens/staff/staff_self_attendance_screen.dart'; // Removed StaffSelfAttendanceScreen
+import 'package:edu_sync/screens/staff/staff_attendance_screen.dart'; // Import StaffAttendanceScreen
+import 'package:edu_sync/screens/admin/exam/modern_exam_management_screen.dart';
+import 'package:edu_sync/screens/admin/exam/subject_management_screen.dart';
+import 'package:edu_sync/screens/admin/exam/grade_management_screen.dart';
+import 'package:edu_sync/screens/teacher/exam/input_marks_screen.dart';
 import 'package:edu_sync/widgets/admin_action_card.dart';
 import 'package:flutter/material.dart';
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
 
 class QuickActionsSection extends StatelessWidget {
   const QuickActionsSection({super.key});
@@ -15,6 +19,9 @@ class QuickActionsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    if (l10n == null) {
+      return const SizedBox.shrink(); // Or a placeholder widget
+    }
     final textTheme = Theme.of(context).textTheme;
     const Color textDarkGrey = Color(0xFF2C2C2C);
     const Color accentStudents = Color(0xFFE0C7FF);
@@ -32,7 +39,7 @@ class QuickActionsSection extends StatelessWidget {
 
     final actions = [
       {
-        'title': l10n.announcementsAction, // "Announcements"
+        'title': l10n.announcementsAction ?? 'Announcements', // "Announcements"
         'icon': Icons.campaign_outlined,
         'bgColor': accentStudents.withAlpha(100),
         'iconBgColor': iconBgStudents,
@@ -40,7 +47,7 @@ class QuickActionsSection extends StatelessWidget {
         'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminAnnouncementsScreen())),
       },
       {
-        'title': l10n.teacherTimetable, // "Teacher Timetable"
+        'title': l10n.teacherTimetable ?? 'Teacher Timetable', // "Teacher Timetable"
         'icon': Icons.calendar_today_outlined,
         'bgColor': accentTeachers.withAlpha(100),
         'iconBgColor': iconBgTeachers,
@@ -48,12 +55,20 @@ class QuickActionsSection extends StatelessWidget {
         'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TeacherTimetableScreen())),
       },
       {
-        'title': l10n.markAttendance, // "Mark Attendance"
+        'title': l10n.markAttendance ?? 'Mark Attendance', // "Mark Attendance"
         'icon': Icons.check_circle_outline,
         'bgColor': accentStudents.withAlpha(100),
         'iconBgColor': iconBgStudents,
         'iconFgColor': iconColorStudents,
         'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AttendanceMarkingScreen())),
+      },
+      {
+        'title': l10n.markStaffAttendanceTitle ?? 'Mark Staff Attendance', // "Mark Staff Attendance"
+        'icon': Icons.person_outline, // A different icon for staff attendance
+        'bgColor': accentParents.withAlpha(100), // Using a different color scheme
+        'iconBgColor': iconBgParents,
+        'iconFgColor': iconColorParents,
+        'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const StaffAttendanceScreen())),
       },
       {
         'title': "Attendance Report",
@@ -64,12 +79,44 @@ class QuickActionsSection extends StatelessWidget {
         'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AttendanceReportScreen())),
       },
       {
-        'title': l10n.teacherStatusOverviewTitle, // "Teacher Status Overview"
+        'title': l10n.teacherStatusOverviewTitle ?? 'Teacher Status Overview', // "Teacher Status Overview"
         'icon': Icons.group_outlined,
         'bgColor': accentTeachers.withAlpha(100),
         'iconBgColor': iconBgTeachers,
         'iconFgColor': iconColorTeachers,
         'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TeacherStatusOverviewScreen())),
+      },
+      {
+        'title': "Exam Management",
+        'icon': Icons.school_outlined,
+        'bgColor': accentStudents.withAlpha(100),
+        'iconBgColor': iconBgStudents,
+        'iconFgColor': iconColorStudents,
+        'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ModernExamManagementScreen())),
+      },
+      {
+        'title': "Subject Management",
+        'icon': Icons.book_outlined,
+        'bgColor': accentTeachers.withAlpha(100),
+        'iconBgColor': iconBgTeachers,
+        'iconFgColor': iconColorTeachers,
+        'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => SubjectManagementScreen())),
+      },
+      {
+        'title': "Grade Management",
+        'icon': Icons.grading_outlined,
+        'bgColor': accentParents.withAlpha(100),
+        'iconBgColor': iconBgParents,
+        'iconFgColor': iconColorParents,
+        'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => GradeManagementScreen())),
+      },
+      {
+        'title': "Input Marks",
+        'icon': Icons.edit_note_outlined,
+        'bgColor': accentEarnings.withAlpha(100),
+        'iconBgColor': iconBgEarnings,
+        'iconFgColor': iconColorEarnings,
+        'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => InputMarksScreen())),
       },
     ];
 
@@ -77,7 +124,7 @@ class QuickActionsSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          l10n.quickActions, // "Quick Actions"
+          l10n.quickActions ?? 'Quick Actions', // "Quick Actions"
           style: textTheme.titleLarge?.copyWith(color: textDarkGrey, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 16),

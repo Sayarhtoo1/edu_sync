@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Import AppLocalizations
 import '../../../models/timetable.dart' as timetable_model;
 import '../../../models/school_class.dart' as app_class;
-import '../../../models/timetable_status.dart';
 import 'timetable_helpers.dart'; // Import the helpers
 
 class TimetableEntryCard extends StatelessWidget {

@@ -6,7 +6,8 @@ import 'package:edu_sync/models/user_role.dart';
 import 'package:provider/provider.dart';
 import 'package:edu_sync/models/user.dart' as app_user;
 import 'package:edu_sync/services/auth_service.dart';
-import 'package:edu_sync/l10n/app_localizations.dart'; // Import AppLocalizations
+import 'package:edu_sync/services/school_service.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Import AppLocalizations
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
 import 'package:edu_sync/utils/logger.dart';
 // import 'package:edu_sync/models/student.dart'; // Will be needed for linking
@@ -61,6 +62,13 @@ class _AddEditParentScreenState extends State<AddEditParentScreen> {
     return widget.parent?.id ?? ''; 
   }
 
+  // Helper method to get school name by ID
+  Future<String> _getSchoolName(int schoolId) async {
+    final schoolService = Provider.of<SchoolService>(context, listen: false);
+    final school = await schoolService.getSchoolById(schoolId);
+    return school?.name ?? 'Unknown School';
+  }
+
   // Future<void> _loadAvailableStudents() async {
   //   // _availableStudents = await _studentService.getStudentsBySchool(widget.schoolId);
   //   // setState(() {});
@@ -105,31 +113,35 @@ class _AddEditParentScreenState extends State<AddEditParentScreen> {
           profilePhotoUrl: photoUrl,
         );
         final success = await _authService.updateUser(updatedParent);
-        if (!success) throw Exception(AppLocalizations.of(context).failedToUpdateParentError);
+        if (!success) throw Exception(AppLocalizations.of(context)?.failedToUpdateParentError ?? 'Failed to update parent.');
         resultUser = updatedParent;
       } else {
         if (_passwordController.text.isEmpty) {
-           setState(() { _isLoading = false; _errorMessage = AppLocalizations.of(context).passwordRequiredForNewParentError; });
+           setState(() { _isLoading = false; _errorMessage = AppLocalizations.of(context)?.passwordRequiredForNewParentError ?? 'Password is required for a new parent.'; });
            return;
         }
         // Adding new parent
         if (_passwordController.text.isEmpty) {
-           setState(() { _isLoading = false; _errorMessage = AppLocalizations.of(context).passwordRequiredForNewParentError; });
+           setState(() { _isLoading = false; _errorMessage = AppLocalizations.of(context)?.passwordRequiredForNewParentError ?? 'Password is required for a new parent.'; });
            return;
         }
 
+        // Get school name for the given school ID
+        final schoolName = await _getSchoolName(widget.schoolId);
+        
         // Create user via Edge Function
         final newParent = await _authService.createUserViaEdgeFunction(
           email: _emailController.text,
           password: _passwordController.text,
           role: UserRole.Parent.name,
           schoolId: widget.schoolId,
+          schoolName: schoolName,
           fullName: _nameController.text,
           profilePhotoUrl: photoUrl, // This might be null if photo is uploaded after user creation
         );
 
         if (newParent == null) {
-          throw Exception(AppLocalizations.of(context).failedToCreateParentError);
+          throw Exception(AppLocalizations.of(context)?.failedToCreateParentError ?? 'Failed to create parent.');
         }
         resultUser = newParent;
 
@@ -156,15 +168,15 @@ class _AddEditParentScreenState extends State<AddEditParentScreen> {
       final l10n = AppLocalizations.of(context);
       String specificError = e.toString();
       if (e.toString().contains('Profile photo upload failed')) {
-        specificError = l10n.profilePhotoUploadFailedError;
-      } else if (e.toString().contains(l10n.failedToUpdateParentError)) { 
-        specificError = l10n.failedToUpdateParentError;
-      } else if (e.toString().contains(l10n.failedToCreateParentError) || e.toString().contains('Failed to create user')) {
-        specificError = l10n.failedToCreateParentError;
+        specificError = l10n?.profilePhotoUploadFailedError ?? 'Profile photo upload failed.';
+      } else if (e.toString().contains(l10n?.failedToUpdateParentError ?? 'Failed to update parent')) { 
+        specificError = l10n?.failedToUpdateParentError ?? 'Failed to update parent.';
+      } else if (e.toString().contains(l10n?.failedToCreateParentError ?? 'Failed to create parent') || e.toString().contains('Failed to create user')) {
+        specificError = l10n?.failedToCreateParentError ?? 'Failed to create parent.';
       }
       setState(() {
         _isLoading = false;
-        _errorMessage = '${l10n.errorOccurredPrefix}: $specificError';
+        _errorMessage = '${l10n?.errorOccurredPrefix ?? 'Error'}: $specificError';
       });
     }
   }
@@ -184,7 +196,7 @@ class _AddEditParentScreenState extends State<AddEditParentScreen> {
     final Color contextualAccentColor = AppTheme.getAccentColorForContext('parents');
 
     return Scaffold(
-      appBar: AppBar(title: Text(_isEditing ? l10n.editParentTitle : l10n.addParentTitle)), // Theme applied globally
+      appBar: AppBar(title: Text(_isEditing ? l10n?.editParentTitle ?? 'Edit Parent' : l10n?.addParentTitle ?? 'Add Parent')), // Theme applied globally
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -193,26 +205,26 @@ class _AddEditParentScreenState extends State<AddEditParentScreen> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: InputDecoration(labelText: l10n.fullNameLabel),
-                validator: (value) => (value == null || value.isEmpty) ? l10n.fullNameValidator : null,
+                decoration: InputDecoration(labelText: l10n?.fullNameLabel ?? 'Full Name'),
+                validator: (value) => (value == null || value.isEmpty) ? l10n?.fullNameValidator ?? 'Full name cannot be empty.' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _emailController,
-                decoration: InputDecoration(labelText: l10n.emailLabel),
+                decoration: InputDecoration(labelText: l10n?.emailLabel ?? 'Email'),
                 keyboardType: TextInputType.emailAddress,
-                validator: (value) => (value == null || value.isEmpty) ? l10n.emailValidator : null,
+                validator: (value) => (value == null || value.isEmpty) ? l10n?.emailValidator ?? 'Email cannot be empty.' : null,
                 readOnly: _isEditing,
               ),
               const SizedBox(height: 16),
               if (!_isEditing)
                 TextFormField(
                   controller: _passwordController,
-                  decoration: InputDecoration(labelText: l10n.passwordLabel),
+                  decoration: InputDecoration(labelText: l10n?.passwordLabel ?? 'Password'),
                   obscureText: true,
                   validator: (value) {
-                    if (!_isEditing && (value == null || value.isEmpty)) return l10n.passwordRequiredValidator;
-                    if (value != null && value.isNotEmpty && value.length < 6) return l10n.passwordTooShortValidator;
+                    if (!_isEditing && (value == null || value.isEmpty)) return l10n?.passwordRequiredValidator ?? 'Password is required.';
+                    if (value != null && value.isNotEmpty && value.length < 6) return l10n?.passwordTooShortValidator ?? 'Password is too short.';
                     return null;
                   },
                 ),
@@ -236,16 +248,16 @@ class _AddEditParentScreenState extends State<AddEditParentScreen> {
                                   height: 90,
                                   fit: BoxFit.contain,
                                   placeholder: (context, url) => CircularProgressIndicator(),
-                                  errorWidget: (context, url, error) => Text(l10n.couldNotLoadImage, style: theme.textTheme.bodySmall),
+                                  errorWidget: (context, url, error) => Text(l10n?.couldNotLoadImage ?? 'Could not load image.', style: theme.textTheme.bodySmall),
                                 )
-                              : Text(l10n.noProfilePhoto, style: theme.textTheme.bodyMedium?.copyWith(color: textLightGrey))),
+                              : Text(l10n?.noProfilePhoto ?? 'No profile photo.', style: theme.textTheme.bodyMedium?.copyWith(color: textLightGrey))),
                     )
                   ),
                   const SizedBox(width: 16),
                   TextButton.icon(
                     style: TextButton.styleFrom(foregroundColor: contextualAccentColor),
                     icon: const Icon(Icons.image),
-                    label: Text(l10n.selectPhotoButton),
+                    label: Text(l10n?.selectPhotoButton ?? 'Select Photo'),
                     onPressed: _pickProfilePhoto,
                   ),
                 ],
@@ -264,7 +276,7 @@ class _AddEditParentScreenState extends State<AddEditParentScreen> {
                         foregroundColor: Colors.white,
                       ),
                       onPressed: _saveParent,
-                      child: Text(_isEditing ? l10n.updateParentButton : l10n.addParentButton),
+                      child: Text(_isEditing ? l10n?.updateParentButton ?? 'Update Parent' : l10n?.addParentButton ?? 'Add Parent'),
                     ),
               if (_errorMessage.isNotEmpty)
                 Padding(

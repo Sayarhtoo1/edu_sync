@@ -6,7 +6,7 @@ import 'package:edu_sync/services/student_service.dart';
 import 'package:edu_sync/services/timetable_service.dart';
 import 'package:edu_sync/services/auth_service.dart';
 import 'package:edu_sync/providers/school_provider.dart';
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
 
 class ChildScheduleScreen extends StatefulWidget {
@@ -48,7 +48,7 @@ class _ChildScheduleScreenState extends State<ChildScheduleScreen> {
         if (mounted) {
           setState(() {
             _isLoadingStudents = false;
-            _errorMessage = AppLocalizations.of(context).error_user_not_found;
+            _errorMessage = AppLocalizations.of(context)?.error_user_not_found ?? 'Error: User not found';
           });
         }
       });
@@ -70,7 +70,7 @@ class _ChildScheduleScreenState extends State<ChildScheduleScreen> {
       if (mounted) {
         setState(() {
           _isLoadingStudents = false;
-          _errorMessage = "${AppLocalizations.of(context).errorOccurredPrefix}: ${e.toString()}";
+          _errorMessage = "${AppLocalizations.of(context)?.errorOccurredPrefix ?? 'Error'}: ${e.toString()}";
         });
       }
     }
@@ -86,7 +86,7 @@ class _ChildScheduleScreenState extends State<ChildScheduleScreen> {
       _timetableEntries = await _timetableService.getTimetableForClass(_selectedStudent!.classId!);
     } catch (e) {
        if (mounted) {
-        setState(() => _errorMessage = "${AppLocalizations.of(context).errorOccurredPrefix}: ${e.toString()}");
+        setState(() => _errorMessage = "${AppLocalizations.of(context)?.errorOccurredPrefix ?? 'Error'}: ${e.toString()}");
       }
     }
     if (mounted) {
@@ -97,26 +97,29 @@ class _ChildScheduleScreenState extends State<ChildScheduleScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    if (l10n == null) {
+      return const SizedBox.shrink(); // Or a placeholder widget
+    }
     final theme = Theme.of(context);
     final Color contextualAccentColor = AppTheme.getAccentColorForContext('students');
 
     return Scaffold(
       appBar: AppBar( // Theme applied globally
-        title: Text(l10n.childScheduleTitle), 
+        title: Text(l10n.childScheduleTitle ?? 'Child Schedule'),
       ),
       body: _isLoadingStudents
           ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(contextualAccentColor)))
           : _errorMessage != null
               ? Center(child: Padding(padding: const EdgeInsets.all(16.0), child: Text(_errorMessage!, style: theme.textTheme.bodyMedium!.copyWith(color: theme.colorScheme.error))))
               : _linkedStudents.isEmpty
-                  ? Center(child: Text(l10n.noChildrenLinked, style: theme.textTheme.bodyLarge)) 
+                  ? Center(child: Text(l10n.noChildrenLinked ?? 'No children linked', style: theme.textTheme.bodyLarge))
                   : Column(
                       children: [
                         Padding(
                           padding: const EdgeInsets.all(16.0), // Increased padding
                           child: DropdownButtonFormField<Student>(
                             value: _selectedStudent,
-                            hint: Text(l10n.selectChildHint, style: theme.textTheme.bodyLarge), 
+                            hint: Text(l10n.selectChildHint ?? 'Select Child', style: theme.textTheme.bodyLarge),
                             items: _linkedStudents.map((Student student) {
                               return DropdownMenuItem<Student>(
                                 value: student,
@@ -139,9 +142,9 @@ class _ChildScheduleScreenState extends State<ChildScheduleScreen> {
                           child: _isLoadingSchedule
                               ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(contextualAccentColor)))
                               : _selectedStudent == null || _selectedStudent!.classId == null
-                                  ? Center(child: Text(l10n.childNotAssignedToClass, style: theme.textTheme.bodyLarge)) 
+                                  ? Center(child: Text(l10n.childNotAssignedToClass ?? 'Child not assigned to class', style: theme.textTheme.bodyLarge))
                                   : _timetableEntries.isEmpty
-                                      ? Center(child: Text(l10n.noScheduleFound, style: theme.textTheme.bodyLarge)) 
+                                      ? Center(child: Text(l10n.noScheduleFound ?? 'No schedule found', style: theme.textTheme.bodyLarge))
                                       : _buildTimetableDisplay(l10n),
                         ),
                       ],
@@ -167,13 +170,13 @@ class _ChildScheduleScreenState extends State<ChildScheduleScreen> {
     
     String getLocalizedDayName(String dayKey) {
         switch (dayKey.toLowerCase()) {
-            case 'monday': return l10n.monday;
-            case 'tuesday': return l10n.tuesday;
-            case 'wednesday': return l10n.wednesday;
-            case 'thursday': return l10n.thursday;
-            case 'friday': return l10n.friday;
-            case 'saturday': return l10n.saturday;
-            case 'sunday': return l10n.sunday;
+            case 'monday': return l10n.monday ?? 'Monday';
+            case 'tuesday': return l10n.tuesday ?? 'Tuesday';
+            case 'wednesday': return l10n.wednesday ?? 'Wednesday';
+            case 'thursday': return l10n.thursday ?? 'Thursday';
+            case 'friday': return l10n.friday ?? 'Friday';
+            case 'saturday': return l10n.saturday ?? 'Saturday';
+            case 'sunday': return l10n.sunday ?? 'Sunday';
             default: return dayKey;
         }
     }
@@ -195,8 +198,8 @@ class _ChildScheduleScreenState extends State<ChildScheduleScreen> {
               return ListTile(
                 title: Text(entry.subjectName, style: theme.textTheme.titleMedium),
                 subtitle: Text(
-                  '${l10n.time}: ${entry.startTimeOfDay.format(context)} - ${entry.endTimeOfDay.format(context)}'
-                  '${entry.teacherId != null ? '\n${l10n.teacherLabel} ID: ${entry.teacherId}' : ''}',
+                  '${l10n.time ?? 'Time'}: ${entry.startTimeOfDay.format(context)} - ${entry.endTimeOfDay.format(context)}'
+                  '${entry.teacherId != null ? '\n${l10n.teacherLabel ?? 'Teacher'} ID: ${entry.teacherId}' : ''}',
                   style: theme.textTheme.bodySmall,
                 ),
                 isThreeLine: entry.teacherId != null,

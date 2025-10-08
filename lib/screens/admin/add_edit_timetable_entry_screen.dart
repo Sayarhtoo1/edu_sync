@@ -6,7 +6,7 @@ import 'package:edu_sync/services/class_service.dart';
 import 'package:edu_sync/models/user.dart' as app_user;
 import 'package:edu_sync/models/user_role.dart';
 import 'package:edu_sync/services/auth_service.dart';
-import 'package:edu_sync/l10n/app_localizations.dart'; // Import AppLocalizations
+import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Import AppLocalizations
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
 import 'package:provider/provider.dart';
 import 'package:edu_sync/utils/logger.dart';
@@ -83,7 +83,7 @@ class _AddEditTimetableEntryScreenState extends State<AddEditTimetableEntryScree
     } catch (e) {
       logger.e("Error loading initial data for timetable entry: $e");
       if (mounted) {
-        setState(() => _errorMessage = AppLocalizations.of(context).failedToLoadTimetableDataError);
+        setState(() => _errorMessage = AppLocalizations.of(context)?.failedToLoadTimetableDataError ?? 'Failed to load timetable data');
       }
     }
     if(mounted) setState(() => _isLoading = false);
@@ -138,11 +138,11 @@ class _AddEditTimetableEntryScreenState extends State<AddEditTimetableEntryScree
     final l10n = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) return;
     if (_selectedStartTime == null || _selectedEndTime == null || _selectedDayOfWeek == null || _selectedClassId == null /* Teacher can be optional || _selectedTeacherId == null */) {
-      setState(() => _errorMessage = l10n.fillAllFieldsError); // Adjusted validation message if teacher is optional
+      setState(() => _errorMessage = l10n?.fillAllFieldsError ?? 'Please fill all required fields'); // Adjusted validation message if teacher is optional
       return;
     }
     if (_selectedEndTime!.hour < _selectedStartTime!.hour || (_selectedEndTime!.hour == _selectedStartTime!.hour && _selectedEndTime!.minute <= _selectedStartTime!.minute)) {
-      setState(() => _errorMessage = l10n.endTimeAfterStartTimeError);
+      setState(() => _errorMessage = l10n?.endTimeAfterStartTimeError ?? 'End time must be after start time');
       return;
     }
     _formKey.currentState!.save();
@@ -172,13 +172,13 @@ class _AddEditTimetableEntryScreenState extends State<AddEditTimetableEntryScree
       if (success) {
         if(mounted) Navigator.of(context).pop(true); 
       } else {
-        throw Exception(l10n.failedToSaveTimetableEntryError);
+        throw Exception(l10n?.failedToSaveTimetableEntryError ?? 'Failed to save timetable entry');
       }
     } catch (e) {
       if(mounted) {
         setState(() {
           _isLoading = false;
-          _errorMessage = '${l10n.errorOccurredPrefix}: ${e.toString()}';
+          _errorMessage = '${l10n?.errorOccurredPrefix ?? 'Error'}: ${e.toString()}';
         });
       }
     }
@@ -199,19 +199,19 @@ class _AddEditTimetableEntryScreenState extends State<AddEditTimetableEntryScree
 
     String getLocalizedDayName(String dayKey) {
         switch (dayKey.toLowerCase()) {
-            case 'monday': return l10n.monday;
-            case 'tuesday': return l10n.tuesday;
-            case 'wednesday': return l10n.wednesday;
-            case 'thursday': return l10n.thursday;
-            case 'friday': return l10n.friday;
-            case 'saturday': return l10n.saturday;
-            case 'sunday': return l10n.sunday;
+            case 'monday': return l10n?.monday ?? 'Monday';
+            case 'tuesday': return l10n?.tuesday ?? 'Tuesday';
+            case 'wednesday': return l10n?.wednesday ?? 'Wednesday';
+            case 'thursday': return l10n?.thursday ?? 'Thursday';
+            case 'friday': return l10n?.friday ?? 'Friday';
+            case 'saturday': return l10n?.saturday ?? 'Saturday';
+            case 'sunday': return l10n?.sunday ?? 'Sunday';
             default: return dayKey;
         }
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(_isEditing ? l10n.editTimetableEntryTitle : l10n.addTimetableEntryTitle)), // Theme applied globally
+      appBar: AppBar(title: Text(_isEditing ? (l10n?.editTimetableEntryTitle ?? 'Edit Timetable Entry') : (l10n?.addTimetableEntryTitle ?? 'Add Timetable Entry'))), // Theme applied globally
       body: _isLoading 
           ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(contextualAccentColor)))
           : Padding(
@@ -222,25 +222,25 @@ class _AddEditTimetableEntryScreenState extends State<AddEditTimetableEntryScree
                   children: [
                     DropdownButtonFormField<int>( // Corrected to int
                       value: _selectedClassId,
-                      hint: Text(l10n.selectClassHint),
+                      hint: Text(l10n?.selectClassHint ?? 'Select Class'),
                       items: _availableClasses.map((app_class.SchoolClass cls) {
                         return DropdownMenuItem<int>(value: cls.id, child: Text(cls.name)); // cls.id is int?
                       }).toList(),
                       onChanged: (value) => setState(() => _selectedClassId = value),
-                      validator: (value) => value == null ? l10n.pleaseSelectClass : null, 
+                      validator: (value) => value == null ? (l10n?.pleaseSelectClass ?? 'Please select a class') : null,
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _subjectNameController,
-                      decoration: InputDecoration(labelText: l10n.subjectNameLabel),
-                      validator: (value) => (value == null || value.isEmpty) ? l10n.subjectNameValidator : null,
+                      decoration: InputDecoration(labelText: l10n?.subjectNameLabel ?? 'Subject Name'),
+                      validator: (value) => (value == null || value.isEmpty) ? (l10n?.subjectNameValidator ?? 'Subject name cannot be empty') : null,
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
                       value: _selectedTeacherId,
-                      hint: Text(l10n.selectClassTeacherHint), 
+                      hint: Text(l10n?.selectClassTeacherHint ?? 'Select Class Teacher'),
                       items: _availableTeachers.map((app_user.User teacher) {
-                        return DropdownMenuItem<String>(value: teacher.id, child: Text(teacher.fullName ?? l10n.unnamedTeacher));
+                        return DropdownMenuItem<String>(value: teacher.id, child: Text(teacher.fullName ?? (l10n?.unnamedTeacher ?? 'Unnamed Teacher')));
                       }).toList(),
                       onChanged: (value) => setState(() => _selectedTeacherId = value),
                       // validator: (value) => value == null ? l10n.classTeacherValidator : null, // Teacher can be optional
@@ -248,21 +248,21 @@ class _AddEditTimetableEntryScreenState extends State<AddEditTimetableEntryScree
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
                       value: _selectedDayOfWeek,
-                      hint: Text(l10n.selectDayOfWeekHint),
+                      hint: Text(l10n?.selectDayOfWeekHint ?? 'Select Day of Week'),
                       items: _daysOfWeek.map((String day) {
                         return DropdownMenuItem<String>(value: day, child: Text(getLocalizedDayName(day)));
                       }).toList(),
                       onChanged: (value) => setState(() => _selectedDayOfWeek = value),
-                      validator: (value) => value == null ? l10n.dayValidator : null,
+                      validator: (value) => value == null ? (l10n?.dayValidator ?? 'Please select a day of the week') : null,
                     ),
                     const SizedBox(height: 16),
                     ListTile(
-                      title: Text('${l10n.startTimeLabelPrefix}${_selectedStartTime?.format(context) ?? l10n.timeNotSet}', style: theme.textTheme.bodyLarge),
+                      title: Text('${l10n?.startTimeLabelPrefix ?? 'Start Time'}${_selectedStartTime?.format(context) ?? (l10n?.timeNotSet ?? 'Not Set')}', style: theme.textTheme.bodyLarge),
                       trailing: Icon(Icons.access_time, color: theme.iconTheme.color),
                       onTap: () => _selectTime(context, true),
                     ),
                     ListTile(
-                      title: Text('${l10n.endTimeLabelPrefix}${_selectedEndTime?.format(context) ?? l10n.timeNotSet}', style: theme.textTheme.bodyLarge),
+                      title: Text('${l10n?.endTimeLabelPrefix ?? 'End Time'}${_selectedEndTime?.format(context) ?? (l10n?.timeNotSet ?? 'Not Set')}', style: theme.textTheme.bodyLarge),
                       trailing: Icon(Icons.access_time, color: theme.iconTheme.color),
                       onTap: () => _selectTime(context, false),
                     ),
@@ -273,7 +273,7 @@ class _AddEditTimetableEntryScreenState extends State<AddEditTimetableEntryScree
                         foregroundColor: Colors.white,
                       ),
                       onPressed: _saveTimetableEntry,
-                      child: Text(_isEditing ? l10n.updateEntryButton : l10n.addEntryButton),
+                      child: Text(_isEditing ? (l10n?.updateEntryButton ?? 'Update Entry') : (l10n?.addEntryButton ?? 'Add Entry')),
                     ),
                     if (_errorMessage.isNotEmpty)
                       Padding(

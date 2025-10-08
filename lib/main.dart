@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, ChangeNotifierProvider;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:edu_sync/config/providers.dart';
 import 'package:edu_sync/config/router.dart';
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Import AppLocalizations
 import 'package:edu_sync/theme/app_theme.dart';
 import 'package:edu_sync/providers/locale_provider.dart';
+import 'package:edu_sync/services/auth_service.dart';
+import 'package:edu_sync/providers/class_provider.dart';
 
 late final GoRouter _router;
 
@@ -24,9 +27,14 @@ Future<void> main() async {
   final providers = await initializeProviders();
 
   runApp(
-    MultiProvider(
-      providers: providers,
-      child: const MyApp(),
+    ProviderScope(
+      child: MultiProvider(
+        providers: [
+          ...providers,
+          ChangeNotifierProvider(create: (_) => ClassProvider()),
+        ],
+        child: const MyApp(),
+      ),
     ),
   );
 }
@@ -39,6 +47,13 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    // Start listening to auth changes as soon as the app starts
+    Provider.of<AuthService>(context, listen: false).listenToAuthChanges();
+  }
+
   @override
   Widget build(BuildContext context) {
     final localeProvider = Provider.of<LocaleProvider>(context);

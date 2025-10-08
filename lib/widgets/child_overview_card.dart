@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:edu_sync/models/student.dart';
 import 'package:edu_sync/models/school_class.dart'; // Assuming Class model is needed for class name
-import 'package:edu_sync/l10n/app_localizations.dart'; // For localization
+import 'package:edu_sync/l10n/gen/app_localizations.dart'; // For localization
 
 class ChildOverviewCard extends StatelessWidget {
   final Student student;
@@ -18,8 +18,11 @@ class ChildOverviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    if (l10n == null) {
+      return const SizedBox.shrink(); // Or a placeholder widget
+    }
     // TODO: Get actual class name from studentClass if available
-    final String className = studentClass?.name ?? l10n.unassignedClass; // Use localized string
+    final String className = studentClass?.name ?? l10n.unassignedClass ?? 'Unassigned'; // Use localized string
 
     return GestureDetector(
       onTap: onTap,
@@ -48,7 +51,7 @@ class ChildOverviewCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      "${l10n.classLabel}: $className", // Localize "Class"
+                      "${l10n.classLabel ?? 'Class'}: $className", // Localize "Class"
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                     ),
                     // TODO: Add quick status indicator (e.g., attendance)

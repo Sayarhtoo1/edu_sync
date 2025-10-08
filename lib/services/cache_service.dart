@@ -14,6 +14,8 @@ import '../models/form_response_answer.dart';
 import '../models/lesson_plan.dart';
 import '../models/school.dart';
 import '../models/timetable.dart';
+import '../models/grade.dart';
+import '../models/subject.dart';
 
 class CacheService {
   static const String _announcementsKeyPrefix = 'cached_announcements_for_school_';
@@ -34,10 +36,14 @@ class CacheService {
   static const String _studentsForParentKeyPrefix = 'cached_students_for_parent_';
   static const String _parentIdsForStudentKeyPrefix = 'cached_parent_ids_for_student_';
   static const String _studentByIdKeyPrefix = 'cached_student_by_id_';
+  static const String _gradesKeyPrefix = 'cached_grades_for_school_';
+  static const String _subjectsKeyPrefix = 'cached_subjects_for_school_';
 
   static String get schoolKeyPrefix => _schoolKeyPrefix;
   static String get studentsKeyPrefix => _studentsKeyPrefix;
   static String get studentByIdKeyPrefix => _studentByIdKeyPrefix;
+  static String get gradesKeyPrefix => _gradesKeyPrefix;
+  static String get subjectsKeyPrefix => _subjectsKeyPrefix;
   static String get studentsForParentKeyPrefix => _studentsForParentKeyPrefix;
 
   Future<SharedPreferences> get _prefs async => await SharedPreferences.getInstance();
@@ -377,5 +383,43 @@ class CacheService {
       return Student.fromMap(json.decode(studentString));
     }
     return null;
+  }
+
+  // --- Grades ---
+
+  Future<void> saveGrades(int schoolId, List<Grade> grades) async {
+    final prefs = await _prefs;
+    final gradesJson = grades.map((g) => g.toMap()).toList();
+    await prefs.setString('$_gradesKeyPrefix$schoolId', json.encode(gradesJson));
+    logger.d('Grades for school $schoolId saved for offline use.');
+  }
+
+  Future<List<Grade>> getGrades(int schoolId) async {
+    final prefs = await _prefs;
+    final gradesString = prefs.getString('$_gradesKeyPrefix$schoolId');
+    if (gradesString != null) {
+      final List<dynamic> gradesJson = json.decode(gradesString);
+      return gradesJson.map((json) => Grade.fromMap(json)).toList();
+    }
+    return [];
+  }
+
+  // --- Subjects ---
+
+  Future<void> saveSubjects(int schoolId, List<Subject> subjects) async {
+    final prefs = await _prefs;
+    final subjectsJson = subjects.map((s) => s.toMap()).toList();
+    await prefs.setString('$_subjectsKeyPrefix$schoolId', json.encode(subjectsJson));
+    logger.d('Subjects for school $schoolId saved for offline use.');
+  }
+
+  Future<List<Subject>> getSubjects(int schoolId) async {
+    final prefs = await _prefs;
+    final subjectsString = prefs.getString('$_subjectsKeyPrefix$schoolId');
+    if (subjectsString != null) {
+      final List<dynamic> subjectsJson = json.decode(subjectsString);
+      return subjectsJson.map((json) => Subject.fromMap(json)).toList();
+    }
+    return [];
   }
 }

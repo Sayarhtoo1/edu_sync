@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <!-- Required for internet access -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
@@ -10,7 +12,9 @@
     <application
         android:label="edu_sync"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:enableOnBackInvokedCallback="true">
+        <meta-data android:name="com.google.android.geo.API_KEY" android:value="AIzaSyBUsOaiBl-MEESjHElcrJwfe2hbh96jZ08"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"

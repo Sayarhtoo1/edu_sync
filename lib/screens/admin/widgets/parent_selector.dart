@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:edu_sync/models/user.dart' as app_user;
-import 'package:edu_sync/l10n/app_localizations.dart';
-import 'package:edu_sync/theme/app_theme.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
 
 class ParentSelector extends StatelessWidget {
   final bool isLoadingParents;
@@ -22,6 +21,9 @@ class ParentSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    if (l10n == null) {
+      return const SizedBox.shrink(); // Or a placeholder widget
+    }
     final theme = Theme.of(context);
 
     if (isLoadingParents) {
@@ -30,7 +32,7 @@ class ParentSelector extends StatelessWidget {
               valueColor: AlwaysStoppedAnimation<Color>(contextualAccentColor)));
     }
     if (availableParents.isEmpty) {
-      return Text(l10n.noParentsAvailableToLink,
+      return Text(l10n.noParentsAvailableToLink ?? 'No parents available to link',
           style: theme.textTheme.bodyMedium);
     }
 
@@ -44,7 +46,7 @@ class ParentSelector extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Text(l10n.linkParentsTitle,
+              child: Text(l10n.linkParentsTitle ?? 'Link Parents',
                   style: theme.textTheme.titleLarge),
             ),
             ListView.builder(
@@ -54,7 +56,7 @@ class ParentSelector extends StatelessWidget {
               itemBuilder: (context, index) {
                 final parent = availableParents[index];
                 return CheckboxListTile(
-                  title: Text(parent.fullName ?? l10n.unnamedParent,
+                  title: Text(parent.fullName ?? l10n.unnamedParent ?? 'Unnamed Parent',
                       style: theme.textTheme.bodyLarge),
                   value: linkedParentIds.contains(parent.id),
                   activeColor: contextualAccentColor,

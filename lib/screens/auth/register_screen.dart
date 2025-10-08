@@ -2,10 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:edu_sync/services/auth_service.dart';
-import 'package:edu_sync/models/user_role.dart';
 import 'package:edu_sync/services/school_service.dart';
-import 'package:edu_sync/models/user.dart' as app_user;
-import 'package:edu_sync/l10n/app_localizations.dart'; // Import AppLocalizations
+import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Import AppLocalizations
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
 import 'package:provider/provider.dart';
 
@@ -62,72 +60,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
-      // Step 1: Sign up the admin user, passing full_name for the trigger
-      final adminAuthUser = await _authService.signUp(
-        _email,
-        _passwordController.text,
-        UserRole.Admin.name,
-        fullName: _adminNameController.text // Pass admin's full name
-      );
-      if (adminAuthUser == null || adminAuthUser.id.isEmpty) {
-        throw Exception('Admin user registration in auth failed.');
-      }
-
-      // Step 2: Create the School Profile
-      // The adminUserId parameter in createSchool might be for associating who created it,
-      // but the primary link is updating the admin's user profile with the school_id.
-      final newSchool = await _schoolService.createSchool(
-        name: _schoolName,
-        academicYear: _academicYear,
-        theme: _theme,
-        contactInfo: _contactInfo,
-        adminUserId: adminAuthUser.id, // If your backend uses this
+      await _authService.registerSchoolAndAdmin(
+        email: _email,
+        password: _passwordController.text,
+        fullName: _adminNameController.text,
+        schoolName: _schoolName,
+        schoolLogoUrl: _schoolLogoFile?.path,
       );
 
-      if (newSchool == null) {
-        // IMPORTANT: Consider deleting the auth user if school creation fails to avoid orphaned auth users.
-        // This would require an admin-privileged delete, possibly via another Edge Function or careful handling.
-        // For now, we'll just throw an error.
-        throw Exception('School profile creation failed.');
-      }
-      
-      // Step 3: Update the Admin's record in public.users with the new school_id
-      // The trigger handle_new_user should have already created a basic profile.
-      // We now update it with the school_id.
-      final adminProfileToUpdate = app_user.User(
-        id: adminAuthUser.id,
-        fullName: _adminNameController.text, // Ensure this is consistent
-        role: UserRole.Admin.name, // Role is known
-        schoolId: newSchool.id, // CRUCIAL: Link admin to the new school
-        // email: _email, // Trigger should handle email based on auth.users.email
-        profilePhotoUrl: null // Admin can set their photo later via profile edit
-      );
-      
-      bool profileUpdateSuccess = await _authService.updateUser(adminProfileToUpdate);
-      if (!profileUpdateSuccess) {
-          // It's tricky to use AppLocalizations.of(context) here if context might be invalid after async
-          // For critical errors like this, a non-localized string might be acceptable, or pass l10n
-          throw Exception("Critical: Failed to link admin to the new school. Please contact support."); 
-      }
-      
-      // Step 4: Upload School Logo if selected
-      String? logoUrl;
-      if (_schoolLogoFile != null) {
-        final fileName = 'logo.${_schoolLogoFile!.path.split('.').last}';
-        logoUrl = await _schoolService.uploadSchoolLogo(newSchool.id, _schoolLogoFile!.path, fileName);
-        await _schoolService.updateSchool(newSchool.copyWith(logoUrl: logoUrl));
-            }
       if (!mounted) return;
       setState(() => _isLoading = false);
-      Navigator.of(context).pop(); 
+      Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).registrationSuccessMessage)),
+        SnackBar(
+            content: Text(AppLocalizations.of(context)
+                    ?.registrationSuccessMessage ??
+                'Registration successful!')),
       );
     } catch (e) {
       if (mounted) {
         setState(() {
-          // Use AppLocalizations.of(context) here as it's within a setState guarded by mounted
-          _errorMessage = '${AppLocalizations.of(context).errorOccurredPrefix}: ${e.toString()}';
+          _errorMessage =
+              '${AppLocalizations.of(context)?.errorOccurredPrefix ?? 'Error'}: ${e.toString()}';
           _isLoading = false;
         });
       }
@@ -149,7 +103,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final Color contextualAccentColor = defaultAccentColor;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.registerSchoolAdminTitle)),
+      appBar: AppBar(title: Text(l10n?.registerSchoolAdminTitle ?? 'Register School Admin')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -157,53 +111,53 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: ListView(
             children: [
               TextFormField(
-                decoration: InputDecoration(labelText: l10n.schoolNameLabel),
-                validator: (value) => (value == null || value.isEmpty) ? l10n.schoolNameValidator : null,
+                decoration: InputDecoration(labelText: l10n?.schoolNameLabel ?? 'School Name'),
+                validator: (value) => (value == null || value.isEmpty) ? l10n?.schoolNameValidator ?? 'School name cannot be empty.' : null,
                 onSaved: (value) => _schoolName = value!,
               ),
               const SizedBox(height: 16),
                TextFormField( 
                 controller: _adminNameController,
-                decoration: InputDecoration(labelText: l10n.adminFullNameLabel),
-                validator: (value) => (value == null || value.isEmpty) ? l10n.adminFullNameValidator : null,
+                decoration: InputDecoration(labelText: l10n?.adminFullNameLabel ?? 'Admin Full Name'),
+                validator: (value) => (value == null || value.isEmpty) ? l10n?.adminFullNameValidator ?? 'Admin full name cannot be empty.' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
-                decoration: InputDecoration(labelText: l10n.adminEmailLabel),
+                decoration: InputDecoration(labelText: l10n?.adminEmailLabel ?? 'Admin Email'),
                 keyboardType: TextInputType.emailAddress,
-                validator: (value) => (value == null || value.isEmpty) ? l10n.adminEmailValidator : null,
+                validator: (value) => (value == null || value.isEmpty) ? l10n?.adminEmailValidator ?? 'Admin email cannot be empty.' : null,
                 onSaved: (value) => _email = value!,
               ),
               const SizedBox(height: 16),
               TextFormField(
-                decoration: InputDecoration(labelText: l10n.adminPasswordLabel),
+                decoration: InputDecoration(labelText: l10n?.adminPasswordLabel ?? 'Admin Password'),
                 obscureText: true,
                 controller: _passwordController, 
                 validator: (value) {
-                  if (value == null || value.isEmpty) return l10n.passwordRequiredValidator; 
-                  if (value.length < 6) return l10n.passwordTooShortValidator; 
+                  if (value == null || value.isEmpty) return l10n?.passwordRequiredValidator ?? 'Password is required.'; 
+                  if (value.length < 6) return l10n?.passwordTooShortValidator ?? 'Password is too short.'; 
                   return null;
                 },
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _confirmPasswordController, 
-                decoration: InputDecoration(labelText: l10n.confirmAdminPasswordLabel),
+                decoration: InputDecoration(labelText: l10n?.confirmAdminPasswordLabel ?? 'Confirm Admin Password'),
                 obscureText: true,
                 validator: (value) {
-                  if (value == null || value.isEmpty) return l10n.confirmPasswordValidator; 
-                  if (value != _passwordController.text) return l10n.passwordsDoNotMatchValidator; 
+                  if (value == null || value.isEmpty) return l10n?.confirmPasswordValidator ?? 'Confirm password cannot be empty.'; 
+                  if (value != _passwordController.text) return l10n?.passwordsDoNotMatchValidator ?? 'Passwords do not match.'; 
                   return null;
                 },
               ),
               const SizedBox(height: 16),
               TextFormField(
-                decoration: InputDecoration(labelText: l10n.academicYearLabel, hintText: l10n.academicYearHint),
+                decoration: InputDecoration(labelText: l10n?.academicYearLabel ?? 'Academic Year', hintText: l10n?.academicYearHint ?? 'e.g., 2023-2024'),
                 onSaved: (value) => _academicYear = value ?? '',
               ),
               const SizedBox(height: 16),
               TextFormField(
-                decoration: InputDecoration(labelText: l10n.contactInfoLabel),
+                decoration: InputDecoration(labelText: l10n?.contactInfoLabel ?? 'Contact Info'),
                 onSaved: (value) => _contactInfo = value ?? '',
               ),
               const SizedBox(height: 16),
@@ -211,14 +165,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 children: [
                   Expanded(
                     child: Text(
-                      _schoolLogoFile == null ? l10n.noLogoSelected : '${l10n.logoSelectedLabel}: ${_schoolLogoFile!.path.split('/').last}',
+                      _schoolLogoFile == null ? l10n?.noLogoSelected ?? 'No logo selected.' : '${l10n?.logoSelectedLabel ?? 'Logo Selected'}: ${_schoolLogoFile!.path.split('/').last}',
                       style: theme.textTheme.bodyMedium,
                     ),
                   ),
                   TextButton.icon(
                     style: TextButton.styleFrom(foregroundColor: contextualAccentColor),
                     icon: const Icon(Icons.image),
-                    label: Text(l10n.selectLogoButton),
+                    label: Text(l10n?.selectLogoButton ?? 'Select Logo'),
                     onPressed: _pickSchoolLogo,
                   ),
                 ],
@@ -232,7 +186,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         foregroundColor: Colors.white,
                       ),
                       onPressed: _registerAdminAndSchool,
-                      child: Text(l10n.registerButton),
+                      child: Text(l10n?.registerButton ?? 'Register'),
                     ),
               // TextButton(
               //   onPressed: () {

@@ -12,7 +12,7 @@ import 'package:edu_sync/models/school.dart';
 // Import AdminSettingsScreen
 // import 'package:edu_sync/screens/teacher/student_view_screen.dart'; // If a separate one is made
 // Import DailyReportScreen
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Corrected import
 import 'package:edu_sync/services/notification_service.dart';
 
 // Matching colors from AdminPanelScreen for theming
@@ -31,7 +31,7 @@ class AppDrawer extends StatelessWidget {
     final schoolProvider = Provider.of<SchoolProvider>(context, listen: false);
     final notificationService = Provider.of<NotificationService>(context); // Listen to changes
     final School? currentSchool = schoolProvider.currentSchool;
-    final l10n = AppLocalizations.of(context); // Get l10n instance
+    final l10n = AppLocalizations.of(context)!; // Get l10n instance and assert non-null
 
     // Drawer items for Admin
     List<Widget> buildAdminDrawerItems(BuildContext context, School? school) {
@@ -39,7 +39,7 @@ class AppDrawer extends StatelessWidget {
         if (school != null)
           ListTile(
             leading: const Icon(Icons.edit_note, color: drawerIconColor),
-            title: Text('Edit School Profile', style: TextStyle(color: drawerTextDarkGrey)),
+            title: Text('Edit School Profile', style: const TextStyle(color: drawerTextDarkGrey)),
             onTap: () {
               Navigator.pop(context); // Close drawer
               context.push('/admin/edit-school-profile', extra: school);
@@ -47,15 +47,15 @@ class AppDrawer extends StatelessWidget {
           ),
         ListTile(
           leading: const Icon(Icons.people, color: drawerIconColor),
-          title: Text('User Management', style: TextStyle(color: drawerTextDarkGrey)),
+          title: Text('Staff Management', style: const TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
-            context.push('/admin/user-management');
+            context.push('/admin/staff-management');
             },
           ),
         ListTile(
           leading: const Icon(Icons.school_outlined, color: drawerIconColor),
-          title: Text('Student Management', style: TextStyle(color: drawerTextDarkGrey)),
+          title: Text(l10n.studentManagementTitle, style: const TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
             context.push('/admin/student-management');
@@ -63,7 +63,7 @@ class AppDrawer extends StatelessWidget {
           ),
         ListTile(
           leading: const Icon(Icons.class_, color: drawerIconColor),
-          title: Text('Class Management', style: TextStyle(color: drawerTextDarkGrey)),
+          title: Text(l10n.classManagementTitle, style: const TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
             context.push('/admin/class-management');
@@ -71,7 +71,7 @@ class AppDrawer extends StatelessWidget {
           ),
         ListTile(
           leading: const Icon(Icons.calendar_today, color: drawerIconColor),
-          title: Text('Timetable Management', style: TextStyle(color: drawerTextDarkGrey)),
+          title: Text(l10n.timetableManagementTitle, style: const TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
             context.push('/admin/timetable-management');
@@ -79,7 +79,7 @@ class AppDrawer extends StatelessWidget {
           ),
         ListTile(
           leading: const Icon(Icons.attach_money, color: drawerIconColor),
-          title: Text('Finance Management', style: TextStyle(color: drawerTextDarkGrey)),
+          title: Text(l10n.financeManagementTitle, style: const TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
             context.push('/admin/finance-management');
@@ -88,7 +88,7 @@ class AppDrawer extends StatelessWidget {
         const Divider(indent: 16, endIndent: 16),
         ListTile(
           leading: const Icon(Icons.check_circle_outline, color: drawerIconColor),
-          title: Text('Mark School Attendance', style: TextStyle(color: drawerTextDarkGrey)), // Admin context
+          title: Text(l10n.markSchoolAttendance, style: const TextStyle(color: drawerTextDarkGrey)), // Admin context
           onTap: () {
             Navigator.pop(context);
             context.push('/teacher/attendance-marking');
@@ -96,7 +96,7 @@ class AppDrawer extends StatelessWidget {
           ),
         ListTile(
           leading: const Icon(Icons.book_outlined, color: drawerIconColor),
-          title: Text('Manage School Lesson Plans', style: TextStyle(color: drawerTextDarkGrey)), // Admin context
+          title: Text(l10n.manageSchoolLessonPlans, style: const TextStyle(color: drawerTextDarkGrey)), // Admin context
           onTap: () {
             Navigator.pop(context);
             context.push('/teacher/lesson-plan-management');
@@ -104,7 +104,7 @@ class AppDrawer extends StatelessWidget {
         ),
         ListTile(
           leading: const Icon(Icons.campaign_outlined, color: drawerIconColor),
-          title: Text(AppLocalizations.of(context).manageAnnouncementsDrawerItem, style: TextStyle(color: drawerTextDarkGrey)),
+          title: Text(l10n.manageAnnouncementsDrawerItem, style: const TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
             context.push('/admin/announcements');
@@ -112,7 +112,7 @@ class AppDrawer extends StatelessWidget {
           ),
         ListTile(
           leading: const Icon(Icons.assignment_outlined, color: drawerIconColor),
-          title: Text(AppLocalizations.of(context).manageDailyReportsDrawerItem, style: TextStyle(color: drawerTextDarkGrey)),
+          title: Text(l10n.manageDailyReportsDrawerItem, style: const TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
             context.push('/admin/manage-custom-forms');
@@ -120,7 +120,7 @@ class AppDrawer extends StatelessWidget {
           ),
         ListTile(
           leading: const Icon(Icons.list_alt_outlined, color: drawerIconColor),
-          title: Text(l10n.viewFormResponsesTitle, style: TextStyle(color: drawerTextDarkGrey)),
+          title: Text(l10n.viewFormResponsesTitle, style: const TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
             if (school != null) {
@@ -134,7 +134,7 @@ class AppDrawer extends StatelessWidget {
         const Divider(indent: 16, endIndent: 16),
         ListTile(
           leading: const Icon(Icons.admin_panel_settings, color: drawerIconColor),
-          title: Text(l10n.adminSettingsTitle, style: TextStyle(color: drawerTextDarkGrey)),
+          title: Text(l10n.adminSettingsTitle, style: const TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
             context.push('/admin/settings');
@@ -148,7 +148,7 @@ class AppDrawer extends StatelessWidget {
       return [
         ListTile(
           leading: const Icon(Icons.dashboard, color: drawerIconColor),
-          title: Text('Dashboard', style: TextStyle(color: drawerTextDarkGrey)),
+          title: Text(l10n.dashboardTitle, style: const TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
             context.go('/teacher-dashboard');
@@ -156,7 +156,7 @@ class AppDrawer extends StatelessWidget {
           ),
         ListTile(
           leading: const Icon(Icons.calendar_today, color: drawerIconColor),
-          title: Text('My Timetable', style: TextStyle(color: drawerTextDarkGrey)),
+          title: Text(l10n.myTimetableTitle, style: const TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
             context.push('/teacher/timetable');
@@ -164,7 +164,7 @@ class AppDrawer extends StatelessWidget {
           ),
         ListTile(
           leading: const Icon(Icons.check_circle_outline, color: drawerIconColor),
-          title: Text('Mark Attendance', style: TextStyle(color: drawerTextDarkGrey)),
+          title: Text(l10n.markAttendance, style: const TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
             context.push('/teacher/attendance-marking');
@@ -172,7 +172,7 @@ class AppDrawer extends StatelessWidget {
           ),
         ListTile(
           leading: const Icon(Icons.book_outlined, color: drawerIconColor),
-          title: Text('Lesson Plans', style: TextStyle(color: drawerTextDarkGrey)),
+          title: Text(l10n.lessonPlansTitle, style: const TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
             context.push('/teacher/lesson-plan-management');
@@ -180,7 +180,7 @@ class AppDrawer extends StatelessWidget {
           ),
          ListTile(
           leading: const Icon(Icons.people_alt_outlined, color: drawerIconColor),
-          title: Text('View Students', style: TextStyle(color: drawerTextDarkGrey)),
+          title: Text(l10n.viewStudentsTitle, style: const TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
             // Assuming teachers can view the same student list screen as admins for now
@@ -189,7 +189,7 @@ class AppDrawer extends StatelessWidget {
           ),
         ListTile(
           leading: const Icon(Icons.list_alt, color: drawerIconColor),
-          title: Text(l10n.viewFormResponsesTitle, style: TextStyle(color: drawerTextDarkGrey)),
+          title: Text(l10n.viewFormResponsesTitle, style: const TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
             // Teachers also need schoolId context for this screen
@@ -209,7 +209,7 @@ class AppDrawer extends StatelessWidget {
       return [
          ListTile(
           leading: const Icon(Icons.dashboard, color: drawerIconColor),
-          title: Text('Dashboard', style: TextStyle(color: drawerTextDarkGrey)),
+          title: Text(l10n.dashboardTitle, style: const TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
             context.go('/parent-dashboard');
@@ -217,7 +217,7 @@ class AppDrawer extends StatelessWidget {
           ),
         ListTile(
           leading: const Icon(Icons.check_circle, color: drawerIconColor),
-          title: Text('Child\'s Attendance', style: TextStyle(color: drawerTextDarkGrey)),
+          title: Text(l10n.childAttendanceTitle, style: const TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
             context.push('/parent/child-attendance');
@@ -225,7 +225,7 @@ class AppDrawer extends StatelessWidget {
           ),
         ListTile(
           leading: const Icon(Icons.schedule, color: drawerIconColor),
-          title: Text('Child\'s Schedule', style: TextStyle(color: drawerTextDarkGrey)),
+          title: Text(l10n.childScheduleTitle, style: const TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
             context.push('/parent/child-schedule');
@@ -235,7 +235,7 @@ class AppDrawer extends StatelessWidget {
           leading: const Icon(Icons.campaign, color: drawerIconColor),
           title: Row(
             children: [
-              Text(AppLocalizations.of(context).announcementsTitle, style: TextStyle(color: drawerTextDarkGrey)),
+              Text(l10n.announcementsTitle, style: const TextStyle(color: drawerTextDarkGrey)),
               if (notificationService.hasNewAnnouncements)
                 Padding(
                   padding: const EdgeInsets.only(left: 8.0),
@@ -254,7 +254,7 @@ class AppDrawer extends StatelessWidget {
           ),
         ListTile(
           leading: const Icon(Icons.assessment_outlined, color: drawerIconColor),
-          title: Text(l10n.dailyReportsTitle, style: TextStyle(color: drawerTextDarkGrey)),
+          title: Text(l10n.dailyReportsTitle, style: const TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
             context.push('/parent/daily-report');
@@ -267,7 +267,7 @@ class AppDrawer extends StatelessWidget {
       return [
         ListTile(
           leading: const Icon(Icons.dashboard, color: drawerIconColor),
-          title: Text('Dashboard', style: TextStyle(color: drawerTextDarkGrey)),
+          title: Text(l10n.dashboardTitle, style: const TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
             context.go('/manager-dashboard');
@@ -275,15 +275,15 @@ class AppDrawer extends StatelessWidget {
           ),
         ListTile(
           leading: const Icon(Icons.people, color: drawerIconColor),
-          title: Text('User Management', style: TextStyle(color: drawerTextDarkGrey)),
+          title: Text('Staff Management', style: const TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
-            context.push('/admin/user-management');
+            context.push('/admin/staff-management');
             },
           ),
         ListTile(
           leading: const Icon(Icons.school_outlined, color: drawerIconColor),
-          title: Text('Student Management', style: TextStyle(color: drawerTextDarkGrey)),
+          title: Text(l10n.studentManagementTitle, style: const TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
             context.push('/admin/student-management');
@@ -291,7 +291,7 @@ class AppDrawer extends StatelessWidget {
           ),
         ListTile(
           leading: const Icon(Icons.class_, color: drawerIconColor),
-          title: Text('Class Management', style: TextStyle(color: drawerTextDarkGrey)),
+          title: Text(l10n.classManagementTitle, style: const TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
             context.push('/admin/class-management');
@@ -299,7 +299,7 @@ class AppDrawer extends StatelessWidget {
           ),
         ListTile(
           leading: const Icon(Icons.calendar_today, color: drawerIconColor),
-          title: Text('Timetable Management', style: TextStyle(color: drawerTextDarkGrey)),
+          title: Text(l10n.timetableManagementTitle, style: const TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
             context.push('/admin/timetable-management');
@@ -307,7 +307,7 @@ class AppDrawer extends StatelessWidget {
           ),
         ListTile(
           leading: const Icon(Icons.attach_money, color: drawerIconColor),
-          title: Text('Finance Management', style: TextStyle(color: drawerTextDarkGrey)),
+          title: Text(l10n.financeManagementTitle, style: const TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
             context.push('/admin/finance-management');
@@ -341,18 +341,18 @@ class AppDrawer extends StatelessWidget {
             padding: EdgeInsets.zero,
             children: <Widget>[
               UserAccountsDrawerHeader(
-                accountName: Text(currentSchool?.name ?? 'EduSync User', style: TextStyle(color: drawerTextDarkGrey)),
-                accountEmail: Text(authService.getCurrentUser()?.email ?? '', style: TextStyle(color: drawerTextLightGrey)),
+                accountName: Text(currentSchool?.name ?? l10n.eduSyncUser, style: const TextStyle(color: drawerTextDarkGrey)),
+                accountEmail: Text(authService.getCurrentUser()?.email ?? '', style: const TextStyle(color: drawerTextLightGrey)),
                 currentAccountPicture: CircleAvatar(
                   backgroundColor: Colors.white,
                   backgroundImage: (currentSchool?.logoUrl != null && currentSchool!.logoUrl.isNotEmpty)
                       ? NetworkImage(currentSchool.logoUrl)
                       : null,
                   child: (currentSchool?.logoUrl == null || currentSchool!.logoUrl.isEmpty)
-                      ? Icon(Icons.school, size: 40, color: drawerIconColor)
+                      ? const Icon(Icons.school, size: 40, color: drawerIconColor)
                       : null,
                 ),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: drawerAppBackgroundColor,
                 ),
               ),
@@ -360,7 +360,7 @@ class AppDrawer extends StatelessWidget {
               const Divider(color: drawerTextLightGrey),
               ListTile(
                 leading: const Icon(Icons.settings, color: drawerIconColor),
-                title: Text('App Settings', style: TextStyle(color: drawerTextDarkGrey)),
+                title: Text(l10n.appSettingsTitle, style: const TextStyle(color: drawerTextDarkGrey)),
                 onTap: () {
                   Navigator.pop(context);
                   context.push('/app-settings');
@@ -368,10 +368,11 @@ class AppDrawer extends StatelessWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.logout, color: drawerIconColor),
-                title: Text('Logout', style: TextStyle(color: drawerTextDarkGrey)),
+                title: Text(l10n.logoutButtonText, style: const TextStyle(color: drawerTextDarkGrey)),
                 onTap: () async {
                   Navigator.pop(context);
                   await authService.signOut();
+                  if (!context.mounted) return; // Add mounted check
                   context.go('/login'); // Use go_router for navigation
                 },
               ),

@@ -4,13 +4,16 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i3;
+import 'dart:ui' as _i10;
 
 import 'package:connectivity_plus/connectivity_plus.dart' as _i6;
 import 'package:connectivity_plus_platform_interface/connectivity_plus_platform_interface.dart'
     as _i7;
+import 'package:edu_sync/models/announcement.dart' as _i9;
+import 'package:edu_sync/services/notification_service.dart' as _i8;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i4;
-import 'package:shared_preferences/src/shared_preferences_legacy.dart' as _i5;
+import 'package:shared_preferences/shared_preferences.dart' as _i5;
 import 'package:supabase/supabase.dart' as _i2;
 
 // ignore_for_file: type=lint
@@ -26,6 +29,7 @@ import 'package:supabase/supabase.dart' as _i2;
 // ignore_for_file: unnecessary_parenthesis
 // ignore_for_file: camel_case_types
 // ignore_for_file: subtype_of_sealed_class
+// ignore_for_file: invalid_use_of_internal_member
 
 class _FakeFunctionsClient_0 extends _i1.SmartFake
     implements _i2.FunctionsClient {
@@ -189,26 +193,26 @@ class MockSupabaseClient extends _i1.Mock implements _i2.SupabaseClient {
           as _i2.GoTrueClient);
 
   @override
-  set functions(_i2.FunctionsClient? _functions) => super.noSuchMethod(
-    Invocation.setter(#functions, _functions),
+  set functions(_i2.FunctionsClient? value) => super.noSuchMethod(
+    Invocation.setter(#functions, value),
     returnValueForMissingStub: null,
   );
 
   @override
-  set storage(_i2.SupabaseStorageClient? _storage) => super.noSuchMethod(
-    Invocation.setter(#storage, _storage),
+  set storage(_i2.SupabaseStorageClient? value) => super.noSuchMethod(
+    Invocation.setter(#storage, value),
     returnValueForMissingStub: null,
   );
 
   @override
-  set realtime(_i2.RealtimeClient? _realtime) => super.noSuchMethod(
-    Invocation.setter(#realtime, _realtime),
+  set realtime(_i2.RealtimeClient? value) => super.noSuchMethod(
+    Invocation.setter(#realtime, value),
     returnValueForMissingStub: null,
   );
 
   @override
-  set rest(_i2.PostgrestClient? _rest) => super.noSuchMethod(
-    Invocation.setter(#rest, _rest),
+  set rest(_i2.PostgrestClient? value) => super.noSuchMethod(
+    Invocation.setter(#rest, value),
     returnValueForMissingStub: null,
   );
 
@@ -507,14 +511,14 @@ class MockGoTrueClient extends _i1.Mock implements _i2.GoTrueClient {
           as Map<String, String>);
 
   @override
-  set admin(_i2.GoTrueAdminApi? _admin) => super.noSuchMethod(
-    Invocation.setter(#admin, _admin),
+  set admin(_i2.GoTrueAdminApi? value) => super.noSuchMethod(
+    Invocation.setter(#admin, value),
     returnValueForMissingStub: null,
   );
 
   @override
-  set mfa(_i2.GoTrueMFAApi? _mfa) => super.noSuchMethod(
-    Invocation.setter(#mfa, _mfa),
+  set mfa(_i2.GoTrueMFAApi? value) => super.noSuchMethod(
+    Invocation.setter(#mfa, value),
     returnValueForMissingStub: null,
   );
 
@@ -1038,4 +1042,119 @@ class MockGoTrueClient extends _i1.Mock implements _i2.GoTrueClient {
             ),
           )
           as Object);
+}
+
+/// A class which mocks [NotificationService].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockNotificationService extends _i1.Mock
+    implements _i8.NotificationService {
+  MockNotificationService() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i3.Stream<_i9.Announcement> get inAppAnnouncements =>
+      (super.noSuchMethod(
+            Invocation.getter(#inAppAnnouncements),
+            returnValue: _i3.Stream<_i9.Announcement>.empty(),
+          )
+          as _i3.Stream<_i9.Announcement>);
+
+  @override
+  bool get hasNewAnnouncements =>
+      (super.noSuchMethod(
+            Invocation.getter(#hasNewAnnouncements),
+            returnValue: false,
+          )
+          as bool);
+
+  @override
+  bool get hasListeners =>
+      (super.noSuchMethod(Invocation.getter(#hasListeners), returnValue: false)
+          as bool);
+
+  @override
+  _i3.Future<void> initialize() =>
+      (super.noSuchMethod(
+            Invocation.method(#initialize, []),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
+
+  @override
+  _i3.Future<void> showNotification(
+    int? id,
+    String? title,
+    String? body,
+    String? payload,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#showNotification, [id, title, body, payload]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
+
+  @override
+  _i3.Future<DateTime?> getLastSeenAnnouncementTimestamp() =>
+      (super.noSuchMethod(
+            Invocation.method(#getLastSeenAnnouncementTimestamp, []),
+            returnValue: _i3.Future<DateTime?>.value(),
+          )
+          as _i3.Future<DateTime?>);
+
+  @override
+  _i3.Future<void> setLastSeenAnnouncementTimestamp(DateTime? timestamp) =>
+      (super.noSuchMethod(
+            Invocation.method(#setLastSeenAnnouncementTimestamp, [timestamp]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
+
+  @override
+  void subscribeToAnnouncements(
+    int? schoolId,
+    String? currentUserId,
+    String? currentUserRole,
+  ) => super.noSuchMethod(
+    Invocation.method(#subscribeToAnnouncements, [
+      schoolId,
+      currentUserId,
+      currentUserRole,
+    ]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void unsubscribeFromAnnouncements() => super.noSuchMethod(
+    Invocation.method(#unsubscribeFromAnnouncements, []),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void dispose() => super.noSuchMethod(
+    Invocation.method(#dispose, []),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void addListener(_i10.VoidCallback? listener) => super.noSuchMethod(
+    Invocation.method(#addListener, [listener]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void removeListener(_i10.VoidCallback? listener) => super.noSuchMethod(
+    Invocation.method(#removeListener, [listener]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void notifyListeners() => super.noSuchMethod(
+    Invocation.method(#notifyListeners, []),
+    returnValueForMissingStub: null,
+  );
 }

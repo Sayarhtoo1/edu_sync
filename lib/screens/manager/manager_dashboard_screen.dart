@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:edu_sync/widgets/app_drawer.dart';
 import 'package:edu_sync/providers/school_provider.dart';
 
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
 import 'package:edu_sync/theme/app_theme.dart';
 
 class ManagerDashboardScreen extends StatelessWidget {
@@ -12,13 +12,16 @@ class ManagerDashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    if (l10n == null) {
+      return const SizedBox.shrink(); // Or a placeholder widget
+    }
 
     return Scaffold(
       backgroundColor: appBackgroundColor,
       appBar: AppBar(
         title: Consumer<SchoolProvider>(
           builder: (context, schoolProvider, child) {
-            return Text(schoolProvider.currentSchool?.name ?? l10n.managerDashboardTitle);
+            return Text(schoolProvider.currentSchool?.name ?? l10n.managerDashboardTitle ?? 'Manager Dashboard');
           },
         ),
         backgroundColor: iconColorTeachers, // You might want to define a specific color for managers
@@ -31,14 +34,14 @@ class ManagerDashboardScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                l10n.managerDashboardWelcomeMessage,
+                l10n.managerDashboardWelcomeMessage ?? 'Welcome to Manager Dashboard',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: textDarkGrey),
               ),
               const SizedBox(height: 20),
               _buildQuickActionsGrid(context),
               const SizedBox(height: 20),
               Text(
-                l10n.recentActivity,
+                l10n.recentActivity ?? 'Recent Activity',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(color: textLightGrey),
               ),
               const SizedBox(height: 10),
@@ -52,6 +55,9 @@ class ManagerDashboardScreen extends StatelessWidget {
 
   Widget _buildQuickActionsGrid(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    if (l10n == null) {
+      return const SizedBox.shrink(); // Or a placeholder widget
+    }
     
     return GridView.count(
       shrinkWrap: true,
@@ -62,7 +68,7 @@ class ManagerDashboardScreen extends StatelessWidget {
       children: [
         _buildActionCard(
           context,
-          title: l10n.manageTeachersAction,
+          title: l10n.manageTeachersAction ?? 'Manage Teachers',
           icon: Icons.school,
           onTap: () {
             // Navigate to manage teachers screen
@@ -70,7 +76,7 @@ class ManagerDashboardScreen extends StatelessWidget {
         ),
         _buildActionCard(
           context,
-          title: l10n.manageParentsAction,
+          title: l10n.manageParentsAction ?? 'Manage Parents',
           icon: Icons.people,
           onTap: () {
             // Navigate to manage parents screen
@@ -78,7 +84,7 @@ class ManagerDashboardScreen extends StatelessWidget {
         ),
         _buildActionCard(
           context,
-          title: l10n.manageStudentsTitle,
+          title: l10n.manageStudentsTitle ?? 'Manage Students',
           icon: Icons.person_outline,
           onTap: () {
             // Navigate to manage students screen
@@ -86,7 +92,7 @@ class ManagerDashboardScreen extends StatelessWidget {
         ),
         _buildActionCard(
           context,
-          title: l10n.manageClassesTitle,
+          title: l10n.manageClassesTitle ?? 'Manage Classes',
           icon: Icons.class_,
           onTap: () {
             // Navigate to manage classes screen

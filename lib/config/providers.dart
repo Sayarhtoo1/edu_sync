@@ -26,6 +26,8 @@ import 'package:edu_sync/services/timetable_service.dart';
 import 'package:edu_sync/services/user_service.dart'; // Import UserService
 import 'package:edu_sync/services/schedule_summary_service.dart'; // Import ScheduleSummaryService
 import 'package:edu_sync/providers/admin_panel_provider.dart'; // Import AdminPanelProvider
+import 'package:edu_sync/providers/exam_provider.dart';
+import 'package:edu_sync/providers/class_provider.dart'; // Import ClassProvider
 
 Future<List<SingleChildWidget>> initializeProviders() async {
   final sharedPreferences = await SharedPreferences.getInstance();
@@ -42,19 +44,22 @@ Future<List<SingleChildWidget>> initializeProviders() async {
     Provider<SupabaseClient>.value(value: Supabase.instance.client),
     Provider<SharedPreferences>.value(value: sharedPreferences),
     Provider<Connectivity>(create: (_) => Connectivity()),
+    ChangeNotifierProvider.value(value: notificationService),
+
 
     // App Services
-    ProxyProvider3<SupabaseClient, SharedPreferences, Connectivity, AuthService>(
-      update: (_, supabase, prefs, connectivity, __) => AuthService(
+    ProxyProvider4<SupabaseClient, SharedPreferences, Connectivity, NotificationService, AuthService>(
+      update: (_, supabase, prefs, connectivity, notificationService, _) => AuthService(
         supabaseClient: supabase,
         sharedPreferences: prefs,
         connectivity: connectivity,
+        notificationService: notificationService,
       ),
     ),
     Provider<AppDatabase>.value(value: appDatabase),
     Provider<SchoolService>(create: (_) => SchoolService()),
     Provider<StudentService>(create: (_) => StudentService(appDatabase)),
-    Provider<ClassService>(create: (_) => ClassService(appDatabase)),
+    Provider<ClassService>(create: (_) => ClassService()),
     Provider<TimetableService>(create: (_) => TimetableService()),
     Provider<AttendanceService>(create: (_) => AttendanceService()),
     Provider<LessonPlanService>(create: (_) => LessonPlanService()),
@@ -65,10 +70,10 @@ Future<List<SingleChildWidget>> initializeProviders() async {
     Provider<CacheService>.value(value: cacheService),
     Provider<UserService>(create: (_) => UserService(Supabase.instance.client)), // Provide UserService
     ProxyProvider<AuthService, RoleService>(
-      update: (_, authService, __) => RoleService(authService),
+      update: (_, authService, _) => RoleService(authService),
     ),
     ProxyProvider3<TimetableService, AuthService, UserService, ScheduleSummaryService>(
-      update: (_, timetableService, authService, userService, __) => ScheduleSummaryService(
+      update: (_, timetableService, authService, userService, _) => ScheduleSummaryService(
         timetableService,
         authService,
         userService,
@@ -98,6 +103,7 @@ Future<List<SingleChildWidget>> initializeProviders() async {
           SchoolProvider(school, auth),
     ),
     ChangeNotifierProvider(create: (_) => LocaleProvider()),
-    ChangeNotifierProvider.value(value: notificationService),
+    ChangeNotifierProvider(create: (_) => ExamProvider()),
+    ChangeNotifierProvider(create: (_) => ClassProvider()), // Add ClassProvider here
   ];
 }

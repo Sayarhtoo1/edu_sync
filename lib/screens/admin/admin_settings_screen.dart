@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:edu_sync/providers/school_provider.dart';
 import 'package:edu_sync/services/school_service.dart';
+import 'package:edu_sync/screens/admin/school_settings_screen.dart';
 import 'package:edu_sync/models/school.dart';
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
 
 class AdminSettingsScreen extends StatefulWidget {
   const AdminSettingsScreen({super.key});
@@ -46,10 +47,10 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       if (_currentSchool != null) {
         _dayAdjustmentController.text = (_currentSchool!.hijriDayAdjustment ?? 0).toString();
       } else {
-        _errorMessage = AppLocalizations.of(context).error_school_not_found;
+        _errorMessage = AppLocalizations.of(context)?.error_school_not_found ?? 'Error: School not found';
       }
     } catch (e) {
-    _errorMessage = "${AppLocalizations.of(context).errorOccurredPrefix}: ${e.toString()}";
+    _errorMessage = "${AppLocalizations.of(context)?.errorOccurredPrefix ?? 'Error'}: ${e.toString()}";
     } finally {
       if (mounted) {
         setState(() {
@@ -71,7 +72,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     try {
       final int? adjustment = int.tryParse(_dayAdjustmentController.text);
       if (adjustment == null) {
-      _errorMessage = AppLocalizations.of(context).error_invalid_number;
+      _errorMessage = AppLocalizations.of(context)?.error_invalid_number ?? 'Error: Invalid number';
         return;
       }
 
@@ -84,12 +85,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).settingsSavedSuccessfully)),
+          SnackBar(content: Text(AppLocalizations.of(context)?.settingsSavedSuccessfully ?? 'Settings saved successfully')),
         );
       }
     } catch (e) {
       if (mounted) {
-        _errorMessage = "${AppLocalizations.of(context).errorSavingSettings}: ${e.toString()}";
+        _errorMessage = "${AppLocalizations.of(context)?.errorSavingSettings ?? 'Error saving settings'}: ${e.toString()}";
       }
     } finally {
       if (mounted) {
@@ -110,10 +111,13 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   Widget build(BuildContext context) {
     debugPrint('AdminSettingsScreen: build called'); // Added debug print
     final l10n = AppLocalizations.of(context);
+    if (l10n == null) {
+      return const SizedBox.shrink(); // Or a placeholder widget
+    }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.adminSettingsTitle),
+        title: Text(l10n.adminSettingsTitle ?? 'Admin Settings'),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -125,7 +129,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        l10n.hijriCalendarSettingsTitle,
+                        l10n.hijriCalendarSettingsTitle ?? 'Hijri Calendar Settings',
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       const SizedBox(height: 16),
@@ -133,16 +137,40 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         controller: _dayAdjustmentController,
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
-                          labelText: l10n.dayAdjustmentLabel,
-                          hintText: l10n.dayAdjustmentHint,
+                          labelText: l10n.dayAdjustmentLabel ?? 'Day Adjustment',
+                          hintText: l10n.dayAdjustmentHint ?? 'Enter day adjustment (e.g., -1, 0, 1)',
                         ),
                       ),
                       const SizedBox(height: 24),
                       Center(
                         child: ElevatedButton(
                           onPressed: _saveSettings,
-                          child: Text(l10n.saveSettingsButton),
+                          child: Text(l10n.saveSettingsButton ?? 'Save Settings'),
                         ),
+                      ),
+                      const SizedBox(height: 24),
+                      ListTile(
+                        title: Text(l10n.schoolLocationSettingsTitle ?? 'School Location Settings'),
+                        trailing: const Icon(Icons.arrow_forward_ios),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const SchoolSettingsScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                      ListTile(
+                        title: Text(l10n.markAttendanceTitle ?? 'Mark Attendance'),
+                        trailing: const Icon(Icons.arrow_forward_ios),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const SchoolSettingsScreen(),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),

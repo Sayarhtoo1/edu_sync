@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:edu_sync/models/user_role.dart';
-import 'package:edu_sync/services/auth_service.dart';
 import 'package:provider/provider.dart';
-import 'package:edu_sync/models/user.dart' as app_user;
-import 'add_edit_teacher_screen.dart';
-import 'package:edu_sync/l10n/app_localizations.dart'; // Import AppLocalizations
-import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
+import 'package:go_router/go_router.dart';
+import '../../models/staff.dart';
+import '../../services/auth_service.dart';
+import '../../models/user.dart' as app_user;
+import 'add_edit_staff_screen_corrected.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
+import 'package:edu_sync/theme/app_theme.dart';
 
 class StaffManagementScreen extends StatefulWidget {
   const StaffManagementScreen({super.key});
@@ -16,8 +17,7 @@ class StaffManagementScreen extends StatefulWidget {
 
 class _StaffManagementScreenState extends State<StaffManagementScreen> {
   late final AuthService _authService;
-  // final SchoolService _schoolService = SchoolService(); // Unused
-  List<app_user.User> _teachers = [];
+  List<app_user.User> _staffList = [];
   bool _isLoading = true;
   int? _currentSchoolId;
 
@@ -25,58 +25,105 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
   void initState() {
     super.initState();
     _authService = Provider.of<AuthService>(context, listen: false);
-    _loadStaffData();
+    _fetchSchoolIdAndLoadStaff();
+  }
+
+  Future<void> _fetchSchoolIdAndLoadStaff() async {
+    try {
+      final currentUser = _authService.getCurrentUser();
+      if (currentUser != null) {
+        _currentSchoolId = await _authService.getCurrentUserSchoolId();
+      }
+      if (_currentSchoolId != null) {
+        await _loadStaffData();
+      } else {
+        if (mounted) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)?.error_school_not_found ?? 'School ID not found. Cannot load staff.')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${AppLocalizations.of(context)?.errorOccurredPrefix ?? 'Error loading staff'}: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _loadStaffData() async {
-    setState(() => _isLoading = true);
-    final currentUser = _authService.getCurrentUser();
-    if (currentUser != null && currentUser.userMetadata?['school_id'] != null) {
-      _currentSchoolId = currentUser.userMetadata!['school_id'] as int;
-      if (_currentSchoolId != null) {
-        _teachers = await _authService.getUsersByRole(UserRole.Teacher, _currentSchoolId!);
+    if (_currentSchoolId == null) {
+      if (mounted) {
+        setState(() => _isLoading = false);
       }
-    } else {
-      // Handle user not having school_id or not being logged in
-      // logger.w("Admin's school ID not found.");
+      return;
     }
-    if (mounted) {
-      setState(() => _isLoading = false);
+
+    setState(() => _isLoading = true);
+
+    try {
+      _staffList = await _authService.getStaffBySchool(_currentSchoolId!);
+
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${AppLocalizations.of(context)?.errorOccurredPrefix ?? 'Error loading staff'}: $e')),
+        );
+      }
     }
   }
 
-  void _navigateToAddEditTeacherScreen({app_user.User? teacher}) async {
+  void _navigateToAddEditStaffScreen({app_user.User? staff}) async {
     if (_currentSchoolId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cannot add/edit teacher: School ID not found.'))
+        SnackBar(content: Text(AppLocalizations.of(context)?.actionRequiresSchoolAndAdminContext ?? 'Cannot add/edit staff: School ID not found.'))
       );
       return;
     }
+
     final result = await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => AddEditTeacherScreen(teacher: teacher, schoolId: _currentSchoolId!),
+        builder: (_) => AddEditStaffScreen(
+          staff: staff != null ? Staff(
+            id: staff.id,
+            role: staff.role ?? 'Staff',
+            profilePhotoUrl: staff.profilePhotoUrl,
+            fullName: staff.fullName,
+            schoolId: staff.schoolId,
+            email: staff.email,
+            phoneNumber: staff.phoneNumber,
+            salary: staff.salary,
+          ) : null,
+          schoolId: _currentSchoolId!,
+        ),
       ),
     );
-    if (result == true) { // Check if a teacher was added/updated
-      _loadStaffData(); // Refresh the list
-    }
+
+    if (result == true) _loadStaffData();
   }
 
-  Future<void> _deleteTeacher(String teacherId) async {
+  Future<void> _deleteStaff(String userId) async {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog( 
-        title: Text(l10n.confirmDeleteTitle),
-        content: Text(l10n.confirmDeleteTeacherText), 
+      builder: (context) => AlertDialog(
+        title: Text(l10n?.confirmDeleteTitle ?? 'Confirm Delete'),
+        content: Text('${l10n?.confirmDeleteUserTextPart1 ?? 'Are you sure you want to delete this'} staff member?'),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n?.cancel ?? 'Cancel')),
           TextButton(
             style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
-            onPressed: () => Navigator.of(context).pop(true), 
-            child: Text(l10n.delete)
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n?.delete ?? 'Delete')
           ),
         ],
       ),
@@ -84,13 +131,13 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
 
     if (confirm == true) {
       setState(() => _isLoading = true);
-      final success = await _authService.deleteUser(teacherId);
+      final success = await _authService.deleteUser(userId);
       if (success) {
-        _loadStaffData(); // Refresh list
+        _loadStaffData();
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to delete teacher.')),
+            SnackBar(content: Text(AppLocalizations.of(context)?.errorOccurredPrefix ?? 'Failed to delete staff member.')),
           );
           setState(() => _isLoading = false);
         }
@@ -102,84 +149,104 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final Color contextualAccentColor = AppTheme.getAccentColorForContext('teachers');
+    final Color accentColor = AppTheme.getAccentColorForContext('staff');
 
     return Scaffold(
-      appBar: AppBar( 
-        title: Text(l10n.manageTeachersTitle), 
+      appBar: AppBar(
+        title: Text('Staff Management'),
+        backgroundColor: accentColor.withAlpha((255 * 0.1).round()),
         actions: [
           IconButton(
-            icon: Icon(Icons.add, color: contextualAccentColor),
-            tooltip: l10n.addTeacherButton,
-            onPressed: () => _navigateToAddEditTeacherScreen(),
+            icon: Icon(Icons.add, color: accentColor),
+            onPressed: () => _navigateToAddEditStaffScreen(),
+            tooltip: 'Add Staff',
+          ),
+          IconButton(
+            icon: Icon(Icons.refresh, color: accentColor),
+            onPressed: _isLoading ? null : _loadStaffData,
+            tooltip: 'Refresh',
           ),
         ],
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(contextualAccentColor)))
+          ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(accentColor)))
           : RefreshIndicator(
               onRefresh: _loadStaffData,
-              color: contextualAccentColor,
-              child: _teachers.isEmpty
+              color: accentColor,
+              child: _staffList.isEmpty
                   ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.person_add_alt_1_outlined, size: 80, color: contextualAccentColor.withOpacity(0.5)),
+                          Icon(
+                            Icons.people_outline,
+                            size: 64,
+                            color: accentColor.withAlpha((255 * 0.5).round()),
+                          ),
                           const SizedBox(height: 16),
                           Text(
-                            l10n.noTeachersFound,
-                            style: theme.textTheme.titleLarge?.copyWith(color: Colors.grey.shade600),
+                            '${l10n?.noUsersFoundTextPart1 ?? 'No'} staff ${l10n?.noUsersFoundTextPart2 ?? 'found.'}',
+                            style: theme.textTheme.titleMedium?.copyWith(color: theme.textTheme.bodySmall?.color),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Add your first staff member to get started.',
+                            style: theme.textTheme.bodyMedium?.copyWith(color: theme.textTheme.bodySmall?.color),
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 24),
                           ElevatedButton.icon(
-                            onPressed: _navigateToAddEditTeacherScreen,
-                            icon: const Icon(Icons.add),
-                            label: Text(l10n.addTeacherButton),
+                            onPressed: () => _navigateToAddEditStaffScreen(),
+                            icon: Icon(Icons.add, color: theme.colorScheme.onPrimary),
+                            label: Text('Add Staff'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: contextualAccentColor,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                              textStyle: theme.textTheme.titleMedium,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
+                              backgroundColor: accentColor,
+                              foregroundColor: theme.colorScheme.onPrimary,
                             ),
                           ),
                         ],
                       ),
                     )
                   : ListView.builder(
-                      itemCount: _teachers.length,
+                      itemCount: _staffList.length,
                       itemBuilder: (context, index) {
-                        final teacher = _teachers[index];
+                        final staff = _staffList[index];
                         return Card(
                           margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           child: ListTile(
                             leading: CircleAvatar(
-                              backgroundColor: contextualAccentColor.withAlpha((255 * 0.2).round()), // Use withAlpha
-                              backgroundImage: teacher.profilePhotoUrl != null && teacher.profilePhotoUrl!.isNotEmpty
-                                  ? NetworkImage(teacher.profilePhotoUrl!)
+                              backgroundColor: accentColor.withAlpha((255 * 0.2).round()),
+                              backgroundImage: staff.profilePhotoUrl != null
+                                  ? NetworkImage(staff.profilePhotoUrl!)
                                   : null,
-                              child: teacher.profilePhotoUrl == null || teacher.profilePhotoUrl!.isEmpty
-                                  ? Icon(Icons.person_outline, color: contextualAccentColor)
+                              child: staff.profilePhotoUrl == null
+                                  ? Icon(Icons.person, color: accentColor)
                                   : null,
                             ),
-                            title: Text(teacher.fullName ?? 'N/A', style: theme.textTheme.titleMedium),
-                            subtitle: Text(teacher.id, style: theme.textTheme.bodySmall),
+                            title: Text(staff.fullName ?? 'N/A', style: theme.textTheme.titleMedium),
+                            subtitle: Text(staff.role ?? 'No role assigned'),
+                            onTap: () => context.push('/staff/profile', extra: Staff(
+                              id: staff.id,
+                              role: staff.role ?? 'Staff',
+                              profilePhotoUrl: staff.profilePhotoUrl,
+                              fullName: staff.fullName,
+                              schoolId: staff.schoolId,
+                              email: staff.email,
+                              phoneNumber: staff.phoneNumber,
+                              salary: staff.salary,
+                            )),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  icon: Icon(Icons.edit, color: theme.iconTheme.color ?? Colors.grey.shade700),
-                                  tooltip: l10n.editButton,
-                                  onPressed: () => _navigateToAddEditTeacherScreen(teacher: teacher),
+                                  icon: Icon(Icons.edit, color: accentColor),
+                                  tooltip: l10n?.editButton ?? 'Edit',
+                                  onPressed: () => _navigateToAddEditStaffScreen(staff: staff),
                                 ),
                                 IconButton(
                                   icon: Icon(Icons.delete, color: theme.colorScheme.error),
-                                  tooltip: l10n.deleteButton,
-                                  onPressed: () => _deleteTeacher(teacher.id),
+                                  tooltip: l10n?.deleteButton ?? 'Delete',
+                                  onPressed: () => _deleteStaff(staff.id),
                                 ),
                               ],
                             ),

@@ -1,7 +1,7 @@
 import 'package:edu_sync/screens/manager/manager_dashboard_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:edu_sync/services/auth_service.dart';
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
 import 'package:edu_sync/screens/admin/admin_panel_screen.dart';
 import 'package:edu_sync/screens/teacher/teacher_dashboard_screen.dart';
 import 'package:edu_sync/screens/parent/parent_dashboard_screen.dart';
@@ -77,7 +77,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.appTitle),
+        title: Text(l10n?.appTitle ?? 'EduSync'),
       ),
       body: const Center(child: CircularProgressIndicator()),
     );

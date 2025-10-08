@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Import AppLocalizations
 import 'package:edu_sync/models/schedule_summary.dart';
 import 'package:edu_sync/models/timetable_status.dart'; // Import TimetableStatus
 import 'package:edu_sync/screens/teacher/teacher_timetable_components/timetable_helpers.dart'; // For status colors/icons

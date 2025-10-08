@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
 import 'package:edu_sync/theme/app_theme.dart';
 
 class ProfilePhotoSelector extends StatelessWidget {
@@ -21,6 +21,9 @@ class ProfilePhotoSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    if (l10n == null) {
+      return const SizedBox.shrink(); // Or a placeholder widget
+    }
     final theme = Theme.of(context);
 
     return Card(
@@ -31,7 +34,7 @@ class ProfilePhotoSelector extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.profilePhotoLabel, style: theme.textTheme.titleLarge),
+            Text(l10n.profilePhotoLabel ?? 'Profile Photo', style: theme.textTheme.titleLarge),
             const SizedBox(height: 16),
             Row(
               children: [
@@ -59,10 +62,10 @@ class ProfilePhotoSelector extends StatelessWidget {
                               placeholder: (context, url) =>
                                   const CircularProgressIndicator(),
                               errorWidget: (context, url, error) => Text(
-                                  l10n.couldNotLoadImage,
+                                  l10n.couldNotLoadImage ?? 'Could not load image',
                                   style: theme.textTheme.bodySmall),
                             )
-                          : Text(l10n.noProfilePhoto,
+                          : Text(l10n.noProfilePhoto ?? 'No Profile Photo',
                               style: theme.textTheme.bodyMedium
                                   ?.copyWith(color: textLightGrey))),
                 )),
@@ -71,7 +74,7 @@ class ProfilePhotoSelector extends StatelessWidget {
                   style: TextButton.styleFrom(
                       foregroundColor: contextualAccentColor),
                   icon: const Icon(Icons.image),
-                  label: Text(l10n.selectPhotoButton),
+                  label: Text(l10n.selectPhotoButton ?? 'Select Photo'),
                   onPressed: onPickProfilePhoto,
                 ),
               ],

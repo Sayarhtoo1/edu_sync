@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:edu_sync/models/school_class.dart' as app_class;
-import 'package:edu_sync/l10n/app_localizations.dart';
-import 'package:edu_sync/theme/app_theme.dart';
-import 'package:intl/intl.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
 
 class StudentFormFields extends StatelessWidget {
   final TextEditingController nameController;
@@ -33,6 +31,9 @@ class StudentFormFields extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    if (l10n == null) {
+      return const SizedBox.shrink(); // Or a placeholder widget
+    }
     final theme = Theme.of(context);
 
     return Card(
@@ -43,28 +44,28 @@ class StudentFormFields extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.studentInformationLabel,
+            Text(l10n.studentInformationLabel ?? 'Student Information',
                 style: theme.textTheme.titleLarge),
             const SizedBox(height: 16),
             TextFormField(
               controller: nameController,
-              decoration: InputDecoration(labelText: l10n.fullNameLabel),
+              decoration: InputDecoration(labelText: l10n.fullNameLabel ?? 'Full Name'),
               validator: (value) =>
-                  (value == null || value.isEmpty) ? l10n.fullNameValidator : null,
+                  (value == null || value.isEmpty) ? (l10n.fullNameValidator ?? 'Full name is required') : null,
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: dobController,
               decoration: InputDecoration(
-                  labelText: l10n.dateOfBirthLabel,
-                  hintText: l10n.dateOfBirthHint),
+                  labelText: l10n.dateOfBirthLabel ?? 'Date of Birth',
+                  hintText: l10n.dateOfBirthHint ?? 'Select Date'),
               readOnly: true,
               onTap: () => onSelectDateOfBirth(context),
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<int>(
               value: selectedClassId,
-              hint: Text(l10n.selectClassOptionalHint),
+              hint: Text(l10n.selectClassOptionalHint ?? 'Select Class (Optional)'),
               items: availableClasses.map((app_class.SchoolClass cls) {
                 return DropdownMenuItem<int>(
                   value: cls.id,
@@ -72,20 +73,20 @@ class StudentFormFields extends StatelessWidget {
                 );
               }).toList(),
               onChanged: onClassChanged,
-              decoration: InputDecoration(labelText: l10n.classOptionalLabel),
-              validator: (value) => value == null ? l10n.classValidator : null,
+              decoration: InputDecoration(labelText: l10n.classOptionalLabel ?? 'Class (Optional)'),
+              validator: (value) => value == null ? (l10n.classValidator ?? 'Class is required') : null,
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               value: selectedGender,
-              hint: Text(l10n.selectGenderHint),
+              hint: Text(l10n.selectGenderHint ?? 'Select Gender'),
               items: [
-                DropdownMenuItem(value: 'Male', child: Text(l10n.genderMale)),
-                DropdownMenuItem(value: 'Female', child: Text(l10n.genderFemale)),
-                DropdownMenuItem(value: 'Other', child: Text(l10n.genderOther)),
+                DropdownMenuItem(value: 'Male', child: Text(l10n.genderMale ?? 'Male')),
+                DropdownMenuItem(value: 'Female', child: Text(l10n.genderFemale ?? 'Female')),
+                DropdownMenuItem(value: 'Other', child: Text(l10n.genderOther ?? 'Other')),
               ],
               onChanged: onGenderChanged,
-              decoration: InputDecoration(labelText: l10n.genderLabel),
+              decoration: InputDecoration(labelText: l10n.genderLabel ?? 'Gender'),
             ),
           ],
         ),

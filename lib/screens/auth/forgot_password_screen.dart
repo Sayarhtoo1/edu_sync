@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:edu_sync/services/auth_service.dart';
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -24,7 +24,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     _authService = Provider.of<AuthService>(context, listen: false);
   }
 
-  Future<void> _resetPassword(AppLocalizations l10n) async {
+  Future<void> _resetPassword(AppLocalizations? l10n) async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       setState(() {
@@ -36,13 +36,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         await _authService.resetPassword(_email);
         if (mounted) {
           setState(() {
-            _message = l10n.passwordResetEmailSent(_email);
+            _message = l10n?.passwordResetEmailSent(_email) ?? 'Password reset email sent to $_email';
           });
         }
       } catch (e) {
         if (mounted) {
           setState(() {
-            _message = '${l10n.errorOccurredPrefix}: ${e.toString()}';
+            _message = '${l10n?.errorOccurredPrefix ?? 'Error'}: ${e.toString()}';
           });
         }
       } finally {
@@ -85,7 +85,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ),
                   SizedBox(height: screenHeight * 0.02),
                   Text(
-                    l10n.forgotPassword,
+                    l10n?.forgotPassword ?? 'Forgot Password',
                     style: theme.textTheme.headlineMedium?.copyWith(
                       color: theme.colorScheme.onPrimary,
                       fontWeight: FontWeight.bold,
@@ -93,7 +93,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ),
                   SizedBox(height: screenHeight * 0.01),
                   Text(
-                    l10n.forgotPasswordInstructions,
+                    l10n?.forgotPasswordInstructions ?? 'Enter your email to receive a password reset link.',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: theme.colorScheme.onPrimary.withOpacity(0.8)
@@ -111,7 +111,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         children: [
                           TextFormField(
                             decoration: InputDecoration(
-                              labelText: l10n.email,
+                              labelText: l10n?.email ?? 'Email',
                               prefixIcon: Icon(Icons.email, color: theme.colorScheme.primary),
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                               focusedBorder: OutlineInputBorder(
@@ -120,7 +120,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               ),
                             ),
                             keyboardType: TextInputType.emailAddress,
-                            validator: (value) => (value == null || value.isEmpty) ? l10n.emailValidator : null,
+                            validator: (value) => (value == null || value.isEmpty) ? (l10n?.emailValidator ?? 'Email cannot be empty') : null,
                             onSaved: (value) => _email = value!,
                           ),
                           const SizedBox(height: 24),
@@ -136,7 +136,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                     ),
                                     child: Text(
-                                      l10n.resetPassword,
+                                      l10n?.resetPassword ?? 'Reset Password',
                                       style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onPrimary),
                                     ),
                                   ),
@@ -148,7 +148,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 _message,
                                 textAlign: TextAlign.center,
                                 style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: _message.contains(l10n.errorOccurredPrefix) ? theme.colorScheme.error : theme.colorScheme.primary,
+                                  color: _message.contains(l10n?.errorOccurredPrefix ?? 'Error') ? theme.colorScheme.error : theme.colorScheme.primary,
                                 ),
                               ),
                             ),
@@ -158,7 +158,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               Navigator.of(context).pop(); // Go back to login screen
                             },
                             child: Text(
-                              l10n.login, // Assuming 'login' can be used to go back
+                              l10n?.login ?? 'Login', // Assuming 'login' can be used to go back
                               style: TextStyle(color: theme.colorScheme.secondary),
                             ),
                           ),

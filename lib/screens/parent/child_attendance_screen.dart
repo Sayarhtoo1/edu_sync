@@ -7,7 +7,7 @@ import 'package:edu_sync/services/student_service.dart';
 import 'package:edu_sync/services/attendance_service.dart';
 import 'package:edu_sync/services/auth_service.dart';
 import 'package:edu_sync/providers/school_provider.dart';
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
 
 class ChildAttendanceScreen extends StatefulWidget {
@@ -53,7 +53,7 @@ class _ChildAttendanceScreenState extends State<ChildAttendanceScreen> {
         if (mounted) {
           setState(() {
             _isLoadingStudents = false;
-            _errorMessage = AppLocalizations.of(context).error_user_not_found ?? "User or school context not found.";
+            _errorMessage = AppLocalizations.of(context)?.error_user_not_found ?? "User or school context not found.";
           });
         }
       });
@@ -77,7 +77,7 @@ class _ChildAttendanceScreenState extends State<ChildAttendanceScreen> {
       if (mounted) {
         setState(() {
           _isLoadingStudents = false;
-          _errorMessage = AppLocalizations.of(context).errorOccurredPrefix ?? "Error" ": ${e.toString()}";
+          _errorMessage = "${AppLocalizations.of(context)?.errorOccurredPrefix ?? "Error"}: ${e.toString()}";
         });
       }
     }
@@ -103,7 +103,7 @@ class _ChildAttendanceScreenState extends State<ChildAttendanceScreen> {
 
     } catch (e) {
        if (mounted) {
-        setState(() => _errorMessage = AppLocalizations.of(context).errorOccurredPrefix ?? "Error" ": ${e.toString()}");
+        setState(() => _errorMessage = "${AppLocalizations.of(context)?.errorOccurredPrefix ?? "Error"}: ${e.toString()}");
       }
     }
     if (mounted) {
@@ -127,21 +127,21 @@ class _ChildAttendanceScreenState extends State<ChildAttendanceScreen> {
 
     return Scaffold(
       appBar: AppBar( // Theme applied globally
-        title: Text(l10n.childAttendanceTitle), 
+        title: Text(l10n?.childAttendanceTitle ?? 'Child Attendance'),
       ),
       body: _isLoadingStudents
           ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(contextualAccentColor)))
           : _errorMessage != null
               ? Center(child: Padding(padding: const EdgeInsets.all(16.0), child: Text(_errorMessage!, style: theme.textTheme.bodyMedium!.copyWith(color: theme.colorScheme.error))))
               : _linkedStudents.isEmpty
-                  ? Center(child: Text(l10n.noChildrenLinked, style: theme.textTheme.bodyLarge)) 
+                  ? Center(child: Text(l10n?.noChildrenLinked ?? 'No children linked', style: theme.textTheme.bodyLarge))
                   : Column(
                       children: [
                         Padding(
                           padding: const EdgeInsets.all(16.0), // Increased padding
                           child: DropdownButtonFormField<Student>(
                             value: _selectedStudent,
-                            hint: Text(l10n.selectChildHint, style: theme.textTheme.bodyLarge), 
+                            hint: Text(l10n?.selectChildHint ?? 'Select Child', style: theme.textTheme.bodyLarge),
                             items: _linkedStudents.map((Student student) {
                               return DropdownMenuItem<Student>(
                                 value: student,
@@ -166,7 +166,7 @@ class _ChildAttendanceScreenState extends State<ChildAttendanceScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               IconButton(icon: Icon(Icons.chevron_left, color: theme.iconTheme.color), onPressed: () => _changeMonth(-1)),
-                              Text(DateFormat.yMMMM(l10n.localeName).format(_selectedMonth), style: theme.textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold)),
+                              Text(DateFormat.yMMMM(l10n?.localeName ?? 'en').format(_selectedMonth), style: theme.textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold)),
                               IconButton(icon: Icon(Icons.chevron_right, color: theme.iconTheme.color), onPressed: () => _changeMonth(1)),
                             ],
                           ),
@@ -175,9 +175,9 @@ class _ChildAttendanceScreenState extends State<ChildAttendanceScreen> {
                           child: _isLoadingAttendance
                               ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(contextualAccentColor)))
                               : _selectedStudent == null
-                                  ? Center(child: Text(l10n.pleaseSelectChild, style: theme.textTheme.bodyLarge)) 
+                                  ? Center(child: Text(l10n?.pleaseSelectChild ?? 'Please select a child', style: theme.textTheme.bodyLarge))
                                   : _attendanceRecords.isEmpty
-                                      ? Center(child: Text(l10n.noAttendanceRecordsFound, style: theme.textTheme.bodyLarge)) 
+                                      ? Center(child: Text(l10n?.noAttendanceRecordsFound ?? 'No attendance records found', style: theme.textTheme.bodyLarge))
                                       : ListView.builder(
                                           itemCount: _attendanceRecords.length,
                                           itemBuilder: (context, index) {
@@ -187,26 +187,26 @@ class _ChildAttendanceScreenState extends State<ChildAttendanceScreen> {
                                             // Using theme colors for consistency where appropriate, but keeping specific status colors
                                             switch(record.status) {
                                               case 'Present':
-                                                statusText = l10n.attendanceStatusPresent;
+                                                statusText = l10n?.attendanceStatusPresent ?? 'Present';
                                                 statusColor = iconColorEarnings; // Greenish from theme
                                                 break;
                                               case 'Absent':
-                                                statusText = l10n.attendanceStatusAbsent;
+                                                statusText = l10n?.attendanceStatusAbsent ?? 'Absent';
                                                 statusColor = theme.colorScheme.error; // Red from theme
                                                 break;
                                               case 'Late':
-                                                statusText = l10n.attendanceStatusLate;
+                                                statusText = l10n?.attendanceStatusLate ?? 'Late';
                                                 statusColor = iconColorParents; // Orangeish from theme
                                                 break;
                                               default:
-                                                statusText = record.status ?? l10n.not_specified;
+                                                statusText = record.status ?? (l10n?.not_specified ?? 'Not Specified');
                                                 statusColor = textLightGrey; // Grey from theme
                                             }
 
                                             return Card( // CardTheme applied globally
                                               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6), // Adjusted margin
                                               child: ListTile(
-                                                title: Text(DateFormat.yMMMd(l10n.localeName).format(record.date), style: theme.textTheme.titleMedium),
+                                                title: Text(DateFormat.yMMMd(l10n?.localeName ?? 'en').format(record.date), style: theme.textTheme.titleMedium),
                                                 trailing: Text(statusText, style: theme.textTheme.bodyLarge!.copyWith(color: statusColor, fontWeight: FontWeight.bold)),
                                               ),
                                             );

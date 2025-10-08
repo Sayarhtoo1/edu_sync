@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
 
 class FinancialSummarySection extends StatelessWidget {
   final double totalIncome;
@@ -33,8 +33,11 @@ class FinancialSummarySection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    if (l10n == null) {
+      return const SizedBox.shrink(); // Or a placeholder widget
+    }
     final textTheme = Theme.of(context).textTheme;
-    final NumberFormat currencyFormat = NumberFormat.currency(locale: l10n.localeName, symbol: '');
+    final NumberFormat currencyFormat = NumberFormat.currency(locale: l10n.localeName ?? 'en', symbol: '');
 
     return Card(
         elevation: 2,
@@ -46,26 +49,26 @@ class FinancialSummarySection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                l10n.financialSummaryTitle,
+                l10n.financialSummaryTitle ?? 'Financial Summary',
                 style: textTheme.titleLarge?.copyWith(color: Colors.black87, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 16),
               _buildFinancialDetailRow(
-                l10n.totalIncomeLabel,
+                l10n.totalIncomeLabel ?? 'Total Income',
                 currencyFormat.format(totalIncome),
                 Colors.green,
                 textTheme,
               ),
               const SizedBox(height: 8),
               _buildFinancialDetailRow(
-                l10n.totalExpensesLabel,
+                l10n.totalExpensesLabel ?? 'Total Expenses',
                 currencyFormat.format(totalExpenses),
                 Colors.redAccent,
                 textTheme,
               ),
               const Divider(height: 24, thickness: 1),
               _buildFinancialDetailRow(
-                l10n.netBalanceLabel,
+                l10n.netBalanceLabel ?? 'Net Balance',
                 currencyFormat.format(netBalance),
                 netBalance >= 0 ? Colors.green : Colors.redAccent,
                 textTheme,

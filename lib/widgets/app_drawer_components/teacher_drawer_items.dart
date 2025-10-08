@@ -4,10 +4,10 @@ import 'package:edu_sync/screens/teacher/teacher_timetable_screen.dart';
 import 'package:edu_sync/screens/teacher/attendance_marking_screen.dart';
 import 'package:edu_sync/screens/teacher/lesson_plan_management_screen.dart';
 import 'package:edu_sync/screens/admin/student_management_screen.dart';
-import 'package:edu_sync/screens/admin/view_form_responses_screen.dart';
 import 'package:edu_sync/providers/school_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
+import 'package:go_router/go_router.dart';
 
 const Color drawerIconColor = Color(0xFF7A6FF0);
 const Color drawerTextDarkGrey = Color(0xFF2C2C2C);
@@ -63,15 +63,23 @@ class TeacherDrawerItems extends StatelessWidget {
         ),
         ListTile(
           leading: const Icon(Icons.list_alt, color: drawerIconColor),
-          title: Text(l10n.viewFormResponsesTitle, style: TextStyle(color: drawerTextDarkGrey)),
+          title: Text(l10n?.viewFormResponsesTitle ?? 'View Form Responses', style: TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
             final schoolId = schoolProvider.currentSchool?.id;
             if (schoolId != null) {
-              Navigator.of(context).push(MaterialPageRoute(builder: (_) => ViewFormResponsesScreen(schoolId: schoolId)));
+              context.go('/teacher/form-responses?schoolId=$schoolId');
             } else {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.error_school_not_selected_or_found)));
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n?.error_school_not_selected_or_found ?? 'School not selected or found')));
             }
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.analytics_outlined, color: drawerIconColor),
+          title: Text(l10n?.analyticsDashboardTitle ?? 'Analytics Dashboard', style: TextStyle(color: drawerTextDarkGrey)),
+          onTap: () {
+            Navigator.pop(context);
+            context.go('/analytics-dashboard');
           },
         ),
       ],

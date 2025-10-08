@@ -11,6 +11,7 @@ class DashboardScreen extends StatelessWidget {
   final String welcomeMessage;
   final Widget? headerWidget; // New parameter for widgets at the top
   final Widget? quickActionsSection; // New parameter
+  final List<Widget>? appBarActions; // New parameter for AppBar actions
 
   const DashboardScreen({
     super.key,
@@ -18,6 +19,7 @@ class DashboardScreen extends StatelessWidget {
     required this.welcomeMessage,
     this.headerWidget, // Initialize new parameter
     this.quickActionsSection, // Initialize new parameter
+    this.appBarActions, // Initialize new parameter
   });
 
   @override
@@ -31,6 +33,7 @@ class DashboardScreen extends StatelessWidget {
             return Text(schoolProvider.currentSchool?.name ?? title);
           },
         ),
+        actions: appBarActions, // Use the new appBarActions parameter
       ),
       drawer: const AppDrawer(),
       body: SingleChildScrollView( // Changed to SingleChildScrollView to accommodate more content

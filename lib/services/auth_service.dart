@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:edu_sync/utils/logger.dart';
+import 'package:edu_sync/services/notification_service.dart';
+
 
 import 'package:edu_sync/models/user.dart' as app_user; // Aliased to avoid conflict with supabase_flutter.User
 import 'package:edu_sync/models/user_role.dart';
@@ -11,14 +13,36 @@ class AuthService {
   final SupabaseClient _supabaseClient;
   final SharedPreferences _prefs;
   final Connectivity _connectivity;
+  final NotificationService _notificationService;
+
 
   AuthService({
     required SupabaseClient supabaseClient,
     required SharedPreferences sharedPreferences,
     required Connectivity connectivity,
+    required NotificationService notificationService,
   })  : _supabaseClient = supabaseClient,
         _prefs = sharedPreferences,
-        _connectivity = connectivity;
+        _connectivity = connectivity,
+        _notificationService = notificationService;
+        
+  void listenToAuthChanges() {
+    _supabaseClient.auth.onAuthStateChange.listen((data) async {
+      final AuthChangeEvent event = data.event;
+      if (event == AuthChangeEvent.signedIn) {
+        logger.i('User signed in, subscribing to announcements.');
+        final role = await getUserRole();
+        final schoolId = await getCurrentUserSchoolId();
+        final user = getCurrentUser();
+        if (role != null && schoolId != null && user != null) {
+          _notificationService.subscribeToAnnouncements(schoolId, user.id, role);
+        }
+      } else if (event == AuthChangeEvent.signedOut) {
+        logger.i('User signed out, unsubscribing from announcements.');
+        _notificationService.unsubscribeFromAnnouncements();
+      }
+    });
+  }
 
   Future<User?> signUp(String email, String password, String role, {String? fullName, int? schoolIdIfKnown, String? profilePhotoUrl}) async {
     final Map<String, dynamic> userMetadata = {'role': role};
@@ -111,7 +135,7 @@ class AuthService {
     // Try to get the school_id from cache first
     final cachedSchoolId = _prefs.getInt('school_id');
     final connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult == ConnectivityResult.none && cachedSchoolId != null) {
+    if (connectivityResult.contains(ConnectivityResult.none) && cachedSchoolId != null) {
       return cachedSchoolId;
     }
 
@@ -156,6 +180,22 @@ class AuthService {
       return response.map((userData) => app_user.User.fromJson(userData)).toList();
     } catch (e) {
       logger.e('Error fetching users by role: $e');
+      return [];
+    }
+  }
+
+  // Fetch staff users (Admin and Teacher roles) for a specific school
+  Future<List<app_user.User>> getStaffBySchool(int schoolId) async {
+    try {
+      final response = await _supabaseClient
+          .from('users')
+          .select()
+          .eq('school_id', schoolId)
+          .or('role.eq.${UserRole.Admin.name},role.eq.${UserRole.Teacher.name}');
+
+      return response.map((userData) => app_user.User.fromJson(userData)).toList();
+    } catch (e) {
+      logger.e('Error fetching staff by school: $e');
       return [];
     }
   }
@@ -211,7 +251,77 @@ class AuthService {
   }
   */
 
+  Future<void> registerSchoolAndAdmin({
+    required String email,
+    required String password,
+    required String fullName,
+    required String schoolName,
+    String? schoolLogoUrl,
+  }) async {
+    try {
+      final response = await _supabaseClient.functions.invoke(
+        'create-user-admin',
+        body: {
+          'email': email,
+          'password': password,
+          'role': 'Admin',
+          'full_name': fullName,
+          'school_name': schoolName,
+          'school_logo_url': schoolLogoUrl,
+        },
+      );
+
+      if (response.data != null && response.data['error'] != null) {
+        throw Exception('Failed to register: ${response.data['error']}');
+      }
+    } catch (e) {
+      logger.e('Error during school and admin registration: $e');
+      throw Exception('An error occurred during registration.');
+    }
+  }
+
   Future<app_user.User?> createUserViaEdgeFunction({
+    required String email,
+    required String password,
+    required String role,
+    required int schoolId,
+    required String schoolName,
+    String? fullName,
+    String? profilePhotoUrl,
+  }) async {
+    try {
+      final response = await _supabaseClient.functions.invoke(
+        'create-user-admin',
+        body: {
+          'email': email,
+          'password': password,
+          'role': role,
+          'school_id': schoolId,
+          'school_name': schoolName,
+          'full_name': fullName,
+          'profile_photo_url': profilePhotoUrl,
+        },
+      );
+
+      if (response.data == null) {
+        logger.e('Edge Function "create-user-admin" returned no data or failed to invoke.');
+        throw Exception('Failed to create user: Edge function returned no data.');
+      }
+
+      final responseData = response.data as Map<String, dynamic>;
+      if (responseData.containsKey('error')) {
+        logger.e('Error from create-user-admin Edge Function: ${responseData['error']}');
+        throw Exception('Failed to create user: ${responseData['error']}');
+      }
+      
+      return app_user.User.fromJson(responseData);
+    } catch (e) {
+      logger.e('Exception calling create-user-admin function: $e');
+      throw Exception('Failed to create user due to an unexpected error: ${e.toString()}');
+    }
+  }
+
+  Future<app_user.User?> createStaffByAdmin({
     required String email,
     required String password,
     required String role,
@@ -221,7 +331,7 @@ class AuthService {
   }) async {
     try {
       final response = await _supabaseClient.functions.invoke(
-        'create-user-admin', // Ensure this matches your deployed Edge Function name
+        'create-staff-by-admin',
         body: {
           'email': email,
           'password': password,
@@ -232,30 +342,21 @@ class AuthService {
         },
       );
 
-      // Check if the function invocation itself resulted in an error (e.g., network issue, function not found)
-      // The supabase_flutter client might throw an exception for this, which would be caught by the outer catch.
-      // If the function executed but returned an error status code (e.g. 400, 500),
-      // response.data might contain an error object from the function.
-      
       if (response.data == null) {
-        // This case might indicate a more fundamental issue with the function call or an empty successful response.
-        logger.e('Edge Function "create-user-admin" returned no data or failed to invoke.');
-        throw Exception('Failed to create user: Edge function returned no data.');
+        logger.e('Edge Function "create-staff-by-admin" returned no data.');
+        throw Exception('Failed to create staff: Edge function returned no data.');
       }
 
-      // Check if the data returned by the function contains an error key (as per our Edge Function design)
       final responseData = response.data as Map<String, dynamic>;
       if (responseData.containsKey('error')) {
-        logger.e('Error from create-user-admin Edge Function: ${responseData['error']}');
-        throw Exception('Failed to create user: ${responseData['error']}');
+        logger.e('Error from create-staff-by-admin Edge Function: ${responseData['error']}');
+        throw Exception('Failed to create staff: ${responseData['error']}');
       }
       
-      // If no error key and data is present, assume success
-      return app_user.User.fromJson(responseData);
+      return app_user.User.fromJson(responseData['user']);
     } catch (e) {
-      logger.e('Exception calling create-user-admin function: $e');
-      // Rethrow or provide a user-friendly error
-      throw Exception('Failed to create user due to an unexpected error: ${e.toString()}');
+      logger.e('Exception calling create-staff-by-admin function: $e');
+      throw Exception('Failed to create staff: ${e.toString()}');
     }
   }
 
@@ -267,6 +368,8 @@ class AuthService {
         'profile_photo_url': user.profilePhotoUrl,
         'role': user.role,
         'school_id': user.schoolId,
+        'phone_number': user.phoneNumber,
+        'salary': user.salary,
         'updated_at': DateTime.now().toIso8601String(),
       }).eq('id', user.id);
       return true;

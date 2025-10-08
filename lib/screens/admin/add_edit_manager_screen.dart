@@ -5,8 +5,9 @@ import 'package:edu_sync/models/user_role.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:edu_sync/models/user.dart';
 import 'package:edu_sync/services/auth_service.dart';
+import 'package:edu_sync/services/school_service.dart';
 import 'package:provider/provider.dart';
-import 'package:edu_sync/l10n/app_localizations.dart'; // Localization
+import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Import AppLocalizations
 import 'package:edu_sync/theme/app_theme.dart'; // Theme
 
 
@@ -51,6 +52,13 @@ class _AddEditManagerScreenState extends State<AddEditManagerScreen> {
 
   Future<void> _fetchUserDetails(String userId) async {
     // Reserved for future: fetching manager email or other info
+  }
+  
+  // Helper method to get school name by ID
+  Future<String> _getSchoolName(int schoolId) async {
+    final schoolService = Provider.of<SchoolService>(context, listen: false);
+    final school = await schoolService.getSchoolById(schoolId);
+    return school?.name ?? 'Unknown School';
   }
 
   Future<void> _pickProfilePhoto() async {
@@ -100,22 +108,26 @@ class _AddEditManagerScreenState extends State<AddEditManagerScreen> {
         if (_passwordController.text.isEmpty) {
           setState(() {
             _isLoading = false;
-            _errorMessage = AppLocalizations.of(context).passwordRequiredForNewTeacherError;
+            _errorMessage = AppLocalizations.of(context)?.passwordRequiredForNewTeacherError ?? 'Password is required for a new manager.';
           });
           return;
         }
 
+        // Get school name for the given school ID
+        final schoolName = await _getSchoolName(widget.schoolId);
+        
         final newManager = await _authService.createUserViaEdgeFunction(
           email: _emailController.text,
           password: _passwordController.text,
           role: UserRole.Manager.name,
           schoolId: widget.schoolId,
+          schoolName: schoolName,
           fullName: _nameController.text,
           profilePhotoUrl: photoUrl,
         );
 
         if (newManager == null) {
-          throw Exception(AppLocalizations.of(context).failedToCreateTeacherError);
+          throw Exception(AppLocalizations.of(context)?.failedToCreateTeacherError ?? 'Failed to create manager.');
         }
         resultUser = newManager;
 
@@ -137,16 +149,16 @@ class _AddEditManagerScreenState extends State<AddEditManagerScreen> {
       final l10n = AppLocalizations.of(context);
       String specificError = e.toString();
       if (e.toString().contains('Profile photo upload failed')) {
-        specificError = l10n.profilePhotoUploadFailedError;
+        specificError = l10n?.profilePhotoUploadFailedError ?? 'Profile photo upload failed.';
       } else if (e.toString().contains('Failed to update manager')) {
-        specificError = l10n.failedToUpdateTeacherError;
-      } else if (e.toString().contains(l10n.failedToCreateTeacherError) || e.toString().contains('Failed to create user')) {
-        specificError = l10n.failedToCreateTeacherError;
+        specificError = l10n?.failedToUpdateTeacherError ?? 'Failed to update manager.';
+      } else if (e.toString().contains(l10n?.failedToCreateTeacherError ?? 'Failed to create manager') || e.toString().contains('Failed to create user')) {
+        specificError = l10n?.failedToCreateTeacherError ?? 'Failed to create manager.';
       }
       if (!mounted) return; // Added mounted check
       setState(() {
         _isLoading = false;
-        _errorMessage = '${l10n.errorOccurredPrefix}: $specificError';
+        _errorMessage = '${l10n?.errorOccurredPrefix ?? 'Error'}: $specificError';
       });
     }
   }
@@ -166,7 +178,7 @@ class _AddEditManagerScreenState extends State<AddEditManagerScreen> {
     final Color contextualAccentColor = AppTheme.getAccentColorForContext('managers');
 
     return Scaffold(
-      appBar: AppBar(title: Text(_isEditing ? l10n.editManagerTitle : l10n.addManagerTitle)),
+      appBar: AppBar(title: Text(_isEditing ? l10n?.editManagerTitle ?? 'Edit Manager' : l10n?.addManagerTitle ?? 'Add Manager')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -175,26 +187,26 @@ class _AddEditManagerScreenState extends State<AddEditManagerScreen> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: InputDecoration(labelText: l10n.fullNameLabel),
-                validator: (value) => (value == null || value.isEmpty) ? l10n.fullNameValidator : null,
+                decoration: InputDecoration(labelText: l10n?.fullNameLabel ?? 'Full Name'),
+                validator: (value) => (value == null || value.isEmpty) ? l10n?.fullNameValidator ?? 'Full name cannot be empty.' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _emailController,
-                decoration: InputDecoration(labelText: l10n.emailLabel),
+                decoration: InputDecoration(labelText: l10n?.emailLabel ?? 'Email'),
                 keyboardType: TextInputType.emailAddress,
-                validator: (value) => (value == null || value.isEmpty) ? l10n.emailValidator : null,
+                validator: (value) => (value == null || value.isEmpty) ? l10n?.emailValidator ?? 'Email cannot be empty.' : null,
                 readOnly: _isEditing,
               ),
               const SizedBox(height: 16),
               if (!_isEditing)
                 TextFormField(
                   controller: _passwordController,
-                  decoration: InputDecoration(labelText: l10n.passwordLabel),
+                  decoration: InputDecoration(labelText: l10n?.passwordLabel ?? 'Password'),
                   obscureText: true,
                   validator: (value) {
-                    if (!_isEditing && (value == null || value.isEmpty)) return l10n.passwordRequiredValidator;
-                    if (value != null && value.isNotEmpty && value.length < 6) return l10n.passwordTooShortValidator;
+                    if (!_isEditing && (value == null || value.isEmpty)) return l10n?.passwordRequiredValidator ?? 'Password is required.';
+                    if (value != null && value.isNotEmpty && value.length < 6) return l10n?.passwordTooShortValidator ?? 'Password is too short.';
                     return null;
                   },
                 ),
@@ -218,16 +230,16 @@ class _AddEditManagerScreenState extends State<AddEditManagerScreen> {
                                 height: 90,
                                 fit: BoxFit.contain,
                                 placeholder: (context, url) => CircularProgressIndicator(),
-                                errorWidget: (context, url, error) => Text(l10n.couldNotLoadImage, style: theme.textTheme.bodySmall),
+                                errorWidget: (context, url, error) => Text(l10n?.couldNotLoadImage ?? 'Could not load image.', style: theme.textTheme.bodySmall),
                               )
-                            : Text(l10n.noProfilePhoto, style: theme.textTheme.bodyMedium?.copyWith(color: textLightGrey))),
+                            : Text(l10n?.noProfilePhoto ?? 'No profile photo.', style: theme.textTheme.bodyMedium?.copyWith(color: textLightGrey))),
                   ),
                 ),
                   const SizedBox(width: 16),
                   TextButton.icon(
                     style: TextButton.styleFrom(foregroundColor: contextualAccentColor),
                     icon: const Icon(Icons.image),
-                    label: Text(l10n.selectPhotoButton),
+                    label: Text(l10n?.selectPhotoButton ?? 'Select Photo'),
                     onPressed: _pickProfilePhoto,
                   ),
                 ],
@@ -241,7 +253,7 @@ class _AddEditManagerScreenState extends State<AddEditManagerScreen> {
                         foregroundColor: Colors.white,
                       ),
                       onPressed: _saveManager,
-                      child: Text(_isEditing ? l10n.updateManagerButton : l10n.addManagerButton),
+                      child: Text(_isEditing ? l10n?.updateManagerButton ?? 'Update Manager' : l10n?.addManagerButton ?? 'Add Manager'),
                     ),
               if (_errorMessage.isNotEmpty)
                 Padding(

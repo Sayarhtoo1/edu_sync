@@ -6,7 +6,7 @@ import 'package:edu_sync/models/attendance.dart' as app_attendance;
 import 'package:edu_sync/services/attendance_service.dart';
 import 'package:edu_sync/models/user_role.dart';
 import 'package:edu_sync/services/auth_service.dart';
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Import AppLocalizations
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
 import 'package:edu_sync/services/class_service.dart';
 import 'package:edu_sync/services/student_service.dart';
@@ -213,7 +213,7 @@ class _AttendanceMarkingScreenState extends State<AttendanceMarkingScreen> {
 
   Future<void> _saveAttendance() async {
     if (!mounted) return;
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!; // Assert non-null
     if (_selectedClass == null || _currentUserId == null) { 
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.classOrUserMissingError))); 
       return;
@@ -227,16 +227,16 @@ class _AttendanceMarkingScreenState extends State<AttendanceMarkingScreen> {
     if (mounted) {
       setState(() => _isLoading = false);
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.attendanceSavedSuccess)));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.attendanceSavedSuccess ?? 'Attendance saved successfully!')));
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.attendanceSaveFailed)));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.attendanceSaveFailed ?? 'Failed to save attendance.')));
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!; // Assert non-null
     final theme = Theme.of(context);
     final Color contextualAccentColor = AppTheme.getAccentColorForContext('teachers');
 

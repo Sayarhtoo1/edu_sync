@@ -11,7 +11,7 @@ import 'dart:convert'; // Import for jsonDecode
 import 'package:edu_sync/services/form_response_service.dart';
 import 'package:edu_sync/services/student_service.dart'; // To get student details
 import 'package:edu_sync/services/auth_service.dart';
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Import AppLocalizations
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
 import 'package:provider/provider.dart';
 
@@ -131,7 +131,7 @@ class _ViewFormResponsesScreenState extends State<ViewFormResponsesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!; // Assert non-null
     return Scaffold(
       appBar: AppBar(title: Text(l10n.viewFormResponsesTitle)), 
       body: _buildBody(l10n),

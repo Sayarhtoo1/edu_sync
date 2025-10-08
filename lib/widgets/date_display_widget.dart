@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:hijri_calendar/hijri_calendar.dart';
 import 'package:provider/provider.dart';
 import 'package:edu_sync/providers/school_provider.dart';
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
 
 class DateDisplayWidget extends StatelessWidget {
   const DateDisplayWidget({super.key});
@@ -11,10 +11,13 @@ class DateDisplayWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    if (l10n == null) {
+      return const SizedBox.shrink(); // Or a placeholder widget
+    }
     final int dayAdjustment = context.select<SchoolProvider, int>((provider) => provider.currentSchool?.hijriDayAdjustment ?? 0);
 
     final now = DateTime.now();
-    final gregorianDate = DateFormat.yMMMMd(l10n.localeName).format(now);
+    final gregorianDate = DateFormat.yMMMMd(l10n.localeName ?? 'en').format(now);
 
     // Calculate Hijri date with adjustment
     final hijriCalendar = HijriCalendarConfig.now();

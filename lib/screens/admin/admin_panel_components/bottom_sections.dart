@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:edu_sync/screens/admin/admin_panel_components/admin_panel_models.dart';
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
 
 class BottomSectionsRow extends StatelessWidget {
   final List<ActivityLogItem> activityLogs;
@@ -27,6 +27,9 @@ class BottomSectionsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    if (l10n == null) {
+      return const SizedBox.shrink(); // Or a placeholder widget
+    }
     final textTheme = Theme.of(context).textTheme;
 
     return LayoutBuilder(builder: (context, constraints) {
@@ -51,7 +54,7 @@ class BottomSectionsRow extends StatelessWidget {
                   Text("Recent Activity", style: textTheme.titleMedium?.copyWith(color: Colors.black87, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 10),
                   activityLogs.isEmpty
-                      ? Center(child: Text(l10n.noRecentActivity, style: textTheme.bodySmall?.copyWith(color: Colors.grey)))
+                      ? Center(child: Text(l10n.noRecentActivity ?? 'No recent activity', style: textTheme.bodySmall?.copyWith(color: Colors.grey)))
                       : ListView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),

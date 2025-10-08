@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:edu_sync/providers/admin_panel_provider.dart';
-import 'package:edu_sync/l10n/app_localizations.dart'; // Corrected import path
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
 import 'package:edu_sync/models/timetable.dart' as timetable_model;
 import 'package:edu_sync/models/user.dart' as app_user;
 import 'package:edu_sync/models/school_class.dart' as app_class;
@@ -45,7 +45,7 @@ class _WholeSchoolScheduleScreenState extends State<WholeSchoolScheduleScreen> {
       logger.e("Could not load school ID for WholeSchoolScheduleScreen.");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).errorLoadingSchoolData)),
+          SnackBar(content: Text(AppLocalizations.of(context)?.errorLoadingSchoolData ?? 'Error loading school data')),
         );
       }
     }
@@ -54,9 +54,12 @@ class _WholeSchoolScheduleScreenState extends State<WholeSchoolScheduleScreen> {
   @override
   Widget build(BuildContext context) {
     final appLocalizations = AppLocalizations.of(context);
+    if (appLocalizations == null) {
+      return const SizedBox.shrink(); // Or a placeholder widget
+    }
     return Scaffold(
       appBar: AppBar(
-        title: Text(appLocalizations.wholeSchoolScheduleTitle),
+        title: Text(appLocalizations.wholeSchoolScheduleTitle ?? 'Whole School Schedule'),
       ),
       body: Consumer<AdminPanelProvider>(
         builder: (context, adminProvider, child) {
@@ -71,7 +74,7 @@ class _WholeSchoolScheduleScreenState extends State<WholeSchoolScheduleScreen> {
           if (timetableEntries.isEmpty) {
             return Center(
               child: Text(
-                appLocalizations.noScheduleDataAvailable,
+                appLocalizations.noScheduleDataAvailable ?? 'No schedule data available',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
@@ -108,7 +111,7 @@ class _WholeSchoolScheduleScreenState extends State<WholeSchoolScheduleScreen> {
                           scrollDirection: Axis.horizontal,
                           child: DataTable(
                             columns: [
-                              DataColumn(label: Text(appLocalizations.timeLabel)),
+                              DataColumn(label: Text(appLocalizations.timeLabel ?? 'Time')),
                               ...teachers.map((teacher) => DataColumn(label: Text(teacher.fullName ?? ''))),
                             ],
                             rows: timeSlots.map((time) {
@@ -120,14 +123,14 @@ class _WholeSchoolScheduleScreenState extends State<WholeSchoolScheduleScreen> {
                                     if (entry != null) {
                                       final schoolClass = schoolClasses.firstWhere(
                                         (c) => c.id == entry.classId,
-                                        orElse: () => app_class.SchoolClass(id: 0, name: appLocalizations.unknown_class, schoolId: 0),
+                                        orElse: () => app_class.SchoolClass(id: 0, name: appLocalizations.unknown_class ?? 'Unknown Class', schoolId: 0),
                                       );
                                       return DataCell(
                                         Text('${entry.subjectName}\n(${schoolClass.name})'),
                                       );
                                     }
-                                    return DataCell(Text(appLocalizations.noClass));
-                                  }).toList(),
+                                    return DataCell(Text(appLocalizations.noClass ?? 'No Class'));
+                                  }),
                                 ],
                               );
                             }).toList(),

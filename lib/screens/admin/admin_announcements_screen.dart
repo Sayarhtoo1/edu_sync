@@ -5,7 +5,7 @@ import 'package:edu_sync/models/announcement.dart';
 import 'package:edu_sync/services/announcement_service.dart';
 import 'package:edu_sync/providers/school_provider.dart';
 import 'package:edu_sync/services/auth_service.dart';
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
 import 'add_edit_announcement_screen.dart'; 
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
 
@@ -42,7 +42,7 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
         if (mounted) {
           setState(() {
             _isLoading = false;
-            _errorMessage = AppLocalizations.of(context).error_school_not_selected_or_found;
+            _errorMessage = AppLocalizations.of(context)?.error_school_not_selected_or_found ?? 'Error: School not selected or found';
           });
         }
       });
@@ -58,7 +58,7 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
       _announcements = await _announcementService.getAnnouncements(_schoolId!);
     } catch (e) {
       if (mounted) {
-        setState(() => _errorMessage = "${AppLocalizations.of(context).errorOccurredPrefix}: ${e.toString()}");
+        setState(() => _errorMessage = "${AppLocalizations.of(context)?.errorOccurredPrefix ?? 'Error'}: ${e.toString()}");
       }
     }
     if (mounted) {
@@ -67,10 +67,13 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
   }
 
   void _navigateToAddEditScreen([Announcement? announcement]) {
-    final l10n = AppLocalizations.of(context); // Get l10n instance
+    final l10n = AppLocalizations.of(context);
+    if (l10n == null) {
+      return; // Or handle the null case appropriately
+    }
     if (_schoolId == null || _adminUserId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.actionRequiresSchoolAndAdminContext))
+            SnackBar(content: Text(l10n.actionRequiresSchoolAndAdminContext ?? 'Action requires school and admin context'))
         );
         return;
     }
@@ -91,20 +94,23 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
 
   Future<void> _deleteAnnouncement(int announcementId) async {
     final l10n = AppLocalizations.of(context);
+    if (l10n == null) {
+      return; // Or handle the null case appropriately
+    }
     final theme = Theme.of(context); 
     // final Color contextualAccentColor = AppTheme.getAccentColorForContext('announcement'); // Unused
 
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog( 
-        title: Text(l10n.confirmDeleteTitle),
-        content: Text(l10n.confirmDeleteAnnouncementText),
+        title: Text(l10n.confirmDeleteTitle ?? 'Confirm Delete'),
+        content: Text(l10n.confirmDeleteAnnouncementText ?? 'Are you sure you want to delete this announcement?'),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel)),
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.cancel ?? 'Cancel')),
           TextButton(
             style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error), 
             onPressed: () => Navigator.of(context).pop(true), 
-            child: Text(l10n.delete)
+            child: Text(l10n.delete ?? 'Delete')
           ),
         ],
       ),
@@ -118,7 +124,7 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
       } else {
          if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(l10n.errorDeletingAnnouncement)),
+              SnackBar(content: Text(l10n.errorDeletingAnnouncement ?? 'Error deleting announcement')),
             );
             setState(() => _isLoading = false);
          }
@@ -129,19 +135,22 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    if (l10n == null) {
+      return const SizedBox.shrink(); // Or a placeholder widget
+    }
     final theme = Theme.of(context);
     final Color contextualAccentColor = AppTheme.getAccentColorForContext('announcement');
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.manageAnnouncementsTitle), // Theme applied globally
+        title: Text(l10n.manageAnnouncementsTitle ?? 'Manage Announcements'), // Theme applied globally
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(contextualAccentColor)))
           : _errorMessage != null
               ? Center(child: Padding(padding: const EdgeInsets.all(16.0), child: Text(_errorMessage!, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.error))))
               : _announcements.isEmpty
-                  ? Center(child: Text(l10n.noAnnouncementsFound, style: theme.textTheme.bodyLarge))
+                  ? Center(child: Text(l10n.noAnnouncementsFound ?? 'No announcements found', style: theme.textTheme.bodyLarge))
                   : RefreshIndicator(
                       onRefresh: _loadAnnouncements,
                       color: contextualAccentColor,
@@ -159,12 +168,12 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
                                   Text(announcement.content, maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodyMedium),
                                   const SizedBox(height: 4),
                                   Text(
-                                    '${l10n.postedOn} ${DateFormat.yMMMd(l10n.localeName).format(announcement.createdAt)}',
+                                    '${l10n.postedOn ?? 'Posted On'} ${DateFormat.yMMMd(l10n.localeName ?? 'en').format(announcement.createdAt)}',
                                     style: theme.textTheme.bodySmall,
                                   ),
                                   if (announcement.targetRole != null && announcement.targetRole != 'All')
                                     Text(
-                                      '${l10n.targetAudience}: ${_getLocalizedTargetRole(announcement.targetRole!, l10n)}${announcement.targetRole == 'SpecificClass' && announcement.targetClassId != null ? ' (ID: ${announcement.targetClassId})' : ''}',
+                                      '${l10n.targetAudience ?? 'Target Audience'}: ${_getLocalizedTargetRole(announcement.targetRole!, l10n)}${announcement.targetRole == 'SpecificClass' && announcement.targetClassId != null ? ' (ID: ${announcement.targetClassId})' : ''}',
                                       style: theme.textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
                                     )
                                 ],
@@ -174,12 +183,12 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
                                 children: [
                                   IconButton(
                                     icon: Icon(Icons.edit, color: theme.iconTheme.color ?? textDarkGrey), 
-                                    tooltip: l10n.editButton, 
+                                    tooltip: l10n.editButton ?? 'Edit',
                                     onPressed: () => _navigateToAddEditScreen(announcement),
                                   ),
                                   IconButton(
                                     icon: Icon(Icons.delete, color: theme.colorScheme.error),
-                                    tooltip: l10n.deleteButton, 
+                                    tooltip: l10n.deleteButton ?? 'Delete',
                                     onPressed: () => _deleteAnnouncement(announcement.id),
                                   ),
                                 ],
@@ -188,7 +197,7 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
                                 showDialog(context: context, builder: (_) => AlertDialog( 
                                   title: Text(announcement.title, style: theme.textTheme.titleLarge),
                                   content: SingleChildScrollView(child: Text(announcement.content, style: theme.textTheme.bodyMedium)),
-                                  actions: [TextButton(onPressed: ()=>Navigator.of(context).pop(), child: Text(l10n.closeButtonLabel))],
+                                  actions: [TextButton(onPressed: ()=>Navigator.of(context).pop(), child: Text(l10n.closeButtonLabel ?? 'Close'))],
                                 ));
                               },
                             ),
@@ -199,7 +208,7 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: contextualAccentColor, 
         onPressed: () => _navigateToAddEditScreen(),
-        tooltip: l10n.addAnnouncementTooltip,
+        tooltip: l10n.addAnnouncementTooltip ?? 'Add Announcement',
         child: const Icon(Icons.add, color: Colors.white), 
       ),
     );
@@ -208,13 +217,13 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
   String _getLocalizedTargetRole(String roleKey, AppLocalizations l10n) {
     switch (roleKey.toLowerCase()) {
       case 'all':
-        return l10n.allAudience; // Use specific key
+        return l10n.allAudience ?? 'All'; // Use specific key
       case 'teachers':
-        return l10n.teachersAudience; // Use specific key
+        return l10n.teachersAudience ?? 'Teachers'; // Use specific key
       case 'parents':
-        return l10n.parentsAudience; // Use specific key
+        return l10n.parentsAudience ?? 'Parents'; // Use specific key
       case 'specificclass':
-        return l10n.specificclass; 
+        return l10n.specificclass ?? 'Specific Class';
       default:
         return roleKey; 
     }

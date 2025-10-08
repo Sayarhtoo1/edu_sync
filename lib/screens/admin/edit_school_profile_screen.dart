@@ -5,7 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:edu_sync/models/school.dart';
 import 'package:edu_sync/services/school_service.dart';
 // import 'package:edu_sync/services/auth_service.dart'; // Unused import
-import 'package:edu_sync/l10n/app_localizations.dart'; // Import AppLocalizations
+import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Import AppLocalizations
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
 
 class EditSchoolProfileScreen extends StatefulWidget {
@@ -116,7 +116,7 @@ class _EditSchoolProfileScreenState extends State<EditSchoolProfileScreen> {
     final Color contextualAccentColor = defaultAccentColor; 
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.editSchoolProfileTitle)),
+      appBar: AppBar(title: Text(l10n?.editSchoolProfileTitle ?? 'Edit School Profile')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -125,23 +125,23 @@ class _EditSchoolProfileScreenState extends State<EditSchoolProfileScreen> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: InputDecoration(labelText: l10n.schoolNameLabel), // Assuming key exists
-                validator: (value) => (value == null || value.isEmpty) ? l10n.schoolNameValidator : null, // Assuming key exists
+                decoration: InputDecoration(labelText: l10n?.schoolNameLabel ?? 'School Name'), // Assuming key exists
+                validator: (value) => (value == null || value.isEmpty) ? l10n?.schoolNameValidator ?? 'School name cannot be empty.' : null, // Assuming key exists
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _academicYearController,
-                decoration: InputDecoration(labelText: l10n.academicYearLabel, hintText: l10n.academicYearHint), // Assuming key exists
+                decoration: InputDecoration(labelText: l10n?.academicYearLabel ?? 'Academic Year', hintText: l10n?.academicYearHint ?? 'e.g., 2023-2024'), // Assuming key exists
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _themeController,
-                decoration: InputDecoration(labelText: l10n.themeLabel, hintText: l10n.themeHint), // Assuming key exists
+                decoration: InputDecoration(labelText: l10n?.themeLabel ?? 'Theme', hintText: l10n?.themeHint ?? 'e.g., Default'), // Assuming key exists
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _contactInfoController,
-                decoration: InputDecoration(labelText: l10n.contactInfoLabel), // Assuming key exists
+                decoration: InputDecoration(labelText: l10n?.contactInfoLabel ?? 'Contact Info'), // Assuming key exists
               ),
               const SizedBox(height: 16),
               Row(
@@ -163,16 +163,16 @@ class _EditSchoolProfileScreenState extends State<EditSchoolProfileScreen> {
                                   height: 90,
                                   fit: BoxFit.contain,
                                   placeholder: (context, url) => CircularProgressIndicator(),
-                                  errorWidget: (context, url, error) => Text(l10n.couldNotLoadImage, style: theme.textTheme.bodySmall),
+                                  errorWidget: (context, url, error) => Text(l10n?.couldNotLoadImage ?? 'Could not load image.', style: theme.textTheme.bodySmall),
                                 )
-                              : Text(l10n.noLogoSelected, style: theme.textTheme.bodyMedium?.copyWith(color: textLightGrey))),
+                              : Text(l10n?.noLogoSelected ?? 'No logo selected.', style: theme.textTheme.bodyMedium?.copyWith(color: textLightGrey))),
                     )
                   ),
                   const SizedBox(width: 16),
                   TextButton.icon(
                     style: TextButton.styleFrom(foregroundColor: contextualAccentColor),
                     icon: const Icon(Icons.image),
-                    label: Text(l10n.changeLogoButton), 
+                    label: Text(l10n?.changeLogoButton ?? 'Change Logo'), 
                     onPressed: _pickSchoolLogo,
                   ),
                 ],
@@ -186,7 +186,7 @@ class _EditSchoolProfileScreenState extends State<EditSchoolProfileScreen> {
                         foregroundColor: Colors.white,
                       ),
                       onPressed: _updateSchoolProfile,
-                      child: Text(l10n.updateProfileButton), 
+                      child: Text(l10n?.updateProfileButton ?? 'Update Profile'), 
                     ),
               if (_errorMessage.isNotEmpty)
                 Padding(

@@ -15,7 +15,7 @@ import 'package:edu_sync/services/custom_form_service.dart';
 import 'package:edu_sync/services/form_response_service.dart';
 import 'package:edu_sync/services/auth_service.dart';
 import 'package:edu_sync/providers/school_provider.dart';
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
 import 'package:uuid/uuid.dart';
 import 'package:collection/collection.dart';
 import 'package:edu_sync/theme/app_theme.dart';
@@ -70,13 +70,14 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
     } else {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-           final l10n = AppLocalizations.of(context);
+           final l10n = AppLocalizations.of(context)!; // Assert non-null
           setState(() {
             _isLoadingStudents = false;
             _errorMessage = _parentId == null ? l10n.error_user_not_found : l10n.error_school_not_selected_or_found;
           });
         }
       });
+      // The l10n object is not available here, so use a non-localized fallback.
       if (!mounted) {
          _isLoadingStudents = false;
          _errorMessage = "User or school data not available.";
@@ -97,7 +98,7 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
         setState(() {
           _isLoadingStudents = false;
           if (_linkedStudents.isEmpty && _errorMessage == null) {
-            _errorMessage = AppLocalizations.of(context).noChildrenLinked;
+            _errorMessage = AppLocalizations.of(context)!.noChildrenLinked; // Assert non-null
           }
         });
       }
@@ -105,7 +106,7 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
       if (mounted) {
         setState(() {
           _isLoadingStudents = false;
-          _errorMessage = "${AppLocalizations.of(context).errorOccurredPrefix}: ${e.toString()}";
+          _errorMessage = "${AppLocalizations.of(context)!.errorOccurredPrefix}: ${e.toString()}"; // Assert non-null
         });
       }
     }
@@ -158,7 +159,7 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _errorMessage = "${AppLocalizations.of(context).errorFetchingForms}: ${e.toString()}");
+        setState(() => _errorMessage = "${AppLocalizations.of(context)!.errorFetchingForms}: ${e.toString()}"); // Assert non-null
       }
     }
     if (mounted) setState(() => _isLoadingForms = false);
@@ -178,7 +179,7 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
       _formFields = await _customFormService.getFormFields(_selectedForm!.id);
     } catch (e) {
       if (mounted) {
-        setState(() => _errorMessage = "${AppLocalizations.of(context).errorFetchingFormDetails}: ${e.toString()}");
+        setState(() => _errorMessage = "${AppLocalizations.of(context)!.errorFetchingFormDetails}: ${e.toString()}"); // Assert non-null
       }
     }
     if (mounted) setState(() => _isLoadingFields = false);
@@ -244,7 +245,7 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
       if (success) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context).reportSubmittedSuccessfully)),
+            SnackBar(content: Text(AppLocalizations.of(context)!.reportSubmittedSuccessfully)), // Assert non-null
           );
           String submissionKey = "${_selectedForm!.id}_${DateFormat('yyyy-MM-dd').format(DateTime.now())}";
           setState(() {
@@ -261,12 +262,12 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
         }
       } else {
         if (mounted) {
-          setState(() => _errorMessage = AppLocalizations.of(context).failedToSubmitReport);
+          setState(() => _errorMessage = AppLocalizations.of(context)!.failedToSubmitReport); // Assert non-null
         }
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _errorMessage = "${AppLocalizations.of(context).errorSubmittingReport}: ${e.toString()}");
+        setState(() => _errorMessage = "${AppLocalizations.of(context)!.errorSubmittingReport}: ${e.toString()}"); // Assert non-null
       }
     }
     if (mounted) setState(() => _isSubmitting = false);
@@ -275,12 +276,12 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!; // Assert non-null
     final theme = Theme.of(context);
     final Color contextualAccentColor = AppTheme.getAccentColorForContext('form');
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.dailyReportsTitle ?? 'Daily Reports')),
+      appBar: AppBar(title: Text(l10n.dailyReportsTitle)),
       body: _buildBody(l10n, theme, contextualAccentColor),
     );
   }
@@ -293,7 +294,7 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
       return Center(child: Padding(padding: const EdgeInsets.all(16.0), child: Text(_errorMessage!, style: theme.textTheme.bodyMedium!.copyWith(color: theme.colorScheme.error))));
     }
     if (_linkedStudents.isEmpty) {
-      return Center(child: Text(l10n.noChildrenLinked, style: theme.textTheme.bodyLarge));
+      return Center(child: Text(l10n.noChildrenLinked, style: theme.textTheme.bodyLarge)); // Use noChildrenLinked
     }
 
     return Padding(
@@ -337,7 +338,7 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
                 return DropdownMenuItem<CustomForm>(
                   value: form,
                   enabled: !isSubmitted,
-                  child: Text("${form.title}${isSubmitted ? ' (${l10n.submitted})' : ''}", style: theme.textTheme.bodyLarge),
+                  child: Text("${form.title}${isSubmitted ? ' (${l10n.reportAlreadySubmitted})' : ''}", style: theme.textTheme.bodyLarge),
                 );
               }).toList(),
               onChanged: (CustomForm? newValue) {
@@ -348,22 +349,22 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
                   _loadFieldsForForm();
                 }
               },
-              decoration: InputDecoration(labelText: l10n.formLabel),
+              decoration: InputDecoration(labelText: l10n.formTitleLabel),
             ),
             const SizedBox(height: 16),
           ] else if (_activeForms.length == 1 && _selectedForm != null) ... [
              Padding(
                padding: const EdgeInsets.symmetric(vertical: 8.0),
-               child: Text("${l10n.formLabel}: ${_selectedForm!.title}", style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+               child: Text("${l10n.formTitleLabel}: ${_selectedForm!.title}", style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
              ),
           ],
 
           if (_isLoadingFields)
             Expanded(child: Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(contextualAccentColor))))
           else if (_selectedForm == null)
-            Expanded(child: Center(child: Text(_activeForms.isEmpty ? (l10n.noActiveFormsForToday ?? "No active forms for today.") : (l10n.pleaseSelectForm ?? "Please select a form."), style: theme.textTheme.bodyLarge)))
+            Expanded(child: Center(child: Text(_activeForms.isEmpty ? l10n.noActiveFormsForToday : l10n.pleaseSelectForm, style: theme.textTheme.bodyLarge)))
           else if (_formFields.isEmpty && _selectedForm != null)
-             Expanded(child: Center(child: Text(l10n.formHasNoQuestions ?? "This form has no questions.", style: theme.textTheme.bodyLarge)))
+             Expanded(child: Center(child: Text(l10n.formHasNoQuestions, style: theme.textTheme.bodyLarge)))
           else
             FormFieldsBuilder(
               formFields: _formFields,

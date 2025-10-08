@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:edu_sync/models/form_field_item.dart';
 import 'package:edu_sync/models/form_field_type.dart';
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
 
 class FormFieldWidget extends StatefulWidget {
   final FormFieldItem field;
@@ -50,7 +50,7 @@ class _FormFieldWidgetState extends State<FormFieldWidget> {
           initialValue: widget.answers[widget.field.id] as String?,
           decoration: InputDecoration(labelText: widget.field.question + (widget.field.required ? " *" : "")),
           maxLines: widget.field.question.toLowerCase().contains("description") || widget.field.question.length > 50 ? 3 : 1,
-          validator: widget.field.required ? (value) => (value == null || value.isEmpty) ? (widget.l10n.fieldRequiredValidation) : null : null,
+          validator: widget.field.required ? (value) => (value == null || value.isEmpty) ? (widget.l10n.fieldRequiredValidation ?? 'This field is required') : null : null,
           onSaved: (value) => widget.onAnswerChange(widget.field.id, value),
         );
         break;
@@ -63,7 +63,7 @@ class _FormFieldWidgetState extends State<FormFieldWidget> {
               children: [
                 Expanded(
                   child: RadioListTile<bool>(
-                    title: Text(widget.l10n.yes, style: widget.theme.textTheme.bodyLarge),
+                    title: Text(widget.l10n.yes ?? 'Yes', style: widget.theme.textTheme.bodyLarge),
                     value: true,
                     groupValue: widget.answers[widget.field.id] as bool?,
                     onChanged: (value) => widget.onAnswerChange(widget.field.id, value),
@@ -72,7 +72,7 @@ class _FormFieldWidgetState extends State<FormFieldWidget> {
                 ),
                 Expanded(
                   child: RadioListTile<bool>(
-                    title: Text(widget.l10n.no, style: widget.theme.textTheme.bodyLarge),
+                    title: Text(widget.l10n.no ?? 'No', style: widget.theme.textTheme.bodyLarge),
                     value: false,
                     groupValue: widget.answers[widget.field.id] as bool?,
                     onChanged: (value) => widget.onAnswerChange(widget.field.id, value),
@@ -84,7 +84,7 @@ class _FormFieldWidgetState extends State<FormFieldWidget> {
             if (widget.field.required && widget.answers[widget.field.id] == null)
               Padding(
                 padding: const EdgeInsets.only(left: 12.0, top: 4.0),
-                child: Text(widget.l10n.fieldRequiredValidation, style: TextStyle(color: widget.theme.colorScheme.error, fontSize: 12)),
+                child: Text(widget.l10n.fieldRequiredValidation ?? 'This field is required', style: TextStyle(color: widget.theme.colorScheme.error, fontSize: 12)),
               ),
           ],
         );
@@ -104,7 +104,7 @@ class _FormFieldWidgetState extends State<FormFieldWidget> {
             if (widget.field.required && widget.answers[widget.field.id] == null)
               Padding(
                 padding: const EdgeInsets.only(left: 12.0, top: 4.0),
-                child: Text(widget.l10n.fieldRequiredValidation, style: TextStyle(color: widget.theme.colorScheme.error, fontSize: 12)),
+                child: Text(widget.l10n.fieldRequiredValidation ?? 'This field is required', style: TextStyle(color: widget.theme.colorScheme.error, fontSize: 12)),
               ),
           ],
         );
@@ -129,7 +129,7 @@ class _FormFieldWidgetState extends State<FormFieldWidget> {
             if (widget.field.required && !(_checkboxSelections.values.any((isSelected) => isSelected)))
               Padding(
                 padding: const EdgeInsets.only(left: 12.0, top: 4.0),
-                child: Text(widget.l10n.fieldRequiredValidation, style: TextStyle(color: widget.theme.colorScheme.error, fontSize: 12)),
+                child: Text(widget.l10n.fieldRequiredValidation ?? 'This field is required', style: TextStyle(color: widget.theme.colorScheme.error, fontSize: 12)),
               ),
           ],
         );
@@ -140,8 +140,8 @@ class _FormFieldWidgetState extends State<FormFieldWidget> {
           decoration: InputDecoration(labelText: widget.field.question + (widget.field.required ? " *" : "")),
           keyboardType: TextInputType.number,
           validator: widget.field.required ? (value) {
-            if (value == null || value.isEmpty) return widget.l10n.fieldRequiredValidation;
-            if (int.tryParse(value) == null) return widget.l10n.pleaseEnterValidNumber;
+            if (value == null || value.isEmpty) return widget.l10n.fieldRequiredValidation ?? 'This field is required';
+            if (int.tryParse(value) == null) return widget.l10n.pleaseEnterValidNumber ?? 'Please enter a valid number';
             return null;
           } : null,
           onSaved: (value) => widget.onAnswerChange(widget.field.id, value != null && value.isNotEmpty ? int.tryParse(value) : null),

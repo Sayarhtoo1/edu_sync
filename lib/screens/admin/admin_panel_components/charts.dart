@@ -1,6 +1,6 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:edu_sync/l10n/app_localizations.dart';
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
+import 'package:syncfusion_flutter_charts/charts.dart';
 
 class ChartsSection extends StatelessWidget {
   final Map<String, int> studentCountsByClass;
@@ -13,6 +13,9 @@ class ChartsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    if (l10n == null) {
+      return const SizedBox.shrink(); // Or a placeholder widget
+    }
     final textTheme = Theme.of(context).textTheme;
 
     return LayoutBuilder(builder: (context, constraints) {
@@ -58,17 +61,18 @@ class ChartsSection extends StatelessWidget {
                               ),
                             ),
                           )
-                        : PieChart(
-                            PieChartData(
-                              sectionsSpace: 2,
-                              centerSpaceRadius: 40,
-                              sections: _generatePieChartSections(context, l10n),
-                              pieTouchData: PieTouchData(
-                                touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                                  // Handle touch events if needed
-                                },
-                              ),
-                            ),
+                        : SfCircularChart(
+                            series: <CircularSeries>[
+                              PieSeries<MapEntry<String, int>, String>(
+                                dataSource: studentCountsByClass.entries.toList(),
+                                xValueMapper: (MapEntry<String, int> data, _) => data.key,
+                                yValueMapper: (MapEntry<String, int> data, _) => data.value,
+                                dataLabelSettings: const DataLabelSettings(isVisible: true),
+                                enableTooltip: true,
+                              )
+                            ],
+                            title: ChartTitle(text: l10n.studentsDistributionByClassTitle),
+                            legend: const Legend(isVisible: true),
                           ),
                   ),
                   if (studentCountsByClass.isNotEmpty) ...[
@@ -162,30 +166,5 @@ class ChartsSection extends StatelessWidget {
       Colors.pink.shade300,
       Colors.amber.shade300,
     ];
-  }
-
-  List<PieChartSectionData> _generatePieChartSections(BuildContext context, AppLocalizations l10n) {
-    final List<Color> sectionColors = _getSectionColors();
-    int colorIndex = 0;
-
-    if (studentCountsByClass.isEmpty) return [];
-
-    return studentCountsByClass.entries.map((entry) {
-      final sectionColor = sectionColors[colorIndex % sectionColors.length];
-      colorIndex++;
-
-      return PieChartSectionData(
-        color: sectionColor,
-        value: entry.value.toDouble(),
-        title: entry.value.toInt().toString(),
-        radius: 50,
-        titleStyle: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-          shadows: [Shadow(color: Colors.black26, blurRadius: 2)],
-        ),
-      );
-    }).toList();
   }
 }
