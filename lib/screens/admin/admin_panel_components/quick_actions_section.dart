@@ -2,13 +2,14 @@ import 'package:edu_sync/screens/admin/admin_announcements_screen.dart';
 import 'package:edu_sync/screens/common/attendance_report_screen.dart';
 import 'package:edu_sync/screens/teacher/attendance_marking_screen.dart';
 import 'package:edu_sync/screens/teacher/teacher_timetable_screen.dart';
-import 'package:edu_sync/screens/admin/teacher_status_overview_screen.dart'; // Import the new screen
-// import 'package:edu_sync/screens/staff/staff_self_attendance_screen.dart'; // Removed StaffSelfAttendanceScreen
-import 'package:edu_sync/screens/staff/staff_attendance_screen.dart'; // Import StaffAttendanceScreen
+import 'package:edu_sync/screens/admin/teacher_status_overview_screen.dart';
+import 'package:edu_sync/screens/staff/staff_attendance_screen.dart';
 import 'package:edu_sync/screens/admin/exam/modern_exam_management_screen.dart';
 import 'package:edu_sync/screens/admin/exam/subject_management_screen.dart';
 import 'package:edu_sync/screens/admin/exam/grade_management_screen.dart';
 import 'package:edu_sync/screens/teacher/exam/input_marks_screen.dart';
+import 'package:edu_sync/screens/admin/fee/fee_structure_management_screen.dart';
+import 'package:edu_sync/screens/admin/fee/donation_management_screen.dart';
 import 'package:edu_sync/widgets/admin_action_card.dart';
 import 'package:flutter/material.dart';
 import 'package:edu_sync/l10n/gen/app_localizations.dart';
@@ -20,103 +21,132 @@ class QuickActionsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     if (l10n == null) {
-      return const SizedBox.shrink(); // Or a placeholder widget
+      return const SizedBox.shrink();
     }
     final textTheme = Theme.of(context).textTheme;
     const Color textDarkGrey = Color(0xFF2C2C2C);
-    const Color accentStudents = Color(0xFFE0C7FF);
-    const Color iconBgStudents = Color(0xFFD4D0FB);
-    const Color iconColorStudents = Color(0xFF7A6FF0);
-    const Color accentTeachers = Color(0xFFC7E9FF);
-    const Color iconBgTeachers = Color(0xFFB3E0FD);
-    const Color iconColorTeachers = Color(0xFF3B9EFF);
-    const Color accentParents = Color(0xFFFFD6C7);
-    const Color iconBgParents = Color(0xFFFFDAB3);
-    const Color iconColorParents = Color(0xFFFFA726);
-    const Color accentEarnings = Color(0xFFD5F5D1);
-    const Color iconBgEarnings = Color(0xFFC8E6C9);
-    const Color iconColorEarnings = Color(0xFF4CAF50);
 
-    final actions = [
+    final actionCategories = [
       {
-        'title': l10n.announcementsAction ?? 'Announcements', // "Announcements"
-        'icon': Icons.campaign_outlined,
-        'bgColor': accentStudents.withAlpha(100),
-        'iconBgColor': iconBgStudents,
-        'iconFgColor': iconColorStudents,
-        'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminAnnouncementsScreen())),
+        'category': 'Communication',
+        'actions': [
+          {
+            'title': l10n.announcementsAction ?? 'Announcements',
+            'icon': Icons.campaign_outlined,
+            'bgColor': const Color(0xFFE3F2FD),
+            'iconBgColor': const Color(0xFF2196F3),
+            'iconFgColor': Colors.white,
+            'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminAnnouncementsScreen())),
+          },
+        ],
       },
       {
-        'title': l10n.teacherTimetable ?? 'Teacher Timetable', // "Teacher Timetable"
-        'icon': Icons.calendar_today_outlined,
-        'bgColor': accentTeachers.withAlpha(100),
-        'iconBgColor': iconBgTeachers,
-        'iconFgColor': iconColorTeachers,
-        'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TeacherTimetableScreen())),
+        'category': 'Attendance',
+        'actions': [
+          {
+            'title': l10n.markAttendance ?? 'Student Attendance',
+            'icon': Icons.how_to_reg_outlined,
+            'bgColor': const Color(0xFFE8F5E9),
+            'iconBgColor': const Color(0xFF4CAF50),
+            'iconFgColor': Colors.white,
+            'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AttendanceMarkingScreen())),
+          },
+          {
+            'title': l10n.markStaffAttendanceTitle ?? 'Staff Attendance',
+            'icon': Icons.badge_outlined,
+            'bgColor': const Color(0xFFFFF3E0),
+            'iconBgColor': const Color(0xFFFF9800),
+            'iconFgColor': Colors.white,
+            'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const StaffAttendanceScreen())),
+          },
+          {
+            'title': "Attendance Report",
+            'icon': Icons.assessment_outlined,
+            'bgColor': const Color(0xFFF3E5F5),
+            'iconBgColor': const Color(0xFF9C27B0),
+            'iconFgColor': Colors.white,
+            'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AttendanceReportScreen())),
+          },
+        ],
       },
       {
-        'title': l10n.markAttendance ?? 'Mark Attendance', // "Mark Attendance"
-        'icon': Icons.check_circle_outline,
-        'bgColor': accentStudents.withAlpha(100),
-        'iconBgColor': iconBgStudents,
-        'iconFgColor': iconColorStudents,
-        'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AttendanceMarkingScreen())),
+        'category': 'Academic',
+        'actions': [
+          {
+            'title': "Exam Management",
+            'icon': Icons.assignment_outlined,
+            'bgColor': const Color(0xFFE1F5FE),
+            'iconBgColor': const Color(0xFF03A9F4),
+            'iconFgColor': Colors.white,
+            'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ModernExamManagementScreen())),
+          },
+          {
+            'title': "Subject Management",
+            'icon': Icons.menu_book_outlined,
+            'bgColor': const Color(0xFFFCE4EC),
+            'iconBgColor': const Color(0xFFE91E63),
+            'iconFgColor': Colors.white,
+            'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => SubjectManagementScreen())),
+          },
+          {
+            'title': "Grade Management",
+            'icon': Icons.grade_outlined,
+            'bgColor': const Color(0xFFFFF9C4),
+            'iconBgColor': const Color(0xFFFBC02D),
+            'iconFgColor': Colors.white,
+            'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => GradeManagementScreen())),
+          },
+          {
+            'title': "Input Marks",
+            'icon': Icons.edit_note_outlined,
+            'bgColor': const Color(0xFFE0F2F1),
+            'iconBgColor': const Color(0xFF009688),
+            'iconFgColor': Colors.white,
+            'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => InputMarksScreen())),
+          },
+        ],
       },
       {
-        'title': l10n.markStaffAttendanceTitle ?? 'Mark Staff Attendance', // "Mark Staff Attendance"
-        'icon': Icons.person_outline, // A different icon for staff attendance
-        'bgColor': accentParents.withAlpha(100), // Using a different color scheme
-        'iconBgColor': iconBgParents,
-        'iconFgColor': iconColorParents,
-        'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const StaffAttendanceScreen())),
+        'category': 'Schedule & Staff',
+        'actions': [
+          {
+            'title': l10n.teacherTimetable ?? 'Timetable',
+            'icon': Icons.schedule_outlined,
+            'bgColor': const Color(0xFFEDE7F6),
+            'iconBgColor': const Color(0xFF673AB7),
+            'iconFgColor': Colors.white,
+            'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TeacherTimetableScreen())),
+          },
+          {
+            'title': l10n.teacherStatusOverviewTitle ?? 'Teacher Overview',
+            'icon': Icons.people_outline,
+            'bgColor': const Color(0xFFE8EAF6),
+            'iconBgColor': const Color(0xFF3F51B5),
+            'iconFgColor': Colors.white,
+            'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TeacherStatusOverviewScreen())),
+          },
+        ],
       },
       {
-        'title': "Attendance Report",
-        'icon': Icons.bar_chart_outlined,
-        'bgColor': accentEarnings.withAlpha(100),
-        'iconBgColor': iconBgEarnings,
-        'iconFgColor': iconColorEarnings,
-        'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AttendanceReportScreen())),
-      },
-      {
-        'title': l10n.teacherStatusOverviewTitle ?? 'Teacher Status Overview', // "Teacher Status Overview"
-        'icon': Icons.group_outlined,
-        'bgColor': accentTeachers.withAlpha(100),
-        'iconBgColor': iconBgTeachers,
-        'iconFgColor': iconColorTeachers,
-        'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TeacherStatusOverviewScreen())),
-      },
-      {
-        'title': "Exam Management",
-        'icon': Icons.school_outlined,
-        'bgColor': accentStudents.withAlpha(100),
-        'iconBgColor': iconBgStudents,
-        'iconFgColor': iconColorStudents,
-        'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ModernExamManagementScreen())),
-      },
-      {
-        'title': "Subject Management",
-        'icon': Icons.book_outlined,
-        'bgColor': accentTeachers.withAlpha(100),
-        'iconBgColor': iconBgTeachers,
-        'iconFgColor': iconColorTeachers,
-        'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => SubjectManagementScreen())),
-      },
-      {
-        'title': "Grade Management",
-        'icon': Icons.grading_outlined,
-        'bgColor': accentParents.withAlpha(100),
-        'iconBgColor': iconBgParents,
-        'iconFgColor': iconColorParents,
-        'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => GradeManagementScreen())),
-      },
-      {
-        'title': "Input Marks",
-        'icon': Icons.edit_note_outlined,
-        'bgColor': accentEarnings.withAlpha(100),
-        'iconBgColor': iconBgEarnings,
-        'iconFgColor': iconColorEarnings,
-        'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => InputMarksScreen())),
+        'category': 'Finance',
+        'actions': [
+          {
+            'title': "Fee Management",
+            'icon': Icons.account_balance_wallet_outlined,
+            'bgColor': const Color(0xFFE3F2FD),
+            'iconBgColor': const Color(0xFF1976D2),
+            'iconFgColor': Colors.white,
+            'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const FeeStructureManagementScreen())),
+          },
+          {
+            'title': "Donations",
+            'icon': Icons.favorite_border_outlined,
+            'bgColor': const Color(0xFFFFEBEE),
+            'iconBgColor': const Color(0xFFF44336),
+            'iconFgColor': Colors.white,
+            'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DonationManagementScreen())),
+          },
+        ],
       },
     ];
 
@@ -124,34 +154,54 @@ class QuickActionsSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          l10n.quickActions ?? 'Quick Actions', // "Quick Actions"
+          l10n.quickActions ?? 'Quick Actions',
           style: textTheme.titleLarge?.copyWith(color: textDarkGrey, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 16),
-        LayoutBuilder(builder: (context, constraints) {
-          int crossAxisCount = constraints.maxWidth < 600 ? 2 : 4;
-          double itemWidth = (constraints.maxWidth - (16 * (crossAxisCount - 1))) / crossAxisCount;
-          itemWidth = itemWidth > 0 ? itemWidth.floorToDouble() : 100.0;
-
-          return Wrap(
-            spacing: 16.0,
-            runSpacing: 16.0,
-            children: actions.map((action) {
-              return SizedBox(
-                width: itemWidth,
-                height: itemWidth * 0.9, // Maintain aspect ratio slightly
-                child: AdminActionCard(
-                  title: action['title'] as String,
-                  icon: action['icon'] as IconData,
-                  bgColor: action['bgColor'] as Color,
-                  iconBgColor: action['iconBgColor'] as Color,
-                  iconFgColor: action['iconFgColor'] as Color,
-                  onTap: action['onTap'] as VoidCallback,
+        ...actionCategories.map((category) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12, top: 8),
+                child: Text(
+                  category['category'] as String,
+                  style: textTheme.titleSmall?.copyWith(
+                    color: textDarkGrey.withOpacity(0.7),
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                  ),
                 ),
-              );
-            }).toList(),
+              ),
+              LayoutBuilder(builder: (context, constraints) {
+                int crossAxisCount = constraints.maxWidth < 600 ? 2 : 4;
+                double itemWidth = (constraints.maxWidth - (16 * (crossAxisCount - 1))) / crossAxisCount;
+                itemWidth = itemWidth > 0 ? itemWidth.floorToDouble() : 100.0;
+
+                final actions = category['actions'] as List;
+                return Wrap(
+                  spacing: 16.0,
+                  runSpacing: 16.0,
+                  children: actions.map((action) {
+                    return SizedBox(
+                      width: itemWidth,
+                      height: itemWidth * 0.9,
+                      child: AdminActionCard(
+                        title: action['title'] as String,
+                        icon: action['icon'] as IconData,
+                        bgColor: action['bgColor'] as Color,
+                        iconBgColor: action['iconBgColor'] as Color,
+                        iconFgColor: action['iconFgColor'] as Color,
+                        onTap: action['onTap'] as VoidCallback,
+                      ),
+                    );
+                  }).toList(),
+                );
+              }),
+              const SizedBox(height: 16),
+            ],
           );
-        }),
+        }).toList(),
       ],
     );
   }

@@ -139,112 +139,104 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final Color contextualAccentColor = AppTheme.getAccentColorForContext('students');
 
     return Scaffold(
-      appBar: AppBar( 
-        title: Text(l10n?.manageStudentsTitle ?? 'Manage Students'), 
+      backgroundColor: const Color(0xFFF5F7FA),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.white,
+        title: Text(l10n?.manageStudentsTitle ?? 'Manage Students', style: const TextStyle(color: Color(0xFF2C2C2C), fontWeight: FontWeight.bold)),
+        iconTheme: const IconThemeData(color: Color(0xFF2C2C2C)),
         actions: [
-          DropdownButton<int?>(
-            value: _selectedClassId,
-            hint: Text(l10n?.allClasses ?? 'All Classes'),
-            onChanged: _onClassFilterChanged,
-            items: [
-              DropdownMenuItem<int?>(
-                value: null,
-                child: Text(l10n?.allClasses ?? 'All Classes'),
-              ),
-              ..._availableClasses.map((schoolClass) => DropdownMenuItem<int?>(
-                value: schoolClass.id,
-                child: Text(schoolClass.name),
-              )),
-            ],
-          ),
-          IconButton(
-            icon: Icon(Icons.add, color: contextualAccentColor),
-            tooltip: l10n?.addStudentButton ?? 'Add Student',
-            onPressed: () => _navigateToAddEditStudentScreen(),
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: DropdownButton<int?>(
+              value: _selectedClassId,
+              hint: Text(l10n?.allClasses ?? 'All Classes'),
+              onChanged: _onClassFilterChanged,
+              underline: const SizedBox(),
+              items: [
+                DropdownMenuItem<int?>(
+                  value: null,
+                  child: Text(l10n?.allClasses ?? 'All Classes'),
+                ),
+                ..._availableClasses.map((schoolClass) => DropdownMenuItem<int?>(
+                  value: schoolClass.id,
+                  child: Text(schoolClass.name),
+                )),
+              ],
+            ),
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color(0xFF2196F3),
+        onPressed: () => _navigateToAddEditStudentScreen(),
+        child: const Icon(Icons.add_rounded),
+      ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(contextualAccentColor)))
+          ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _loadStudents,
-              color: contextualAccentColor,
               child: _students.isEmpty
-                  ? Center(child: Text(l10n?.noStudentsFound ?? 'No students found.', style: theme.textTheme.bodyLarge))
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.school_outlined, size: 64, color: Colors.grey[400]),
+                          const SizedBox(height: 16),
+                          Text(l10n?.noStudentsFound ?? 'No students found', style: const TextStyle(fontSize: 18, color: Colors.grey)),
+                        ],
+                      ),
+                    )
                   : ListView.builder(
+                      padding: const EdgeInsets.all(16),
                       itemCount: _students.length,
                       itemBuilder: (context, index) {
                         final student = _students[index];
                         return GestureDetector(
                           onTap: () => context.push('/student/profile', extra: student),
-                          child: Card(
-                          margin: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
-                          elevation: 4,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 12),
-                            leading: CircleAvatar(
-                              radius: 30,
-                              backgroundColor: contextualAccentColor
-                                  .withAlpha((255 * 0.2).round()),
-                              child: student.profilePhotoUrl != null &&
-                                      student.profilePhotoUrl!.isNotEmpty
-                                  ? ClipOval(
-                                      child: CachedNetworkImage(
-                                        imageUrl: student.profilePhotoUrl!,
-                                        placeholder: (context, url) =>
-                                            CircularProgressIndicator(
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                  contextualAccentColor),
-                                        ),
-                                        errorWidget: (context, url, error) =>
-                                            Icon(Icons.school_outlined,
-                                                color: contextualAccentColor),
-                                        fit: BoxFit.cover,
-                                        width: 60,
-                                        height: 60,
-                                      ),
-                                    )
-                                  : Icon(Icons.school_outlined,
-                                      color: contextualAccentColor),
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))],
                             ),
-                            title: Text(student.fullName,
-                                style: theme.textTheme.titleLarge),
-                            subtitle: Padding(
-                              padding: const EdgeInsets.only(top: 4.0),
-                              child: Text(
-                                  'ID: ${student.id} - ${l10n?.classLabel ?? 'Class'} ID: ${student.classId ?? l10n?.not_specified ?? 'Not Specified'}',
-                                  style: theme.textTheme.bodyMedium),
-                            ),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: Icon(Icons.edit,
-                                      color: theme.colorScheme.primary),
-                                  tooltip: l10n?.editButton ?? 'Edit',
-                                  onPressed: () =>
-                                      _navigateToAddEditStudentScreen(
-                                          student: student),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.all(16),
+                              leading: Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF2196F3).withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                  image: student.profilePhotoUrl != null && student.profilePhotoUrl!.isNotEmpty
+                                      ? DecorationImage(image: CachedNetworkImageProvider(student.profilePhotoUrl!), fit: BoxFit.cover)
+                                      : null,
                                 ),
-                                IconButton(
-                                  icon: Icon(Icons.delete,
-                                      color: theme.colorScheme.error),
-                                  tooltip: l10n?.deleteButton ?? 'Delete',
-                                  onPressed: () => _deleteStudent(student.id),
-                                ),
-                              ],
+                                child: student.profilePhotoUrl == null || student.profilePhotoUrl!.isEmpty
+                                    ? const Icon(Icons.school_rounded, color: Color(0xFF2196F3))
+                                    : null,
+                              ),
+                              title: Text(student.fullName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                              subtitle: Text('ID: ${student.id} - Class: ${student.classId ?? "N/A"}', style: TextStyle(color: Colors.grey[600])),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(Icons.edit_outlined, color: Colors.grey[700]),
+                                    onPressed: () => _navigateToAddEditStudentScreen(student: student),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                    onPressed: () => _deleteStudent(student.id),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),);
+                        );
                       },
                     ),
             ),

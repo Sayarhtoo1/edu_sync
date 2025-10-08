@@ -110,62 +110,71 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final Color contextualAccentColor = AppTheme.getAccentColorForContext('students');
 
     return Scaffold(
-      appBar: AppBar( 
-        title: Text(l10n?.manageClassesTitle ?? 'Manage Classes'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.add, color: contextualAccentColor),
-            tooltip: l10n?.addClassButton ?? 'Add Class',
-            onPressed: () => _navigateToAddEditClassScreen(),
-          ),
-        ],
+      backgroundColor: const Color(0xFFF5F7FA),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.white,
+        title: Text(l10n?.manageClassesTitle ?? 'Manage Classes', style: const TextStyle(color: Color(0xFF2C2C2C), fontWeight: FontWeight.bold)),
+        iconTheme: const IconThemeData(color: Color(0xFF2C2C2C)),
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color(0xFF9C27B0),
+        onPressed: () => _navigateToAddEditClassScreen(),
+        child: const Icon(Icons.add_rounded),
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(contextualAccentColor)))
+          ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _loadClasses,
-              color: contextualAccentColor,
               child: _classes.isEmpty
-                  ? Center(child: Text(l10n?.noClassesFound ?? 'No classes found', style: theme.textTheme.bodyLarge))
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.class_outlined, size: 64, color: Colors.grey[400]),
+                          const SizedBox(height: 16),
+                          Text(l10n?.noClassesFound ?? 'No classes found', style: const TextStyle(fontSize: 18, color: Colors.grey)),
+                        ],
+                      ),
+                    )
                   : ListView.builder(
+                      padding: const EdgeInsets.all(16),
                       itemCount: _classes.length,
                       itemBuilder: (context, index) {
                         final classItem = _classes[index];
-                        // TODO: Fetch teacher name based on classItem.teacherId for a better display
-                        String teacherDisplay = classItem.teacherId != null
-                            ? '${l10n?.teacherLabel ?? 'Teacher'}: ${classItem.teacherId}'
-                            : l10n?.noTeacherAssigned ?? 'No Teacher Assigned';
+                        String teacherDisplay = classItem.teacherId != null ? 'Teacher ID: ${classItem.teacherId}' : 'No Teacher Assigned';
 
-                        return Card( 
-                          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))],
+                          ),
                           child: ListTile(
-                            leading: Icon(Icons.class_outlined, color: theme.iconTheme.color),
-                            title: Text(classItem.name, style: theme.textTheme.titleMedium),
-                            subtitle: Text(teacherDisplay, style: theme.textTheme.bodySmall), 
+                            contentPadding: const EdgeInsets.all(16),
+                            leading: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF9C27B0).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(Icons.class_rounded, color: Color(0xFF9C27B0)),
+                            ),
+                            title: Text(classItem.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                            subtitle: Text(teacherDisplay, style: TextStyle(color: Colors.grey[600])),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  icon: Icon(Icons.edit, color: theme.iconTheme.color ?? textDarkGrey), 
-                                  tooltip: l10n?.editButton ?? 'Edit',
+                                  icon: Icon(Icons.edit_outlined, color: Colors.grey[700]),
                                   onPressed: () => _navigateToAddEditClassScreen(classDetails: classItem),
                                 ),
                                 IconButton(
-                                  icon: Icon(Icons.delete, color: theme.colorScheme.error),
-                                  tooltip: l10n?.deleteButton ?? 'Delete',
-                                  onPressed: () {
-                                    if (classItem.id != null) {
-                                      _deleteClass(classItem.id!); 
-                                    } else {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text(l10n?.cannotDeleteMissingIdError ?? 'Cannot delete class: ID is missing'))
-                                      );
-                                    }
-                                  },
+                                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                  onPressed: () => classItem.id != null ? _deleteClass(classItem.id!) : null,
                                 ),
                               ],
                             ),

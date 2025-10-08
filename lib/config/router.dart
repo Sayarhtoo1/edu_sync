@@ -16,9 +16,9 @@ import 'package:edu_sync/services/auth_service.dart';
 import 'package:edu_sync/screens/splash_screen.dart';
 import 'package:edu_sync/screens/auth/login_screen.dart';
 import 'package:edu_sync/screens/auth/reset_password_screen.dart';
-import 'package:edu_sync/screens/admin/admin_panel_screen.dart';
-import 'package:edu_sync/screens/teacher/teacher_dashboard_screen.dart';
-import 'package:edu_sync/screens/parent/parent_dashboard_screen.dart';
+import 'package:edu_sync/screens/admin/modern_admin_dashboard.dart';
+import 'package:edu_sync/screens/teacher/modern_teacher_dashboard.dart';
+import 'package:edu_sync/screens/parent/modern_parent_dashboard.dart';
 import 'package:edu_sync/screens/manager/manager_dashboard_screen.dart';
 import 'package:edu_sync/screens/admin/user_management_screen.dart';
 import 'package:edu_sync/screens/admin/student_management_screen.dart'; // Corrected import
@@ -49,6 +49,9 @@ import 'package:edu_sync/models/student.dart' as model;
 import 'package:edu_sync/screens/admin/exam/exam_overview_screen.dart';
 import 'package:edu_sync/screens/admin/exam/exam_list_screen.dart';
 import 'package:edu_sync/screens/admin/exam/exam_form_screen.dart';
+import 'package:edu_sync/screens/admin/fee/fee_structure_management_screen.dart';
+import 'package:edu_sync/screens/admin/fee/donation_management_screen.dart';
+import 'package:edu_sync/screens/donator/modern_donator_dashboard.dart';
 
 // A class that converts a stream into a listenable for GoRouter.
 class GoRouterRefreshStream extends ChangeNotifier {
@@ -128,6 +131,8 @@ GoRouter initializeRouter() {
             return '/parent-dashboard';
           } else if (role == UserRole.Manager.name) {
             return '/manager-dashboard';
+          } else if (role == UserRole.Donator.name) {
+            return '/donator-dashboard';
           }
         }
         // Fallback if role is not determined or offline
@@ -148,6 +153,8 @@ GoRouter initializeRouter() {
             return '/parent-dashboard';
           } else if (role == UserRole.Manager.name) {
             return '/manager-dashboard';
+          } else if (role == UserRole.Donator.name) {
+            return '/donator-dashboard';
           }
         }
         // Fallback if role is not determined or offline
@@ -176,15 +183,15 @@ GoRouter initializeRouter() {
       ),
       GoRoute(
         path: '/admin',
-        builder: (context, state) => const AdminPanelScreen(),
+        builder: (context, state) => const ModernAdminDashboard(),
       ),
       GoRoute(
         path: '/teacher-dashboard',
-        builder: (context, state) => const TeacherDashboardScreen(),
+        builder: (context, state) => const ModernTeacherDashboard(),
       ),
       GoRoute(
         path: '/parent-dashboard',
-        builder: (context, state) => const ParentDashboardScreen(),
+        builder: (context, state) => const ModernParentDashboard(),
       ),
       GoRoute(
         path: '/manager-dashboard',
@@ -301,6 +308,32 @@ GoRouter initializeRouter() {
         path: '/admin/exam-form',
         name: 'exam-form',
         builder: (context, state) => ExamFormScreen(exam: state.extra as dynamic),
+      ),
+      // Fee Management routes
+      GoRoute(
+        path: '/admin/fee-management',
+        builder: (context, state) => const FeeStructureManagementScreen(),
+      ),
+      GoRoute(
+        path: '/admin/donation-management',
+        builder: (context, state) => const DonationManagementScreen(),
+      ),
+      // Donator routes
+      GoRoute(
+        path: '/donator-dashboard',
+        builder: (context, state) => const ModernDonatorDashboard(),
+      ),
+      GoRoute(
+        path: '/teacher',
+        builder: (context, state) => const ModernTeacherDashboard(),
+      ),
+      GoRoute(
+        path: '/parent',
+        builder: (context, state) => const ModernParentDashboard(),
+      ),
+      GoRoute(
+        path: '/donator',
+        builder: (context, state) => const ModernDonatorDashboard(),
       ),
     ],
   );

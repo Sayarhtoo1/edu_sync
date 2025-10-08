@@ -153,13 +153,22 @@ class _FinanceManagementScreenState extends State<FinanceManagementScreen> with 
   }
 
   Widget _buildFinancialList(String type, List<dynamic> records, AppLocalizations l10n) {
-    final theme = Theme.of(context);
     if (records.isEmpty) {
-      return Center(child: Text(type == 'income' ? l10n.noIncomeRecordsFound : l10n.noExpenseRecordsFound, style: theme.textTheme.bodyLarge));
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(type == 'income' ? Icons.trending_up_outlined : Icons.trending_down_outlined, size: 64, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(type == 'income' ? l10n.noIncomeRecordsFound : l10n.noExpenseRecordsFound, style: const TextStyle(fontSize: 18, color: Colors.grey)),
+          ],
+        ),
+      );
     }
     final currencyFormat = NumberFormat.currency(locale: l10n.localeName, symbol: '');
 
     return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       itemCount: records.length,
       itemBuilder: (context, index) {
         final record = records[index];
@@ -167,23 +176,35 @@ class _FinanceManagementScreenState extends State<FinanceManagementScreen> with 
         String amount = currencyFormat.format(record.amount);
         String date = DateFormat.yMMMd(l10n.localeName).format(record.date);
 
-        return Card( // CardTheme applied globally
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))],
+          ),
           child: ListTile(
-            title: Text(title, style: theme.textTheme.titleMedium),
-            subtitle: Text('${l10n.categoryLabel}: ${record.category} • ${l10n.date}: $date', style: theme.textTheme.bodySmall),
+            contentPadding: const EdgeInsets.all(16),
+            leading: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: (type == 'income' ? const Color(0xFF4CAF50) : const Color(0xFFF44336)).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(type == 'income' ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded, color: type == 'income' ? const Color(0xFF4CAF50) : const Color(0xFFF44336)),
+            ),
+            title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            subtitle: Text('${record.category} • $date', style: TextStyle(color: Colors.grey[600])),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(amount, style: TextStyle(color: type == 'income' ? iconColorEarnings : theme.colorScheme.error, fontWeight: FontWeight.bold)),
+                Text(amount, style: TextStyle(color: type == 'income' ? const Color(0xFF4CAF50) : const Color(0xFFF44336), fontWeight: FontWeight.bold, fontSize: 16)),
                 IconButton(
-                  icon: Icon(Icons.edit, size: 20, color: theme.iconTheme.color ?? textDarkGrey),
-                  tooltip: l10n.editButton,
+                  icon: Icon(Icons.edit_outlined, color: Colors.grey[700]),
                   onPressed: () => _navigateToAddEditRecord(type, record),
                 ),
                 IconButton(
-                  icon: Icon(Icons.delete, color: theme.colorScheme.error, size: 20),
-                  tooltip: l10n.deleteButton,
+                  icon: const Icon(Icons.delete_outline, color: Colors.red),
                   onPressed: () => _deleteRecord(type, record.id),
                 ),
               ],
@@ -195,41 +216,46 @@ class _FinanceManagementScreenState extends State<FinanceManagementScreen> with 
   }
   
   Widget _buildSummaryCard(AppLocalizations l10n) {
-    final theme = Theme.of(context);
     final currencyFormat = NumberFormat.currency(locale: l10n.localeName, symbol: '');
-    return Card( // CardTheme applied globally
-      margin: const EdgeInsets.all(8.0),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.financialSummaryTitle, style: theme.textTheme.titleLarge),
-            const SizedBox(height: 8),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(l10n.totalIncomeLabel, style: theme.textTheme.bodyMedium), Text(currencyFormat.format(_totalIncome), style: TextStyle(color: iconColorEarnings, fontWeight: FontWeight.w600))]),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(l10n.totalExpensesLabel, style: theme.textTheme.bodyMedium), Text(currencyFormat.format(_totalExpenses), style: TextStyle(color: theme.colorScheme.error, fontWeight: FontWeight.w600))]),
-            const Divider(),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(l10n.netBalanceLabel, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)), Text(currencyFormat.format(_netBalance), style: TextStyle(fontWeight: FontWeight.bold, color: _netBalance >= 0 ? iconColorEarnings : theme.colorScheme.error, fontSize: theme.textTheme.titleMedium?.fontSize))]),
-          ],
-        ),
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 2))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l10n.financialSummaryTitle, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 16),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Total Income'), Text(currencyFormat.format(_totalIncome), style: const TextStyle(color: Color(0xFF4CAF50), fontWeight: FontWeight.w600, fontSize: 16))]),
+          const SizedBox(height: 8),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Total Expenses'), Text(currencyFormat.format(_totalExpenses), style: const TextStyle(color: Color(0xFFF44336), fontWeight: FontWeight.w600, fontSize: 16))]),
+          const Divider(height: 24),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Net Balance', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)), Text(currencyFormat.format(_netBalance), style: TextStyle(fontWeight: FontWeight.bold, color: _netBalance >= 0 ? const Color(0xFF4CAF50) : const Color(0xFFF44336), fontSize: 20))]),
+        ],
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!; // Assert non-null
-    final theme = Theme.of(context);
-    final Color contextualAccentColor = AppTheme.getAccentColorForContext('finance');
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar( // Theme applied globally
-        title: Text(l10n.financeManagementTitle),
-        bottom: TabBar( 
+      backgroundColor: const Color(0xFFF5F7FA),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.white,
+        title: Text(l10n.financeManagementTitle, style: const TextStyle(color: Color(0xFF2C2C2C), fontWeight: FontWeight.bold)),
+        iconTheme: const IconThemeData(color: Color(0xFF2C2C2C)),
+        bottom: TabBar(
           controller: _tabController,
-          indicatorColor: contextualAccentColor, 
-          labelColor: contextualAccentColor, 
-          unselectedLabelColor: textLightGrey, // Use top-level constant
+          indicatorColor: const Color(0xFF4CAF50),
+          labelColor: const Color(0xFF4CAF50),
+          unselectedLabelColor: Colors.grey,
           tabs: [
             Tab(text: l10n.incomeTabLabel),
             Tab(text: l10n.expensesTabLabel),
@@ -237,31 +263,30 @@ class _FinanceManagementScreenState extends State<FinanceManagementScreen> with 
         ),
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(contextualAccentColor)))
-          : _errorMessage != null 
-              ? Center(child: Padding(padding: const EdgeInsets.all(16.0), child: Text(_errorMessage!, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.error))))
+          ? const Center(child: CircularProgressIndicator())
+          : _errorMessage != null
+              ? Center(child: Padding(padding: const EdgeInsets.all(16.0), child: Text(_errorMessage!, style: const TextStyle(color: Colors.red))))
               : Column(
-                children: [
-                  _buildSummaryCard(l10n),
-                  Expanded(
-                    child: TabBarView(
-                      controller: _tabController,
-                      children: [
-                        _buildFinancialList('income', _incomeRecords, l10n),
-                        _buildFinancialList('expense', _expenseRecords, l10n),
-                      ],
+                  children: [
+                    _buildSummaryCard(l10n),
+                    Expanded(
+                      child: TabBarView(
+                        controller: _tabController,
+                        children: [
+                          _buildFinancialList('income', _incomeRecords, l10n),
+                          _buildFinancialList('expense', _expenseRecords, l10n),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-      floatingActionButton: FloatingActionButton( // FABTheme applied globally, can override here
-        backgroundColor: contextualAccentColor,
+                  ],
+                ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: _tabController.index == 0 ? const Color(0xFF4CAF50) : const Color(0xFFF44336),
         onPressed: () {
           final type = _tabController.index == 0 ? 'income' : 'expense';
           _navigateToAddEditRecord(type);
         },
-        tooltip: _tabController.index == 0 ? l10n.addIncomeTooltip : l10n.addExpenseTooltip,
-        child: const Icon(Icons.add, color: Colors.white), // Ensure icon contrasts
+        child: const Icon(Icons.add_rounded),
       ),
     );
   }

@@ -136,81 +136,97 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     if (l10n == null) {
-      return const SizedBox.shrink(); // Or a placeholder widget
+      return const SizedBox.shrink();
     }
-    final theme = Theme.of(context);
-    final Color contextualAccentColor = AppTheme.getAccentColorForContext('announcement');
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
-        title: Text(l10n.manageAnnouncementsTitle ?? 'Manage Announcements'), // Theme applied globally
+        elevation: 0,
+        backgroundColor: Colors.white,
+        title: Text(l10n.manageAnnouncementsTitle ?? 'Announcements', style: const TextStyle(color: Color(0xFF2C2C2C), fontWeight: FontWeight.bold)),
+        iconTheme: const IconThemeData(color: Color(0xFF2C2C2C)),
       ),
+
       body: _isLoading
-          ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(contextualAccentColor)))
+          ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
-              ? Center(child: Padding(padding: const EdgeInsets.all(16.0), child: Text(_errorMessage!, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.error))))
+              ? Center(child: Padding(padding: const EdgeInsets.all(16.0), child: Text(_errorMessage!, style: const TextStyle(color: Colors.red))))
               : _announcements.isEmpty
-                  ? Center(child: Text(l10n.noAnnouncementsFound ?? 'No announcements found', style: theme.textTheme.bodyLarge))
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.campaign_outlined, size: 64, color: Colors.grey[400]),
+                          const SizedBox(height: 16),
+                          Text(l10n.noAnnouncementsFound ?? 'No announcements found', style: const TextStyle(fontSize: 18, color: Colors.grey)),
+                        ],
+                      ),
+                    )
                   : RefreshIndicator(
                       onRefresh: _loadAnnouncements,
-                      color: contextualAccentColor,
                       child: ListView.builder(
+                        padding: const EdgeInsets.all(16),
                         itemCount: _announcements.length,
                         itemBuilder: (context, index) {
                           final announcement = _announcements[index];
-                          return Card( // CardTheme applied globally
-                            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            child: ListTile(
-                              title: Text(announcement.title, style: theme.textTheme.titleMedium),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(announcement.content, maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodyMedium),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '${l10n.postedOn ?? 'Posted On'} ${DateFormat.yMMMd(l10n.localeName ?? 'en').format(announcement.createdAt)}',
-                                    style: theme.textTheme.bodySmall,
-                                  ),
-                                  if (announcement.targetRole != null && announcement.targetRole != 'All')
-                                    Text(
-                                      '${l10n.targetAudience ?? 'Target Audience'}: ${_getLocalizedTargetRole(announcement.targetRole!, l10n)}${announcement.targetRole == 'SpecificClass' && announcement.targetClassId != null ? ' (ID: ${announcement.targetClassId})' : ''}',
-                                      style: theme.textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
-                                    )
-                                ],
+                          return GestureDetector(
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (_) => AlertDialog(
+                                  title: Text(announcement.title),
+                                  content: SingleChildScrollView(child: Text(announcement.content)),
+                                  actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close'))],
+                                ),
+                              );
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))],
                               ),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: Icon(Icons.edit, color: theme.iconTheme.color ?? textDarkGrey), 
-                                    tooltip: l10n.editButton ?? 'Edit',
-                                    onPressed: () => _navigateToAddEditScreen(announcement),
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.all(16),
+                                leading: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF2196F3).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
-                                  IconButton(
-                                    icon: Icon(Icons.delete, color: theme.colorScheme.error),
-                                    tooltip: l10n.deleteButton ?? 'Delete',
-                                    onPressed: () => _deleteAnnouncement(announcement.id),
-                                  ),
-                                ],
+                                  child: const Icon(Icons.campaign_rounded, color: Color(0xFF2196F3)),
+                                ),
+                                title: Text(announcement.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const SizedBox(height: 4),
+                                    Text(announcement.content, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.grey[600])),
+                                    const SizedBox(height: 4),
+                                    Text(DateFormat.yMMMd().format(announcement.createdAt), style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+                                  ],
+                                ),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: Icon(Icons.edit_outlined, color: Colors.grey[700]),
+                                      onPressed: () => _navigateToAddEditScreen(announcement),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                      onPressed: () => _deleteAnnouncement(announcement.id),
+                                    ),
+                                  ],
+                                ),
                               ),
-                              onTap: () {
-                                showDialog(context: context, builder: (_) => AlertDialog( 
-                                  title: Text(announcement.title, style: theme.textTheme.titleLarge),
-                                  content: SingleChildScrollView(child: Text(announcement.content, style: theme.textTheme.bodyMedium)),
-                                  actions: [TextButton(onPressed: ()=>Navigator.of(context).pop(), child: Text(l10n.closeButtonLabel ?? 'Close'))],
-                                ));
-                              },
                             ),
                           );
                         },
                       ),
                     ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: contextualAccentColor, 
-        onPressed: () => _navigateToAddEditScreen(),
-        tooltip: l10n.addAnnouncementTooltip ?? 'Add Announcement',
-        child: const Icon(Icons.add, color: Colors.white), 
-      ),
     );
   }
 

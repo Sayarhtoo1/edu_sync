@@ -148,107 +148,89 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final Color accentColor = AppTheme.getAccentColorForContext('staff');
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
-        title: Text('Staff Management'),
-        backgroundColor: accentColor.withAlpha((255 * 0.1).round()),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.add, color: accentColor),
-            onPressed: () => _navigateToAddEditStaffScreen(),
-            tooltip: 'Add Staff',
-          ),
-          IconButton(
-            icon: Icon(Icons.refresh, color: accentColor),
-            onPressed: _isLoading ? null : _loadStaffData,
-            tooltip: 'Refresh',
-          ),
-        ],
+        elevation: 0,
+        backgroundColor: Colors.white,
+        title: const Text('Staff Management', style: TextStyle(color: Color(0xFF2C2C2C), fontWeight: FontWeight.bold)),
+        iconTheme: const IconThemeData(color: Color(0xFF2C2C2C)),
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color(0xFFFF9800),
+        onPressed: () => _navigateToAddEditStaffScreen(),
+        child: const Icon(Icons.add_rounded),
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(accentColor)))
+          ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _loadStaffData,
-              color: accentColor,
               child: _staffList.isEmpty
                   ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            Icons.people_outline,
-                            size: 64,
-                            color: accentColor.withAlpha((255 * 0.5).round()),
-                          ),
+                          Icon(Icons.badge_outlined, size: 64, color: Colors.grey[400]),
                           const SizedBox(height: 16),
-                          Text(
-                            '${l10n?.noUsersFoundTextPart1 ?? 'No'} staff ${l10n?.noUsersFoundTextPart2 ?? 'found.'}',
-                            style: theme.textTheme.titleMedium?.copyWith(color: theme.textTheme.bodySmall?.color),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Add your first staff member to get started.',
-                            style: theme.textTheme.bodyMedium?.copyWith(color: theme.textTheme.bodySmall?.color),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 24),
-                          ElevatedButton.icon(
-                            onPressed: () => _navigateToAddEditStaffScreen(),
-                            icon: Icon(Icons.add, color: theme.colorScheme.onPrimary),
-                            label: Text('Add Staff'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: accentColor,
-                              foregroundColor: theme.colorScheme.onPrimary,
-                            ),
-                          ),
+                          Text('No staff found', style: const TextStyle(fontSize: 18, color: Colors.grey)),
                         ],
                       ),
                     )
                   : ListView.builder(
+                      padding: const EdgeInsets.all(16),
                       itemCount: _staffList.length,
                       itemBuilder: (context, index) {
                         final staff = _staffList[index];
-                        return Card(
-                          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: accentColor.withAlpha((255 * 0.2).round()),
-                              backgroundImage: staff.profilePhotoUrl != null
-                                  ? NetworkImage(staff.profilePhotoUrl!)
-                                  : null,
-                              child: staff.profilePhotoUrl == null
-                                  ? Icon(Icons.person, color: accentColor)
-                                  : null,
+                        return GestureDetector(
+                          onTap: () => context.push('/staff/profile', extra: Staff(
+                            id: staff.id,
+                            role: staff.role ?? 'Staff',
+                            profilePhotoUrl: staff.profilePhotoUrl,
+                            fullName: staff.fullName,
+                            schoolId: staff.schoolId,
+                            email: staff.email,
+                            phoneNumber: staff.phoneNumber,
+                            salary: staff.salary,
+                          )),
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))],
                             ),
-                            title: Text(staff.fullName ?? 'N/A', style: theme.textTheme.titleMedium),
-                            subtitle: Text(staff.role ?? 'No role assigned'),
-                            onTap: () => context.push('/staff/profile', extra: Staff(
-                              id: staff.id,
-                              role: staff.role ?? 'Staff',
-                              profilePhotoUrl: staff.profilePhotoUrl,
-                              fullName: staff.fullName,
-                              schoolId: staff.schoolId,
-                              email: staff.email,
-                              phoneNumber: staff.phoneNumber,
-                              salary: staff.salary,
-                            )),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: Icon(Icons.edit, color: accentColor),
-                                  tooltip: l10n?.editButton ?? 'Edit',
-                                  onPressed: () => _navigateToAddEditStaffScreen(staff: staff),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.all(16),
+                              leading: Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFF9800).withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                  image: staff.profilePhotoUrl != null && staff.profilePhotoUrl!.isNotEmpty
+                                      ? DecorationImage(image: NetworkImage(staff.profilePhotoUrl!), fit: BoxFit.cover)
+                                      : null,
                                 ),
-                                IconButton(
-                                  icon: Icon(Icons.delete, color: theme.colorScheme.error),
-                                  tooltip: l10n?.deleteButton ?? 'Delete',
-                                  onPressed: () => _deleteStaff(staff.id),
-                                ),
-                              ],
+                                child: staff.profilePhotoUrl == null || staff.profilePhotoUrl!.isEmpty
+                                    ? const Icon(Icons.badge_rounded, color: Color(0xFFFF9800))
+                                    : null,
+                              ),
+                              title: Text(staff.fullName ?? 'N/A', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                              subtitle: Text(staff.role ?? 'No role assigned', style: TextStyle(color: Colors.grey[600])),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(Icons.edit_outlined, color: Colors.grey[700]),
+                                    onPressed: () => _navigateToAddEditStaffScreen(staff: staff),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                    onPressed: () => _deleteStaff(staff.id),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         );

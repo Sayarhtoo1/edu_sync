@@ -155,6 +155,24 @@ class AdminDrawerItems extends StatelessWidget {
             context.push('/admin/exam-form');
           },
         ),
+        const Divider(indent: 16, endIndent: 16),
+        // Fee & Donation Section
+        ListTile(
+          leading: const Icon(Icons.payment, color: drawerIconColor),
+          title: Text('Fee Management', style: TextStyle(color: drawerTextDarkGrey)),
+          onTap: () {
+            Navigator.pop(context);
+            context.go('/admin/fee-management');
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.volunteer_activism, color: drawerIconColor),
+          title: Text('Donation Management', style: TextStyle(color: drawerTextDarkGrey)),
+          onTap: () {
+            Navigator.pop(context);
+            context.go('/admin/donation-management');
+          },
+        ),
       ],
     );
   }

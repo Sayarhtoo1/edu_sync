@@ -23,11 +23,14 @@ import 'package:edu_sync/services/role_service.dart';
 import 'package:edu_sync/services/school_service.dart';
 import 'package:edu_sync/services/student_service.dart';
 import 'package:edu_sync/services/timetable_service.dart';
-import 'package:edu_sync/services/user_service.dart'; // Import UserService
-import 'package:edu_sync/services/schedule_summary_service.dart'; // Import ScheduleSummaryService
-import 'package:edu_sync/providers/admin_panel_provider.dart'; // Import AdminPanelProvider
+import 'package:edu_sync/services/user_service.dart';
+import 'package:edu_sync/services/schedule_summary_service.dart';
+import 'package:edu_sync/services/fee_structure_service.dart';
+import 'package:edu_sync/services/fee_payment_service.dart';
+import 'package:edu_sync/services/donation_service.dart';
+import 'package:edu_sync/providers/admin_panel_provider.dart';
 import 'package:edu_sync/providers/exam_provider.dart';
-import 'package:edu_sync/providers/class_provider.dart'; // Import ClassProvider
+import 'package:edu_sync/providers/class_provider.dart';
 
 Future<List<SingleChildWidget>> initializeProviders() async {
   final sharedPreferences = await SharedPreferences.getInstance();
@@ -68,7 +71,16 @@ Future<List<SingleChildWidget>> initializeProviders() async {
     Provider<AnnouncementService>(create: (_) => AnnouncementService()),
     Provider<FinanceService>(create: (_) => FinanceService()),
     Provider<CacheService>.value(value: cacheService),
-    Provider<UserService>(create: (_) => UserService(Supabase.instance.client)), // Provide UserService
+    Provider<UserService>(create: (_) => UserService(Supabase.instance.client)),
+    ProxyProvider<SupabaseClient, FeeStructureService>(
+      update: (_, supabase, __) => FeeStructureService(supabase),
+    ),
+    ProxyProvider<SupabaseClient, FeePaymentService>(
+      update: (_, supabase, __) => FeePaymentService(supabase),
+    ),
+    ProxyProvider<SupabaseClient, DonationService>(
+      update: (_, supabase, __) => DonationService(supabase),
+    ),
     ProxyProvider<AuthService, RoleService>(
       update: (_, authService, _) => RoleService(authService),
     ),

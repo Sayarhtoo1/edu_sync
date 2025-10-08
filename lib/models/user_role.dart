@@ -2,7 +2,8 @@ enum UserRole {
   Admin,
   Teacher,
   Parent,
-  Manager;
+  Manager,
+  Donator;
 
   String get name {
     switch (this) {
@@ -14,6 +15,8 @@ enum UserRole {
         return 'Parent';
       case UserRole.Manager:
         return 'Manager';
+      case UserRole.Donator:
+        return 'Donator';
     }
   }
 
@@ -28,6 +31,8 @@ enum UserRole {
         return UserRole.Parent;
       case 'Manager':
         return UserRole.Manager;
+      case 'Donator':
+        return UserRole.Donator;
       default:
         return null;
     }

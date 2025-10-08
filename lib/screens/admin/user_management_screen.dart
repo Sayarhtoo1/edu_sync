@@ -5,8 +5,7 @@ import 'package:edu_sync/models/user.dart' as app_user;
 import 'package:provider/provider.dart';
 import 'add_edit_teacher_screen.dart';
 import 'add_edit_parent_screen.dart';
-import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Import AppLocalizations
-import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
 
 class UserManagementScreen extends StatefulWidget {
   final int initialTabIndex;
@@ -152,69 +151,85 @@ class _UserManagementScreenState extends State<UserManagementScreen> with Single
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final Color teacherAccent = AppTheme.getAccentColorForContext('teachers');
-    final Color parentAccent = AppTheme.getAccentColorForContext('parents');
-    final Color currentAccent = _currentRoleView == 'Teacher' ? teacherAccent : parentAccent;
+    final Color currentAccent = _currentRoleView == 'Teacher' ? const Color(0xFF4CAF50) : const Color(0xFF9C27B0);
 
     return Scaffold(
-      appBar: AppBar( 
-        title: Text('${l10n?.manageUsersTitle ?? 'Manage Users'} (${_currentRoleView == 'Teacher' ? l10n?.teachers ?? 'Teachers' : l10n?.parents ?? 'Parents'})'), 
+      backgroundColor: const Color(0xFFF5F7FA),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.white,
+        title: Text('${_currentRoleView == 'Teacher' ? l10n?.teachers ?? 'Teachers' : l10n?.parents ?? 'Parents'}', style: const TextStyle(color: Color(0xFF2C2C2C), fontWeight: FontWeight.bold)),
+        iconTheme: const IconThemeData(color: Color(0xFF2C2C2C)),
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: currentAccent,
           labelColor: currentAccent,
-          unselectedLabelColor: textLightGrey,
+          unselectedLabelColor: Colors.grey,
           tabs: [
             Tab(text: l10n?.teachers ?? 'Teachers'),
             Tab(text: l10n?.parents ?? 'Parents'),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.add, color: currentAccent),
-            tooltip: _currentRoleView == 'Teacher' ? l10n?.addTeacherButton ?? 'Add Teacher' : l10n?.addParentButton ?? 'Add Parent', 
-            onPressed: () => _navigateToAddEditUserScreen(),
-          ),
-        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: currentAccent,
+        onPressed: () => _navigateToAddEditUserScreen(),
+        child: const Icon(Icons.add_rounded),
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(currentAccent)))
+          ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _loadStaffData,
-              color: currentAccent,
               child: _staffList.isEmpty
-                  ? Center(child: Text('${l10n?.noUsersFoundTextPart1 ?? 'No'} ${_currentRoleView.toLowerCase()}s ${l10n?.noUsersFoundTextPart2 ?? 'found.'}', style: theme.textTheme.bodyLarge)) 
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.people_outline, size: 64, color: Colors.grey[400]),
+                          const SizedBox(height: 16),
+                          Text('No ${_currentRoleView.toLowerCase()}s found', style: const TextStyle(fontSize: 18, color: Colors.grey)),
+                        ],
+                      ),
+                    )
                   : ListView.builder(
+                      padding: const EdgeInsets.all(16),
                       itemCount: _staffList.length,
                       itemBuilder: (context, index) {
                         final user = _staffList[index];
-                        IconData leadingIconData = _currentRoleView == 'Teacher' ? Icons.school_outlined : Icons.person_outline;
-                        return Card( 
-                          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))],
+                          ),
                           child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: currentAccent.withAlpha((255 * 0.2).round()), // Use withAlpha
-                              backgroundImage: user.profilePhotoUrl != null && user.profilePhotoUrl!.isNotEmpty
-                                  ? NetworkImage(user.profilePhotoUrl!)
-                                  : null,
+                            contentPadding: const EdgeInsets.all(16),
+                            leading: Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: currentAccent.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                                image: user.profilePhotoUrl != null && user.profilePhotoUrl!.isNotEmpty
+                                    ? DecorationImage(image: NetworkImage(user.profilePhotoUrl!), fit: BoxFit.cover)
+                                    : null,
+                              ),
                               child: user.profilePhotoUrl == null || user.profilePhotoUrl!.isEmpty
-                                  ? Icon(leadingIconData, color: currentAccent)
+                                  ? Icon(_currentRoleView == 'Teacher' ? Icons.school_rounded : Icons.person_rounded, color: currentAccent)
                                   : null,
                             ),
-                            title: Text(user.fullName ?? 'N/A', style: theme.textTheme.titleMedium),
-                            subtitle: Text(user.id, style: theme.textTheme.bodySmall), 
+                            title: Text(user.fullName ?? 'N/A', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                            subtitle: Text(user.email ?? user.id, style: TextStyle(color: Colors.grey[600])),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  icon: Icon(Icons.edit, color: theme.iconTheme.color ?? textDarkGrey),
-                                  tooltip: l10n?.editButton ?? 'Edit',
+                                  icon: Icon(Icons.edit_outlined, color: Colors.grey[700]),
                                   onPressed: () => _navigateToAddEditUserScreen(user: user),
                                 ),
                                 IconButton(
-                                  icon: Icon(Icons.delete, color: theme.colorScheme.error),
-                                  tooltip: l10n?.deleteButton ?? 'Delete', 
+                                  icon: const Icon(Icons.delete_outline, color: Colors.red),
                                   onPressed: () => _deleteUser(user.id),
                                 ),
                               ],
