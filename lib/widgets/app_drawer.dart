@@ -5,319 +5,262 @@ import 'package:edu_sync/services/auth_service.dart';
 import 'package:go_router/go_router.dart';
 import 'package:edu_sync/providers/school_provider.dart';
 import 'package:edu_sync/models/school.dart';
-// Import other screens as needed for navigation
-// Import ViewFormResponsesScreen
-// Import AdminAnnouncementsScreen
-// Import ManageCustomFormsScreen
-// Import AdminSettingsScreen
-// import 'package:edu_sync/screens/teacher/student_view_screen.dart'; // If a separate one is made
-// Import DailyReportScreen
-import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Corrected import
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
 import 'package:edu_sync/services/notification_service.dart';
 
-// Matching colors from AdminPanelScreen for theming
-const Color drawerAppBackgroundColor = Color(0xFFF5F0FF); // Very light pastel purple
-const Color drawerTextDarkGrey = Color(0xFF2C2C2C);
-const Color drawerTextLightGrey = Color(0xFF8C8C8C);
-const Color drawerIconColor = Color(0xFF7A6FF0); // Using iconColorStudents as a general accent
-
+// Modern drawer colors matching the school dashboard design
+const Color drawerBackgroundColor = Color(0xFF4A5568); // Dark blue-grey
+const Color drawerTextColor = Colors.white;
+const Color drawerSelectedColor = Colors.white;
+const Color drawerSelectedTextColor = Color(0xFF2D3748);
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
+
+  Widget _buildDrawerItem({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    bool isSelected = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Material(
+        color: isSelected ? drawerSelectedColor : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  color: isSelected ? drawerSelectedTextColor : drawerTextColor,
+                  size: 20,
+                ),
+                const SizedBox(width: 16),
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: isSelected ? drawerSelectedTextColor : drawerTextColor,
+                    fontSize: 15,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context, listen: false);
     final schoolProvider = Provider.of<SchoolProvider>(context, listen: false);
-    final notificationService = Provider.of<NotificationService>(context); // Listen to changes
     final School? currentSchool = schoolProvider.currentSchool;
-    final l10n = AppLocalizations.of(context)!; // Get l10n instance and assert non-null
 
-    // Drawer items for Admin
-    List<Widget> buildAdminDrawerItems(BuildContext context, School? school) {
+    List<Widget> buildAdminDrawerItems(BuildContext context) {
       return [
-        if (school != null)
-          ListTile(
-            leading: const Icon(Icons.edit_note, color: drawerIconColor),
-            title: Text('Edit School Profile', style: const TextStyle(color: drawerTextDarkGrey)),
-            onTap: () {
-              Navigator.pop(context); // Close drawer
-              context.push('/admin/edit-school-profile', extra: school);
-            },
-          ),
-        ListTile(
-          leading: const Icon(Icons.people, color: drawerIconColor),
-          title: Text('Staff Management', style: const TextStyle(color: drawerTextDarkGrey)),
+        _buildDrawerItem(
+          icon: Icons.dashboard,
+          title: 'Dashboard',
           onTap: () {
             Navigator.pop(context);
-            context.push('/admin/staff-management');
-            },
-          ),
-        ListTile(
-          leading: const Icon(Icons.school_outlined, color: drawerIconColor),
-          title: Text(l10n.studentManagementTitle, style: const TextStyle(color: drawerTextDarkGrey)),
+            context.go('/admin');
+          },
+          isSelected: true,
+        ),
+        _buildDrawerItem(
+          icon: Icons.school_outlined,
+          title: 'Students',
           onTap: () {
             Navigator.pop(context);
             context.push('/admin/student-management');
-            },
-          ),
-        ListTile(
-          leading: const Icon(Icons.class_, color: drawerIconColor),
-          title: Text(l10n.classManagementTitle, style: const TextStyle(color: drawerTextDarkGrey)),
+          },
+        ),
+        _buildDrawerItem(
+          icon: Icons.people_outline,
+          title: 'Teachers',
+          onTap: () {
+            Navigator.pop(context);
+            context.push('/admin/staff-management');
+          },
+        ),
+        _buildDrawerItem(
+          icon: Icons.check_circle_outline,
+          title: 'Attendance',
+          onTap: () {
+            Navigator.pop(context);
+            context.push('/teacher/attendance-marking');
+          },
+        ),
+        _buildDrawerItem(
+          icon: Icons.class_,
+          title: 'Courses',
           onTap: () {
             Navigator.pop(context);
             context.push('/admin/class-management');
-            },
-          ),
-        ListTile(
-          leading: const Icon(Icons.calendar_today, color: drawerIconColor),
-          title: Text(l10n.timetableManagementTitle, style: const TextStyle(color: drawerTextDarkGrey)),
+          },
+        ),
+        _buildDrawerItem(
+          icon: Icons.assignment_outlined,
+          title: 'Exam',
           onTap: () {
             Navigator.pop(context);
-            context.push('/admin/timetable-management');
-            },
-          ),
-        ListTile(
-          leading: const Icon(Icons.attach_money, color: drawerIconColor),
-          title: Text(l10n.financeManagementTitle, style: const TextStyle(color: drawerTextDarkGrey)),
+            context.push('/admin/exam-overview');
+          },
+        ),
+        _buildDrawerItem(
+          icon: Icons.payment,
+          title: 'Payment',
           onTap: () {
             Navigator.pop(context);
             context.push('/admin/finance-management');
           },
         ),
-        const Divider(indent: 16, endIndent: 16),
-        ListTile(
-          leading: const Icon(Icons.check_circle_outline, color: drawerIconColor),
-          title: Text(l10n.markSchoolAttendance, style: const TextStyle(color: drawerTextDarkGrey)), // Admin context
-          onTap: () {
-            Navigator.pop(context);
-            context.push('/teacher/attendance-marking');
-            },
-          ),
-        ListTile(
-          leading: const Icon(Icons.book_outlined, color: drawerIconColor),
-          title: Text(l10n.manageSchoolLessonPlans, style: const TextStyle(color: drawerTextDarkGrey)), // Admin context
-          onTap: () {
-            Navigator.pop(context);
-            context.push('/teacher/lesson-plan-management');
-          },
-        ),
-        ListTile(
-          leading: const Icon(Icons.campaign_outlined, color: drawerIconColor),
-          title: Text(l10n.manageAnnouncementsDrawerItem, style: const TextStyle(color: drawerTextDarkGrey)),
-          onTap: () {
-            Navigator.pop(context);
-            context.push('/admin/announcements');
-          },
-          ),
-        ListTile(
-          leading: const Icon(Icons.assignment_outlined, color: drawerIconColor),
-          title: Text(l10n.manageDailyReportsDrawerItem, style: const TextStyle(color: drawerTextDarkGrey)),
-          onTap: () {
-            Navigator.pop(context);
-            context.push('/admin/manage-custom-forms');
-          },
-          ),
-        ListTile(
-          leading: const Icon(Icons.list_alt_outlined, color: drawerIconColor),
-          title: Text(l10n.viewFormResponsesTitle, style: const TextStyle(color: drawerTextDarkGrey)),
-          onTap: () {
-            Navigator.pop(context);
-            if (school != null) {
-              context.push('/admin/view-form-responses', extra: school.id);
-            } else {
-              // Handle case where school is null, maybe show a snackbar
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.error_school_not_selected_or_found)));
-            }
-          },
-        ),
-        const Divider(indent: 16, endIndent: 16),
-        ListTile(
-          leading: const Icon(Icons.admin_panel_settings, color: drawerIconColor),
-          title: Text(l10n.adminSettingsTitle, style: const TextStyle(color: drawerTextDarkGrey)),
-          onTap: () {
-            Navigator.pop(context);
-            context.push('/admin/settings');
-          },
-        ),
+        const SizedBox(height: 20),
       ];
     }
 
-    // Drawer items for Teacher
     List<Widget> buildTeacherDrawerItems(BuildContext context) {
       return [
-        ListTile(
-          leading: const Icon(Icons.dashboard, color: drawerIconColor),
-          title: Text(l10n.dashboardTitle, style: const TextStyle(color: drawerTextDarkGrey)),
+        _buildDrawerItem(
+          icon: Icons.dashboard,
+          title: 'Dashboard',
           onTap: () {
             Navigator.pop(context);
             context.go('/teacher-dashboard');
-            },
-          ),
-        ListTile(
-          leading: const Icon(Icons.calendar_today, color: drawerIconColor),
-          title: Text(l10n.myTimetableTitle, style: const TextStyle(color: drawerTextDarkGrey)),
+          },
+          isSelected: true,
+        ),
+        _buildDrawerItem(
+          icon: Icons.school_outlined,
+          title: 'Students',
           onTap: () {
             Navigator.pop(context);
-            context.push('/teacher/timetable');
-            },
-          ),
-        ListTile(
-          leading: const Icon(Icons.check_circle_outline, color: drawerIconColor),
-          title: Text(l10n.markAttendance, style: const TextStyle(color: drawerTextDarkGrey)),
+            context.push('/admin/student-management');
+          },
+        ),
+        _buildDrawerItem(
+          icon: Icons.check_circle_outline,
+          title: 'Attendance',
           onTap: () {
             Navigator.pop(context);
             context.push('/teacher/attendance-marking');
-            },
-          ),
-        ListTile(
-          leading: const Icon(Icons.book_outlined, color: drawerIconColor),
-          title: Text(l10n.lessonPlansTitle, style: const TextStyle(color: drawerTextDarkGrey)),
+          },
+        ),
+        _buildDrawerItem(
+          icon: Icons.calendar_today,
+          title: 'Timetable',
+          onTap: () {
+            Navigator.pop(context);
+            context.push('/teacher/timetable');
+          },
+        ),
+        _buildDrawerItem(
+          icon: Icons.book_outlined,
+          title: 'Lesson Plans',
           onTap: () {
             Navigator.pop(context);
             context.push('/teacher/lesson-plan-management');
-            },
-          ),
-         ListTile(
-          leading: const Icon(Icons.people_alt_outlined, color: drawerIconColor),
-          title: Text(l10n.viewStudentsTitle, style: const TextStyle(color: drawerTextDarkGrey)),
-          onTap: () {
-            Navigator.pop(context);
-            // Assuming teachers can view the same student list screen as admins for now
-            context.push('/admin/student-management');
-          },
-          ),
-        ListTile(
-          leading: const Icon(Icons.list_alt, color: drawerIconColor),
-          title: Text(l10n.viewFormResponsesTitle, style: const TextStyle(color: drawerTextDarkGrey)),
-          onTap: () {
-            Navigator.pop(context);
-            // Teachers also need schoolId context for this screen
-            final schoolId = schoolProvider.currentSchool?.id;
-            if (schoolId != null) {
-              context.push('/admin/view-form-responses', extra: schoolId);
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.error_school_not_selected_or_found)));
-            }
           },
         ),
+        const SizedBox(height: 20),
       ];
     }
 
-    // Drawer items for Parent
     List<Widget> buildParentDrawerItems(BuildContext context) {
       return [
-         ListTile(
-          leading: const Icon(Icons.dashboard, color: drawerIconColor),
-          title: Text(l10n.dashboardTitle, style: const TextStyle(color: drawerTextDarkGrey)),
+        _buildDrawerItem(
+          icon: Icons.dashboard,
+          title: 'Dashboard',
           onTap: () {
             Navigator.pop(context);
             context.go('/parent-dashboard');
-            },
-          ),
-        ListTile(
-          leading: const Icon(Icons.check_circle, color: drawerIconColor),
-          title: Text(l10n.childAttendanceTitle, style: const TextStyle(color: drawerTextDarkGrey)),
+          },
+          isSelected: true,
+        ),
+        _buildDrawerItem(
+          icon: Icons.check_circle_outline,
+          title: 'Attendance',
           onTap: () {
             Navigator.pop(context);
             context.push('/parent/child-attendance');
-            },
-          ),
-        ListTile(
-          leading: const Icon(Icons.schedule, color: drawerIconColor),
-          title: Text(l10n.childScheduleTitle, style: const TextStyle(color: drawerTextDarkGrey)),
+          },
+        ),
+        _buildDrawerItem(
+          icon: Icons.schedule,
+          title: 'Schedule',
           onTap: () {
             Navigator.pop(context);
             context.push('/parent/child-schedule');
           },
         ),
-        ListTile(
-          leading: const Icon(Icons.campaign, color: drawerIconColor),
-          title: Row(
-            children: [
-              Text(l10n.announcementsTitle, style: const TextStyle(color: drawerTextDarkGrey)),
-              if (notificationService.hasNewAnnouncements)
-                Padding(
-                  padding: const EdgeInsets.only(left: 8.0),
-                  child: CircleAvatar(radius: 4, backgroundColor: Colors.red),
-                )
-            ],
-          ),
+        _buildDrawerItem(
+          icon: Icons.campaign,
+          title: 'Announcements',
           onTap: () {
             Navigator.pop(context);
-            context.push('/parent/announcements').then((_){
-              if (notificationService.hasNewAnnouncements) {
-                 // Consider clearing flag here or within AnnouncementsScreen
-              }
-            });
+            context.push('/parent/announcements');
           },
-          ),
-        ListTile(
-          leading: const Icon(Icons.assessment_outlined, color: drawerIconColor),
-          title: Text(l10n.dailyReportsTitle, style: const TextStyle(color: drawerTextDarkGrey)),
+        ),
+        _buildDrawerItem(
+          icon: Icons.assessment_outlined,
+          title: 'Reports',
           onTap: () {
             Navigator.pop(context);
             context.push('/parent/daily-report');
           },
         ),
+        const SizedBox(height: 20),
       ];
     }
 
     List<Widget> buildManagerDrawerItems(BuildContext context) {
       return [
-        ListTile(
-          leading: const Icon(Icons.dashboard, color: drawerIconColor),
-          title: Text(l10n.dashboardTitle, style: const TextStyle(color: drawerTextDarkGrey)),
+        _buildDrawerItem(
+          icon: Icons.dashboard,
+          title: 'Dashboard',
           onTap: () {
             Navigator.pop(context);
             context.go('/manager-dashboard');
-            },
-          ),
-        ListTile(
-          leading: const Icon(Icons.people, color: drawerIconColor),
-          title: Text('Staff Management', style: const TextStyle(color: drawerTextDarkGrey)),
-          onTap: () {
-            Navigator.pop(context);
-            context.push('/admin/staff-management');
-            },
-          ),
-        ListTile(
-          leading: const Icon(Icons.school_outlined, color: drawerIconColor),
-          title: Text(l10n.studentManagementTitle, style: const TextStyle(color: drawerTextDarkGrey)),
+          },
+          isSelected: true,
+        ),
+        _buildDrawerItem(
+          icon: Icons.school_outlined,
+          title: 'Students',
           onTap: () {
             Navigator.pop(context);
             context.push('/admin/student-management');
-            },
-          ),
-        ListTile(
-          leading: const Icon(Icons.class_, color: drawerIconColor),
-          title: Text(l10n.classManagementTitle, style: const TextStyle(color: drawerTextDarkGrey)),
+          },
+        ),
+        _buildDrawerItem(
+          icon: Icons.people_outline,
+          title: 'Staff',
           onTap: () {
             Navigator.pop(context);
-            context.push('/admin/class-management');
-            },
-          ),
-        ListTile(
-          leading: const Icon(Icons.calendar_today, color: drawerIconColor),
-          title: Text(l10n.timetableManagementTitle, style: const TextStyle(color: drawerTextDarkGrey)),
-          onTap: () {
-            Navigator.pop(context);
-            context.push('/admin/timetable-management');
-            },
-          ),
-        ListTile(
-          leading: const Icon(Icons.attach_money, color: drawerIconColor),
-          title: Text(l10n.financeManagementTitle, style: const TextStyle(color: drawerTextDarkGrey)),
+            context.push('/admin/staff-management');
+          },
+        ),
+        _buildDrawerItem(
+          icon: Icons.payment,
+          title: 'Finance',
           onTap: () {
             Navigator.pop(context);
             context.push('/admin/finance-management');
           },
         ),
+        const SizedBox(height: 20),
       ];
     }
 
     return Drawer(
-      backgroundColor: drawerAppBackgroundColor,
+      backgroundColor: drawerBackgroundColor,
       child: FutureBuilder<String?>(
         future: authService.getUserRole(),
         builder: (context, snapshot) {
@@ -328,7 +271,7 @@ class AppDrawer extends StatelessWidget {
           final userRole = snapshot.data;
           List<Widget> drawerItems = [];
           if (userRole == UserRole.Admin.name) {
-            drawerItems = buildAdminDrawerItems(context, currentSchool);
+            drawerItems = buildAdminDrawerItems(context);
           } else if (userRole == UserRole.Teacher.name) {
             drawerItems = buildTeacherDrawerItems(context);
           } else if (userRole == UserRole.Parent.name) {
@@ -337,45 +280,67 @@ class AppDrawer extends StatelessWidget {
             drawerItems = buildManagerDrawerItems(context);
           }
 
-          return ListView(
-            padding: EdgeInsets.zero,
-            children: <Widget>[
-              UserAccountsDrawerHeader(
-                accountName: Text(currentSchool?.name ?? l10n.eduSyncUser, style: const TextStyle(color: drawerTextDarkGrey)),
-                accountEmail: Text(authService.getCurrentUser()?.email ?? '', style: const TextStyle(color: drawerTextLightGrey)),
-                currentAccountPicture: CircleAvatar(
-                  backgroundColor: Colors.white,
-                  backgroundImage: (currentSchool?.logoUrl != null && currentSchool!.logoUrl.isNotEmpty)
-                      ? NetworkImage(currentSchool.logoUrl)
-                      : null,
-                  child: (currentSchool?.logoUrl == null || currentSchool!.logoUrl.isEmpty)
-                      ? const Icon(Icons.school, size: 40, color: drawerIconColor)
-                      : null,
-                ),
-                decoration: const BoxDecoration(
-                  color: drawerAppBackgroundColor,
+          return Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: (currentSchool?.logoUrl != null && currentSchool!.logoUrl.isNotEmpty)
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.network(
+                                currentSchool.logoUrl,
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          : const Icon(Icons.school, size: 28, color: drawerBackgroundColor),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        currentSchool?.name ?? 'SCHOOL',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              const SizedBox(height: 20),
               ...drawerItems,
-              const Divider(color: drawerTextLightGrey),
-              ListTile(
-                leading: const Icon(Icons.settings, color: drawerIconColor),
-                title: Text(l10n.appSettingsTitle, style: const TextStyle(color: drawerTextDarkGrey)),
+              const Spacer(),
+              _buildDrawerItem(
+                icon: Icons.settings,
+                title: 'Settings',
                 onTap: () {
                   Navigator.pop(context);
                   context.push('/app-settings');
                 },
               ),
-              ListTile(
-                leading: const Icon(Icons.logout, color: drawerIconColor),
-                title: Text(l10n.logoutButtonText, style: const TextStyle(color: drawerTextDarkGrey)),
+              _buildDrawerItem(
+                icon: Icons.logout,
+                title: 'Logout',
                 onTap: () async {
                   Navigator.pop(context);
                   await authService.signOut();
-                  if (!context.mounted) return; // Add mounted check
-                  context.go('/login'); // Use go_router for navigation
+                  if (!context.mounted) return;
+                  context.go('/login');
                 },
               ),
+              const SizedBox(height: 20),
             ],
           );
         },

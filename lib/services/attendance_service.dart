@@ -137,4 +137,56 @@ class AttendanceService {
       );
     }).toList();
   }
+
+  /// Fetches staff attendance summary for a school within a date range
+  Future<List<Map<String, dynamic>>> getStaffAttendanceSummary({
+    required int schoolId,
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    try {
+      final response = await _supabase
+          .from('staff_attendance')
+          .select('staff_id, clock_in_time, clock_out_time, date, staff!inner(full_name, role, school_id)')
+          .eq('staff.school_id', schoolId)
+          .gte('date', DateFormat('yyyy-MM-dd').format(startDate))
+          .lte('date', DateFormat('yyyy-MM-dd').format(endDate))
+          .order('date', ascending: false);
+
+      final List<dynamic> data = response;
+      
+      // Group by staff
+      final Map<String, Map<String, dynamic>> staffMap = {};
+      
+      for (var record in data) {
+        final staffId = record['staff_id']?.toString() ?? '';
+        if (!staffMap.containsKey(staffId)) {
+          staffMap[staffId] = {
+            'staff_id': staffId,
+            'full_name': record['staff']?['full_name'] ?? 'Unknown',
+            'role': record['staff']?['role'] ?? 'Staff',
+            'present_days': 0,
+            'absent_days': 0,
+            'late_days': 0,
+          };
+        }
+        
+        if (record['clock_in_time'] != null) {
+          staffMap[staffId]!['present_days'] = (staffMap[staffId]!['present_days'] as int) + 1;
+          
+          // Check if late (after 9 AM)
+          final clockIn = DateTime.parse(record['clock_in_time']);
+          final lateTime = DateTime(clockIn.year, clockIn.month, clockIn.day, 9, 0);
+          if (clockIn.isAfter(lateTime)) {
+            staffMap[staffId]!['late_days'] = (staffMap[staffId]!['late_days'] as int) + 1;
+          }
+        }
+      }
+      
+      return staffMap.values.toList();
+    } catch (e) {
+      // If the query fails, return empty list
+      return [];
+    }
+  }
 }

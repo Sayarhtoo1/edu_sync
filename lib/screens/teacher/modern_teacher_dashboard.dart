@@ -4,12 +4,15 @@ import 'package:provider/provider.dart';
 import 'package:edu_sync/services/auth_service.dart';
 import 'package:edu_sync/services/schedule_summary_service.dart';
 import 'package:edu_sync/models/schedule_summary.dart';
-import 'package:edu_sync/widgets/admin/animated_metric_card.dart';
+import 'package:edu_sync/providers/school_provider.dart';
+// import 'package:edu_sync/widgets/admin/animated_metric_card.dart';
 import 'package:edu_sync/widgets/teacher/teacher_drawer.dart';
 import 'package:edu_sync/screens/teacher/attendance_marking_screen.dart';
 import 'package:edu_sync/screens/teacher/exam/input_marks_screen.dart';
 import 'package:edu_sync/screens/teacher/teacher_timetable_screen.dart';
 import 'package:edu_sync/screens/common/attendance_report_screen.dart';
+import 'package:edu_sync/screens/teacher/teacher_student_management_screen.dart';
+import 'package:edu_sync/screens/staff/staff_attendance_screen.dart';
 
 class ModernTeacherDashboard extends StatefulWidget {
   const ModernTeacherDashboard({super.key});
@@ -44,9 +47,10 @@ class _ModernTeacherDashboardState extends State<ModernTeacherDashboard> with Ti
     final user = authService.getCurrentUser();
     
     if (user != null) {
+      final userDetails = await authService.getUserById(user.id);
       final summary = await scheduleSummaryService.getDailyScheduleSummary(user.id, DateTime.now());
       setState(() {
-        _teacherName = user.email?.split('@')[0];
+        _teacherName = userDetails?.fullName ?? user.email?.split('@')[0];
         _scheduleSummary = summary;
         _isLoading = false;
       });
@@ -72,7 +76,42 @@ class _ModernTeacherDashboardState extends State<ModernTeacherDashboard> with Ti
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
-        title: const Text('Teacher Dashboard', style: TextStyle(color: Color(0xFF2C2C2C), fontWeight: FontWeight.bold)),
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+        title: Row(
+          children: [
+            Consumer<SchoolProvider>(
+              builder: (context, schoolProvider, _) {
+                final schoolLogo = schoolProvider.currentSchool?.logoUrl;
+                return Container(
+                  width: 36,
+                  height: 36,
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4)],
+                  ),
+                  child: schoolLogo != null && schoolLogo.isNotEmpty
+                      ? Image.network(schoolLogo, fit: BoxFit.contain)
+                      : const Icon(Icons.school, size: 20, color: Colors.grey),
+                );
+              },
+            ),
+            const SizedBox(width: 8),
+            const Flexible(
+              child: Text(
+                'Teacher Dashboard',
+                style: TextStyle(color: Color(0xFF2C2C2C), fontWeight: FontWeight.bold),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
         iconTheme: const IconThemeData(color: Color(0xFF2C2C2C)),
         actions: [
           IconButton(icon: const Icon(Icons.notifications_outlined), onPressed: () {}),
@@ -127,10 +166,22 @@ class _ModernTeacherDashboardState extends State<ModernTeacherDashboard> with Ti
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
-            child: const Icon(Icons.school_rounded, color: Colors.white, size: 32),
+          Consumer<SchoolProvider>(
+            builder: (context, schoolProvider, _) {
+              final schoolLogo = schoolProvider.currentSchool?.logoUrl;
+              return Container(
+                width: 56,
+                height: 56,
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: schoolLogo != null && schoolLogo.isNotEmpty
+                    ? Image.network(schoolLogo, fit: BoxFit.contain)
+                    : const Icon(Icons.school_rounded, color: Colors.white, size: 32),
+              );
+            },
           ),
         ],
       ),
@@ -198,8 +249,10 @@ class _ModernTeacherDashboardState extends State<ModernTeacherDashboard> with Ti
 
   Widget _buildQuickActions() {
     final actions = [
+      {'title': 'My Students', 'icon': Icons.school_outlined, 'color': const Color(0xFF2196F3), 'screen': const TeacherStudentManagementScreen()},
+      {'title': 'Clock In/Out', 'icon': Icons.access_time_outlined, 'color': const Color(0xFF00BCD4), 'screen': const StaffAttendanceScreen()},
       {'title': 'Mark Attendance', 'icon': Icons.how_to_reg_outlined, 'color': const Color(0xFF4CAF50), 'screen': const AttendanceMarkingScreen()},
-      {'title': 'Input Marks', 'icon': Icons.edit_note_outlined, 'color': const Color(0xFF2196F3), 'screen': InputMarksScreen()},
+      {'title': 'Input Marks', 'icon': Icons.edit_note_outlined, 'color': const Color(0xFF673AB7), 'screen': const InputMarksScreen(examId: 'placeholder')},
       {'title': 'Timetable', 'icon': Icons.schedule_outlined, 'color': const Color(0xFF9C27B0), 'screen': const TeacherTimetableScreen()},
       {'title': 'Reports', 'icon': Icons.assessment_outlined, 'color': const Color(0xFFFF9800), 'screen': const AttendanceReportScreen()},
     ];
@@ -212,7 +265,7 @@ class _ModernTeacherDashboardState extends State<ModernTeacherDashboard> with Ti
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12, childAspectRatio: 1.5),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12, childAspectRatio: 1.4),
           itemCount: actions.length,
           itemBuilder: (context, index) {
             final action = actions[index];

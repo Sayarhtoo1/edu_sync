@@ -5,6 +5,8 @@ import 'package:edu_sync/l10n/gen/app_localizations.dart';
 class StudentFormFields extends StatelessWidget {
   final TextEditingController nameController;
   final TextEditingController dobController;
+  final TextEditingController? phoneNumber1Controller;
+  final TextEditingController? phoneNumber2Controller;
   final DateTime? selectedDateOfBirth;
   final Function(BuildContext) onSelectDateOfBirth;
   final int? selectedClassId;
@@ -18,6 +20,8 @@ class StudentFormFields extends StatelessWidget {
     super.key,
     required this.nameController,
     required this.dobController,
+    this.phoneNumber1Controller,
+    this.phoneNumber2Controller,
     required this.selectedDateOfBirth,
     required this.onSelectDateOfBirth,
     required this.selectedClassId,
@@ -88,6 +92,28 @@ class StudentFormFields extends StatelessWidget {
               onChanged: onGenderChanged,
               decoration: InputDecoration(labelText: l10n.genderLabel ?? 'Gender'),
             ),
+            if (phoneNumber1Controller != null) ...[
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: phoneNumber1Controller,
+                decoration: const InputDecoration(
+                  labelText: 'Phone Number 1',
+                  prefixIcon: Icon(Icons.phone),
+                ),
+                keyboardType: TextInputType.phone,
+              ),
+            ],
+            if (phoneNumber2Controller != null) ...[
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: phoneNumber2Controller,
+                decoration: const InputDecoration(
+                  labelText: 'Phone Number 2 (Optional)',
+                  prefixIcon: Icon(Icons.phone),
+                ),
+                keyboardType: TextInputType.phone,
+              ),
+            ],
           ],
         ),
       ),

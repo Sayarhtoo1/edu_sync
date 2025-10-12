@@ -85,7 +85,7 @@ class ExamService {
     };
   }
 
-  Future<void> addExam({
+  Future<Exam> addExam({
     required int classId,
     required int schoolId,
     required String name,
@@ -94,7 +94,7 @@ class ExamService {
     String? description,
     int? maxMarks,
   }) async {
-    await _supabaseClient.rpc('add_exam', params: {
+    final response = await _supabaseClient.rpc('add_exam', params: {
       'p_class_id': classId,
       'p_school_id': schoolId,
       'p_name': name,
@@ -103,17 +103,36 @@ class ExamService {
       'p_description': description,
       'p_max_marks': maxMarks,
     });
+    
+    // If response is a string (exam ID), create Exam object manually
+    if (response is String) {
+      return Exam(
+        id: response,
+        classId: classId,
+        schoolId: schoolId,
+        name: name,
+        examDate: examDate,
+        examinerName: examinerName,
+        description: description,
+        maxMarks: maxMarks,
+        createdAt: DateTime.now(),
+      );
+    }
+    
+    return Exam.fromMap(response as Map<String, dynamic>);
   }
 
   Future<void> addSubject({
     required String name,
-    required int classId,
     required int schoolId,
+    int? classId,
+    String? code,
   }) async {
     await _supabaseClient.rpc('add_subject', params: {
       'p_name': name,
-      'p_class_id': classId,
       'p_school_id': schoolId,
+      'p_class_id': classId,
+      'p_code': code,
     });
   }
 
@@ -148,14 +167,16 @@ class ExamService {
   Future<void> updateSubject({
     required String id,
     required String name,
-    required int classId,
     required int schoolId,
+    int? classId,
+    String? code,
   }) async {
     await _supabaseClient.rpc('update_subject', params: {
       'p_subject_id': id,
       'p_name': name,
-      'p_class_id': classId,
       'p_school_id': schoolId,
+      'p_class_id': classId,
+      'p_code': code,
     });
   }
 
@@ -216,7 +237,7 @@ class ExamService {
 
   Future<void> upsertStudentExamMark({
     required String examId,
-    required String studentId,
+    required int studentId,
     required String subjectId,
     required int marksObtained,
   }) async {
@@ -236,7 +257,6 @@ class ExamService {
     required int passingMarks,
   }) async {
     await _supabaseClient.rpc('upsert_exam_subject', params: {
-      'p_id': id,
       'p_exam_id': examId,
       'p_subject_id': subjectId,
       'p_max_marks': maxMarks,
@@ -262,7 +282,7 @@ class ExamService {
   }
 
   Future<List<dynamic>> getStudentReportCard({
-    required String studentId,
+    required int studentId,
     required String examId,
   }) async {
     return await _supabaseClient.rpc('get_student_report_card', params: {
@@ -272,14 +292,12 @@ class ExamService {
   }
 
   Future<List<dynamic>> getDetailedStudentReportCard({
-    required String studentId,
+    required int studentId,
     required String examId,
-    required int schoolId,
   }) async {
     final response = await _supabaseClient.rpc('get_detailed_student_report_card', params: {
       'p_student_id': studentId,
       'p_exam_id': examId,
-      'p_school_id': schoolId,
     });
     return response as List<dynamic>;
   }
@@ -343,10 +361,10 @@ class ExamService {
     return response as List<dynamic>;
   }
 
-  Future<Map<String, dynamic>> getStudentPerformance(int studentId) async {
+  Future<Map<String, dynamic>?> getStudentPerformance(int studentId) async {
     final response = await _supabaseClient.rpc('get_student_performance', params: {
       'p_student_id': studentId,
     });
-    return response as Map<String, dynamic>;
+    return response as Map<String, dynamic>?;
   }
 }

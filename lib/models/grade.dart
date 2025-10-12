@@ -1,6 +1,6 @@
 class Grade {
   final String id;
-  final String schoolId;
+  final int schoolId;
   final String gradeName;
   final int minPercentage;
   final int maxPercentage;
@@ -21,7 +21,7 @@ class Grade {
     return Grade(
       id: map['id'],
       schoolId: map['school_id'],
-      gradeName: map['grade_name'],
+      gradeName: map['grade_name'] ?? map['name'] ?? '',
       minPercentage: map['min_percentage'],
       maxPercentage: map['max_percentage'],
       remarks: map['remarks'],

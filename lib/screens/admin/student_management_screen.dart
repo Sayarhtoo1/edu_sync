@@ -1,7 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:edu_sync/models/student.dart';
-import 'package:edu_sync/theme/app_theme.dart';
 import 'package:edu_sync/services/student_service.dart';
 import 'package:edu_sync/services/auth_service.dart';
 import 'package:edu_sync/services/class_service.dart'; // New import

@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:edu_sync/providers/locale_provider.dart'; 
 import 'package:edu_sync/l10n/gen/app_localizations.dart';
-import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
+import 'package:edu_sync/theme/app_theme.dart';
 import 'package:edu_sync/services/update_service.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class AppSettingsScreen extends StatefulWidget {
   const AppSettingsScreen({super.key});
@@ -14,8 +15,20 @@ class AppSettingsScreen extends StatefulWidget {
 
 class _AppSettingsScreenState extends State<AppSettingsScreen> {
   final UpdateService _updateService = UpdateService();
-  // Example: bool _notificationsEnabled = true;
-  // Example: String _selectedLanguage = 'English'; // or from a LocaleProvider
+  String _appVersion = 'Loading...';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAppVersion();
+  }
+
+  Future<void> _loadAppVersion() async {
+    final packageInfo = await PackageInfo.fromPlatform();
+    setState(() {
+      _appVersion = packageInfo.version;
+    });
+  }
 
   void _showLanguagePicker(BuildContext context, LocaleProvider localeProvider) {
     final theme = Theme.of(context); // Get theme for dialog elements
@@ -91,13 +104,13 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
           const Divider(),
           ListTile(
             title: Text(l10n.aboutAppTitle ?? 'About App', style: theme.textTheme.titleMedium),
-            subtitle: Text('${l10n.versionLabel ?? 'Version'} 1.0.0 (Placeholder)', style: theme.textTheme.bodySmall),
+            subtitle: Text('${l10n.versionLabel ?? 'Version'} $_appVersion', style: theme.textTheme.bodySmall),
             leading: Icon(Icons.info_outline, color: theme.iconTheme.color),
             onTap: () {
               showAboutDialog(
                 context: context,
-                applicationName: l10n.appTitle ?? 'EduSync', // Use appTitle instead of appName
-                applicationVersion: '${l10n.versionLabel ?? 'Version'} 1.0.0 (Placeholder)',
+                applicationName: l10n.appTitle ?? 'EduSync',
+                applicationVersion: '${l10n.versionLabel ?? 'Version'} $_appVersion',
                 applicationLegalese: '© 2024 EduSync Team', 
                 children: <Widget>[
                   Padding(

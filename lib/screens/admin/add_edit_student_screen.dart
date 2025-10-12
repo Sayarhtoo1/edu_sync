@@ -37,6 +37,8 @@ class _AddEditStudentScreenState extends State<AddEditStudentScreen> {
 
   late TextEditingController _nameController;
   late TextEditingController _dobController;
+  late TextEditingController _phoneNumber1Controller;
+  late TextEditingController _phoneNumber2Controller;
 
   File? _profilePhotoFile;
   String? _currentProfilePhotoUrl;
@@ -61,6 +63,8 @@ class _AddEditStudentScreenState extends State<AddEditStudentScreen> {
     _authService = Provider.of<AuthService>(context, listen: false);
 
     _nameController = TextEditingController(text: widget.student?.fullName ?? '');
+    _phoneNumber1Controller = TextEditingController(text: widget.student?.phoneNumber1 ?? '');
+    _phoneNumber2Controller = TextEditingController(text: widget.student?.phoneNumber2 ?? '');
     _selectedDateOfBirth = widget.student?.dateOfBirth;
     _dobController = TextEditingController(
         text: _selectedDateOfBirth != null
@@ -77,9 +81,31 @@ class _AddEditStudentScreenState extends State<AddEditStudentScreen> {
     await _loadClasses();
     await _loadAvailableParents();
     if (_isEditing && widget.student != null) {
+      await _refetchStudentData();
       await _loadLinkedParents(widget.student!.id);
     }
     if (mounted) setState(() => _isLoading = false);
+  }
+
+  Future<void> _refetchStudentData() async {
+    try {
+      final freshStudent = await _studentService.getStudentById(widget.student!.id, widget.schoolId);
+      if (freshStudent != null && mounted) {
+        setState(() {
+          _phoneNumber1Controller.text = freshStudent.phoneNumber1 ?? '';
+          _phoneNumber2Controller.text = freshStudent.phoneNumber2 ?? '';
+          _selectedGender = freshStudent.gender;
+          _selectedClassId = freshStudent.classId;
+          _selectedDateOfBirth = freshStudent.dateOfBirth;
+          _dobController.text = _selectedDateOfBirth != null
+              ? DateFormat('yyyy-MM-dd').format(_selectedDateOfBirth!)
+              : '';
+          _currentProfilePhotoUrl = freshStudent.profilePhotoUrl;
+        });
+      }
+    } catch (e) {
+      logger.e('Error refetching student data: $e');
+    }
   }
 
   Future<void> _loadClasses() async {
@@ -270,11 +296,17 @@ class _AddEditStudentScreenState extends State<AddEditStudentScreen> {
     try {
       if (_isEditing) {
         // --- UPDATE LOGIC ---
+        final phone1Text = _phoneNumber1Controller.text.trim();
+        final phone2Text = _phoneNumber2Controller.text.trim();
         Student studentData = widget.student!.copyWith(
           fullName: _nameController.text,
           dateOfBirth: _selectedDateOfBirth,
           classId: _selectedClassId,
           gender: _selectedGender,
+          phoneNumber1: phone1Text.isEmpty ? null : phone1Text,
+          clearPhoneNumber1: phone1Text.isEmpty,
+          phoneNumber2: phone2Text.isEmpty ? null : phone2Text,
+          clearPhoneNumber2: phone2Text.isEmpty,
         );
 
         if (_profilePhotoFile != null) {
@@ -298,21 +330,25 @@ class _AddEditStudentScreenState extends State<AddEditStudentScreen> {
           newStudentId = await _studentService.createStudentWithParent(
             studentName: _nameController.text,
             schoolId: widget.schoolId,
-            classId: _selectedClassId, // Now nullable
+            classId: _selectedClassId,
             parentId: _linkedParentIds.first,
             relationType: UserRole.Parent.name,
             dateOfBirth: _selectedDateOfBirth,
             profilePhotoUrl: null,
             gender: _selectedGender,
+            phoneNumber1: _phoneNumber1Controller.text.isEmpty ? null : _phoneNumber1Controller.text,
+            phoneNumber2: _phoneNumber2Controller.text.isEmpty ? null : _phoneNumber2Controller.text,
           );
         } else {
           newStudentId = await _studentService.createStudent(
             studentName: _nameController.text,
             schoolId: widget.schoolId,
-            classId: _selectedClassId, // Now nullable
+            classId: _selectedClassId,
             dateOfBirth: _selectedDateOfBirth,
             profilePhotoUrl: null,
             gender: _selectedGender,
+            phoneNumber1: _phoneNumber1Controller.text.isEmpty ? null : _phoneNumber1Controller.text,
+            phoneNumber2: _phoneNumber2Controller.text.isEmpty ? null : _phoneNumber2Controller.text,
           );
         }
 
@@ -334,6 +370,7 @@ class _AddEditStudentScreenState extends State<AddEditStudentScreen> {
       }
 
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(_isEditing
@@ -347,10 +384,11 @@ class _AddEditStudentScreenState extends State<AddEditStudentScreen> {
     } catch (e, stackTrace) {
       logger.e('Failed to save student', error: e, stackTrace: stackTrace);
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         setState(() {
           _errorMessage = _isEditing
-              ? (AppLocalizations.of(context)?.failedToUpdateStudentError ?? 'Failed to update student')
-              : (AppLocalizations.of(context)?.failedToCreateStudentError ?? 'Failed to create student');
+              ? (l10n?.failedToUpdateStudentError ?? 'Failed to update student')
+              : (l10n?.failedToCreateStudentError ?? 'Failed to create student');
         });
       }
     } finally {
@@ -364,6 +402,8 @@ class _AddEditStudentScreenState extends State<AddEditStudentScreen> {
   void dispose() {
     _nameController.dispose();
     _dobController.dispose();
+    _phoneNumber1Controller.dispose();
+    _phoneNumber2Controller.dispose();
     super.dispose();
   }
 
@@ -386,6 +426,8 @@ class _AddEditStudentScreenState extends State<AddEditStudentScreen> {
               StudentFormFields(
                 nameController: _nameController,
                 dobController: _dobController,
+                phoneNumber1Controller: _phoneNumber1Controller,
+                phoneNumber2Controller: _phoneNumber2Controller,
                 selectedDateOfBirth: _selectedDateOfBirth,
                 onSelectDateOfBirth: _selectDateOfBirth,
                 selectedClassId: _selectedClassId,

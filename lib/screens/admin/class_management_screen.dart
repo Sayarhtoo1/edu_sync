@@ -5,7 +5,7 @@ import 'package:edu_sync/services/auth_service.dart';
 import 'add_edit_class_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Import AppLocalizations
-import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
+// Import AppTheme
 
 class ClassManagementScreen extends StatefulWidget {
   const ClassManagementScreen({super.key});

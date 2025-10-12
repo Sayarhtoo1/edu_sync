@@ -81,6 +81,11 @@ class _ExamManagementScreenState extends State<ExamManagementScreen> {
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.grade),
+            onPressed: () => context.push('/admin/grade-management'),
+            tooltip: 'Manage Grades',
+          ),
+          IconButton(
             icon: const Icon(Icons.filter_list),
             onPressed: _showFilterDialog,
             tooltip: 'Filter',
@@ -177,7 +182,7 @@ class _ExamManagementScreenState extends State<ExamManagementScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
-        onTap: () => context.push('/exam-management/edit/${exam.id}'),
+        onTap: () => context.push('/exam-management/edit/${exam.id}', extra: exam),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -279,34 +284,39 @@ class _ExamManagementScreenState extends State<ExamManagementScreen> {
                 ),
               ],
               const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   TextButton.icon(
-                    onPressed: () => context.push('/exam-management/edit/${exam.id}'),
+                    onPressed: () => context.push('/admin/marks-entry/${exam.id}', extra: {'examName': exam.name}),
+                    icon: const Icon(Icons.edit_note, size: 16),
+                    label: const Text('Enter Marks'),
+                    style: TextButton.styleFrom(foregroundColor: Colors.blue),
+                  ),
+                  TextButton.icon(
+                    onPressed: () => context.push('/all-report-cards/${exam.id}', extra: {'examName': exam.name}),
+                    icon: const Icon(Icons.assignment, size: 16),
+                    label: const Text('Report Cards'),
+                    style: TextButton.styleFrom(foregroundColor: Colors.purple),
+                  ),
+                  TextButton.icon(
+                    onPressed: () => context.push('/exam-analytics/${exam.id}', extra: {'examName': exam.name}),
+                    icon: const Icon(Icons.analytics, size: 16),
+                    label: const Text('Analytics'),
+                    style: TextButton.styleFrom(foregroundColor: Colors.green),
+                  ),
+                  TextButton.icon(
+                    onPressed: () => context.push('/exam-management/edit/${exam.id}', extra: exam),
                     icon: const Icon(Icons.edit, size: 16),
                     label: const Text('Edit'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: defaultAccentColor,
-                    ),
+                    style: TextButton.styleFrom(foregroundColor: defaultAccentColor),
                   ),
-                  const SizedBox(width: 8),
                   TextButton.icon(
                     onPressed: () => _showDeleteDialog(exam),
                     icon: const Icon(Icons.delete, size: 16),
                     label: const Text('Delete'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.red,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  TextButton.icon(
-                    onPressed: () => context.push('/input-marks/${exam.id}'),
-                    icon: const Icon(Icons.grade, size: 16),
-                    label: const Text('Input Marks'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: accentEarnings,
-                    ),
+                    style: TextButton.styleFrom(foregroundColor: Colors.red),
                   ),
                 ],
               ),
@@ -428,10 +438,23 @@ class _ExamManagementScreenState extends State<ExamManagementScreen> {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () {
-                Provider.of<ExamProvider>(context, listen: false)
-                    .deleteExam(exam.id, context.read<SchoolProvider>().currentSchool!.id.toString());
+              onPressed: () async {
                 Navigator.pop(context);
+                try {
+                  await Provider.of<ExamProvider>(context, listen: false)
+                      .deleteExam(exam.id, context.read<SchoolProvider>().currentSchool!.id.toString());
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Exam deleted successfully')),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to delete exam: $e')),
+                    );
+                  }
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,

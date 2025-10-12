@@ -37,8 +37,8 @@ class _AddEditTimetableEntryScreenState extends State<AddEditTimetableEntryScree
   
   TimeOfDay? _selectedStartTime;
   TimeOfDay? _selectedEndTime;
-  String? _selectedDayOfWeek;
-  int? _selectedClassId; // Corrected to int?
+  Set<String> _selectedDaysOfWeek = {};
+  int? _selectedClassId;
   String? _selectedTeacherId;
 
   List<app_class.SchoolClass> _availableClasses = [];
@@ -61,8 +61,8 @@ class _AddEditTimetableEntryScreenState extends State<AddEditTimetableEntryScree
     if (_isEditing && widget.timetableEntry != null) {
       _selectedStartTime = widget.timetableEntry!.startTimeOfDay;
       _selectedEndTime = widget.timetableEntry!.endTimeOfDay;
-      _selectedDayOfWeek = widget.timetableEntry!.dayOfWeek;
-      _selectedClassId = widget.timetableEntry!.classId; // Timetable.classId is int
+      _selectedDaysOfWeek = {widget.timetableEntry!.dayOfWeek};
+      _selectedClassId = widget.timetableEntry!.classId;
       _selectedTeacherId = widget.timetableEntry!.teacherId;
     } else if (widget.classIdForNewEntry != null) {
       _selectedClassId = widget.classIdForNewEntry; // classIdForNewEntry is int?
@@ -137,8 +137,8 @@ class _AddEditTimetableEntryScreenState extends State<AddEditTimetableEntryScree
   Future<void> _saveTimetableEntry() async {
     final l10n = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedStartTime == null || _selectedEndTime == null || _selectedDayOfWeek == null || _selectedClassId == null /* Teacher can be optional || _selectedTeacherId == null */) {
-      setState(() => _errorMessage = l10n?.fillAllFieldsError ?? 'Please fill all required fields'); // Adjusted validation message if teacher is optional
+    if (_selectedStartTime == null || _selectedEndTime == null || _selectedDaysOfWeek.isEmpty || _selectedClassId == null) {
+      setState(() => _errorMessage = l10n?.fillAllFieldsError ?? 'Please fill all required fields');
       return;
     }
     if (_selectedEndTime!.hour < _selectedStartTime!.hour || (_selectedEndTime!.hour == _selectedStartTime!.hour && _selectedEndTime!.minute <= _selectedStartTime!.minute)) {
@@ -150,32 +150,39 @@ class _AddEditTimetableEntryScreenState extends State<AddEditTimetableEntryScree
 
     try {
       final selectedClass = _availableClasses.firstWhere((cls) => cls.id == _selectedClassId);
-      final entry = Timetable(
-        id: _isEditing ? widget.timetableEntry!.id : 0, 
-        classId: _selectedClassId!, // Now int
-        className: selectedClass.name, // Pass the class name
-        startTimeOfDay: _selectedStartTime!,
-        endTimeOfDay: _selectedEndTime!,
-        dayOfWeek: _selectedDayOfWeek!,
-        subjectName: _subjectNameController.text,
-        teacherId: _selectedTeacherId,
-      );
-
-      bool success;
+      
       if (_isEditing) {
-        success = await _timetableService.updateTimetableEntry(entry);
+        final entry = Timetable(
+          id: widget.timetableEntry!.id,
+          classId: _selectedClassId!,
+          className: selectedClass.name,
+          startTimeOfDay: _selectedStartTime!,
+          endTimeOfDay: _selectedEndTime!,
+          dayOfWeek: _selectedDaysOfWeek.first,
+          subjectName: _subjectNameController.text,
+          teacherId: _selectedTeacherId,
+        );
+        final success = await _timetableService.updateTimetableEntry(entry);
+        if (!success) throw Exception('Failed to update');
       } else {
-        final newEntry = await _timetableService.createTimetableEntry(entry);
-        success = newEntry != null;
+        for (final day in _selectedDaysOfWeek) {
+          final entry = Timetable(
+            id: 0,
+            classId: _selectedClassId!,
+            className: selectedClass.name,
+            startTimeOfDay: _selectedStartTime!,
+            endTimeOfDay: _selectedEndTime!,
+            dayOfWeek: day,
+            subjectName: _subjectNameController.text,
+            teacherId: _selectedTeacherId,
+          );
+          final newEntry = await _timetableService.createTimetableEntry(entry);
+          if (newEntry == null) throw Exception('Failed to create entry for $day');
+        }
       }
-
-      if (success) {
-        if(mounted) Navigator.of(context).pop(true); 
-      } else {
-        throw Exception(l10n?.failedToSaveTimetableEntryError ?? 'Failed to save timetable entry');
-      }
+      if (mounted) Navigator.of(context).pop(true);
     } catch (e) {
-      if(mounted) {
+      if (mounted) {
         setState(() {
           _isLoading = false;
           _errorMessage = '${l10n?.errorOccurredPrefix ?? 'Error'}: ${e.toString()}';
@@ -192,98 +199,258 @@ class _AddEditTimetableEntryScreenState extends State<AddEditTimetableEntryScree
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('AddEditTimetableEntryScreen: build called'); // Added debug print
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final Color contextualAccentColor = AppTheme.getAccentColorForContext('students');
 
     String getLocalizedDayName(String dayKey) {
-        switch (dayKey.toLowerCase()) {
-            case 'monday': return l10n?.monday ?? 'Monday';
-            case 'tuesday': return l10n?.tuesday ?? 'Tuesday';
-            case 'wednesday': return l10n?.wednesday ?? 'Wednesday';
-            case 'thursday': return l10n?.thursday ?? 'Thursday';
-            case 'friday': return l10n?.friday ?? 'Friday';
-            case 'saturday': return l10n?.saturday ?? 'Saturday';
-            case 'sunday': return l10n?.sunday ?? 'Sunday';
-            default: return dayKey;
-        }
+      switch (dayKey.toLowerCase()) {
+        case 'monday': return l10n?.monday ?? 'Monday';
+        case 'tuesday': return l10n?.tuesday ?? 'Tuesday';
+        case 'wednesday': return l10n?.wednesday ?? 'Wednesday';
+        case 'thursday': return l10n?.thursday ?? 'Thursday';
+        case 'friday': return l10n?.friday ?? 'Friday';
+        case 'saturday': return l10n?.saturday ?? 'Saturday';
+        case 'sunday': return l10n?.sunday ?? 'Sunday';
+        default: return dayKey;
+      }
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(_isEditing ? (l10n?.editTimetableEntryTitle ?? 'Edit Timetable Entry') : (l10n?.addTimetableEntryTitle ?? 'Add Timetable Entry'))), // Theme applied globally
-      body: _isLoading 
+      backgroundColor: appBackgroundColor,
+      appBar: AppBar(
+        elevation: 0,
+        title: Text(_isEditing ? (l10n?.editTimetableEntryTitle ?? 'Edit Entry') : (l10n?.addTimetableEntryTitle ?? 'Add Entry')),
+      ),
+      body: _isLoading
           ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(contextualAccentColor)))
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: ListView(
-                  children: [
-                    DropdownButtonFormField<int>( // Corrected to int
-                      value: _selectedClassId,
-                      hint: Text(l10n?.selectClassHint ?? 'Select Class'),
-                      items: _availableClasses.map((app_class.SchoolClass cls) {
-                        return DropdownMenuItem<int>(value: cls.id, child: Text(cls.name)); // cls.id is int?
-                      }).toList(),
-                      onChanged: (value) => setState(() => _selectedClassId = value),
-                      validator: (value) => value == null ? (l10n?.pleaseSelectClass ?? 'Please select a class') : null,
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _subjectNameController,
-                      decoration: InputDecoration(labelText: l10n?.subjectNameLabel ?? 'Subject Name'),
-                      validator: (value) => (value == null || value.isEmpty) ? (l10n?.subjectNameValidator ?? 'Subject name cannot be empty') : null,
-                    ),
-                    const SizedBox(height: 16),
-                    DropdownButtonFormField<String>(
-                      value: _selectedTeacherId,
-                      hint: Text(l10n?.selectClassTeacherHint ?? 'Select Class Teacher'),
-                      items: _availableTeachers.map((app_user.User teacher) {
-                        return DropdownMenuItem<String>(value: teacher.id, child: Text(teacher.fullName ?? (l10n?.unnamedTeacher ?? 'Unnamed Teacher')));
-                      }).toList(),
-                      onChanged: (value) => setState(() => _selectedTeacherId = value),
-                      // validator: (value) => value == null ? l10n.classTeacherValidator : null, // Teacher can be optional
-                    ),
-                    const SizedBox(height: 16),
-                    DropdownButtonFormField<String>(
-                      value: _selectedDayOfWeek,
-                      hint: Text(l10n?.selectDayOfWeekHint ?? 'Select Day of Week'),
-                      items: _daysOfWeek.map((String day) {
-                        return DropdownMenuItem<String>(value: day, child: Text(getLocalizedDayName(day)));
-                      }).toList(),
-                      onChanged: (value) => setState(() => _selectedDayOfWeek = value),
-                      validator: (value) => value == null ? (l10n?.dayValidator ?? 'Please select a day of the week') : null,
-                    ),
-                    const SizedBox(height: 16),
-                    ListTile(
-                      title: Text('${l10n?.startTimeLabelPrefix ?? 'Start Time'}${_selectedStartTime?.format(context) ?? (l10n?.timeNotSet ?? 'Not Set')}', style: theme.textTheme.bodyLarge),
-                      trailing: Icon(Icons.access_time, color: theme.iconTheme.color),
-                      onTap: () => _selectTime(context, true),
-                    ),
-                    ListTile(
-                      title: Text('${l10n?.endTimeLabelPrefix ?? 'End Time'}${_selectedEndTime?.format(context) ?? (l10n?.timeNotSet ?? 'Not Set')}', style: theme.textTheme.bodyLarge),
-                      trailing: Icon(Icons.access_time, color: theme.iconTheme.color),
-                      onTap: () => _selectTime(context, false),
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: contextualAccentColor,
-                        foregroundColor: Colors.white,
+          : Form(
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  _buildSectionCard(
+                    'Basic Information',
+                    [
+                      _buildDropdownField(
+                        value: _selectedClassId,
+                        hint: l10n?.selectClassHint ?? 'Select Class',
+                        icon: Icons.class_,
+                        items: _availableClasses.map((cls) => DropdownMenuItem<int>(value: cls.id, child: Text(cls.name))).toList(),
+                        onChanged: (value) => setState(() => _selectedClassId = value),
+                        validator: (value) => value == null ? (l10n?.pleaseSelectClass ?? 'Required') : null,
+                        accentColor: contextualAccentColor,
                       ),
-                      onPressed: _saveTimetableEntry,
-                      child: Text(_isEditing ? (l10n?.updateEntryButton ?? 'Update Entry') : (l10n?.addEntryButton ?? 'Add Entry')),
-                    ),
-                    if (_errorMessage.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
-                        child: Text(_errorMessage, style: TextStyle(color: theme.colorScheme.error)),
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                        controller: _subjectNameController,
+                        label: l10n?.subjectNameLabel ?? 'Subject Name',
+                        icon: Icons.book,
+                        validator: (value) => (value == null || value.isEmpty) ? (l10n?.subjectNameValidator ?? 'Required') : null,
+                        accentColor: contextualAccentColor,
                       ),
-                  ],
-                ),
+                      const SizedBox(height: 16),
+                      _buildDropdownField<String>(
+                        value: _selectedTeacherId,
+                        hint: l10n?.selectClassTeacherHint ?? 'Select Teacher',
+                        icon: Icons.person,
+                        items: _availableTeachers.map((teacher) => DropdownMenuItem<String>(value: teacher.id, child: Text(teacher.fullName ?? 'Unnamed'))).toList(),
+                        onChanged: (value) => setState(() => _selectedTeacherId = value),
+                        accentColor: contextualAccentColor,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _buildSectionCard(
+                    'Schedule',
+                    [
+                      _buildDaySelector(getLocalizedDayName, contextualAccentColor),
+                      const SizedBox(height: 16),
+                      _buildTimeSelector(
+                        label: l10n?.startTimeLabelPrefix ?? 'Start Time',
+                        time: _selectedStartTime,
+                        icon: Icons.access_time,
+                        onTap: () => _selectTime(context, true),
+                        accentColor: contextualAccentColor,
+                        context: context,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTimeSelector(
+                        label: l10n?.endTimeLabelPrefix ?? 'End Time',
+                        time: _selectedEndTime,
+                        icon: Icons.access_time_filled,
+                        onTap: () => _selectTime(context, false),
+                        accentColor: contextualAccentColor,
+                        context: context,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: contextualAccentColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 2,
+                    ),
+                    onPressed: _saveTimetableEntry,
+                    child: Text(_isEditing ? (l10n?.updateEntryButton ?? 'Update') : (l10n?.addEntryButton ?? 'Add Entry'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  ),
+                  if (_errorMessage.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.error.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.error_outline, color: theme.colorScheme.error),
+                            const SizedBox(width: 8),
+                            Expanded(child: Text(_errorMessage, style: TextStyle(color: theme.colorScheme.error))),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
+    );
+  }
+
+  Widget _buildSectionCard(String title, List<Widget> children) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cardBackgroundColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withAlpha(20),
+            spreadRadius: 1,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textDarkGrey)),
+          const SizedBox(height: 16),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextField({required TextEditingController controller, required String label, required IconData icon, String? Function(String?)? validator, required Color accentColor}) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: accentColor),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: accentColor, width: 2)),
+      ),
+      validator: validator,
+    );
+  }
+
+  Widget _buildDropdownField<T>({required T? value, required String hint, required IconData icon, required List<DropdownMenuItem<T>> items, required void Function(T?) onChanged, String? Function(T?)? validator, required Color accentColor}) {
+    return DropdownButtonFormField<T>(
+      value: value,
+      decoration: InputDecoration(
+        hintText: hint,
+        prefixIcon: Icon(icon, color: accentColor),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: accentColor, width: 2)),
+      ),
+      items: items,
+      onChanged: onChanged,
+      validator: validator,
+    );
+  }
+
+  Widget _buildTimeSelector({required String label, required TimeOfDay? time, required IconData icon, required VoidCallback onTap, required Color accentColor, required BuildContext context}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.withOpacity(0.3)),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: accentColor),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: TextStyle(fontSize: 12, color: textDarkGrey.withOpacity(0.6))),
+                  const SizedBox(height: 4),
+                  Text(time?.format(context) ?? 'Not Set', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, size: 16, color: textDarkGrey.withOpacity(0.4)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDaySelector(String Function(String) getLocalizedDayName, Color accentColor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.calendar_today, color: accentColor, size: 20),
+            const SizedBox(width: 8),
+            Text('Select Days', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: textDarkGrey)),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: _daysOfWeek.map((day) {
+            final isSelected = _selectedDaysOfWeek.contains(day);
+            return FilterChip(
+              label: Text(getLocalizedDayName(day)),
+              selected: isSelected,
+              onSelected: (selected) {
+                setState(() {
+                  if (selected) {
+                    _selectedDaysOfWeek.add(day);
+                  } else {
+                    _selectedDaysOfWeek.remove(day);
+                  }
+                });
+              },
+              selectedColor: accentColor.withOpacity(0.2),
+              checkmarkColor: accentColor,
+              labelStyle: TextStyle(
+                color: isSelected ? accentColor : textDarkGrey,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+              side: BorderSide(color: isSelected ? accentColor : Colors.grey.withOpacity(0.3)),
+            );
+          }).toList(),
+        ),
+        if (_selectedDaysOfWeek.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text('Please select at least one day', style: TextStyle(fontSize: 12, color: Colors.red.withOpacity(0.7))),
+          ),
+      ],
     );
   }
 }

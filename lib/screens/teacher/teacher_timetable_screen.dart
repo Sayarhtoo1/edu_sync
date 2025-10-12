@@ -10,7 +10,6 @@ import '../../services/class_service.dart'; // Import ClassService
 import '../../providers/school_provider.dart';
 import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart'; // Import AppTheme
-import 'teacher_timetable_components/timetable_entry_card.dart';
 
 class TeacherTimetableScreen extends StatefulWidget {
   const TeacherTimetableScreen({super.key});
@@ -123,16 +122,18 @@ class _TeacherTimetableScreenState extends State<TeacherTimetableScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!; // Assert non-null
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final Color contextualAccentColor = AppTheme.getAccentColorForContext('teachers');
 
     return Scaffold(
+      backgroundColor: appBackgroundColor,
       appBar: AppBar(
+        elevation: 0,
         title: Text(l10n.my_timetable_title),
         actions: [
           IconButton(
-            icon: const Icon(Icons.calendar_today),
+            icon: Icon(Icons.calendar_month, color: contextualAccentColor),
             onPressed: () async {
               final DateTime? picked = await showDatePicker(
                 context: context,
@@ -145,12 +146,10 @@ class _TeacherTimetableScreenState extends State<TeacherTimetableScreen> {
                       colorScheme: theme.colorScheme.copyWith(
                         primary: contextualAccentColor,
                         onPrimary: Colors.white,
-                        onSurface: Colors.black, // Adjust as needed
+                        onSurface: Colors.black,
                       ),
                       textButtonTheme: TextButtonThemeData(
-                        style: TextButton.styleFrom(
-                          foregroundColor: contextualAccentColor,
-                        ),
+                        style: TextButton.styleFrom(foregroundColor: contextualAccentColor),
                       ),
                     ),
                     child: child!,
@@ -166,68 +165,183 @@ class _TeacherTimetableScreenState extends State<TeacherTimetableScreen> {
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back_ios),
-                  onPressed: () => _changeSelectedDate(_selectedDate.subtract(const Duration(days: 1))),
-                ),
-                Text(
-                  DateFormat('EEEE, MMM d, yyyy').format(_selectedDate),
-                  style: theme.textTheme.titleMedium?.copyWith(color: contextualAccentColor),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.arrow_forward_ios),
-                  onPressed: () => _changeSelectedDate(_selectedDate.add(const Duration(days: 1))),
-                ),
-              ],
-            ),
+          _buildDateNavigator(contextualAccentColor, theme),
+          Expanded(child: _buildBody(l10n, contextualAccentColor)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDateNavigator(Color accentColor, ThemeData theme) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: cardBackgroundColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withAlpha(20),
+            spreadRadius: 1,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
-          Expanded(
-            child: _buildBody(l10n),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          IconButton(
+            icon: Icon(Icons.chevron_left, color: accentColor),
+            onPressed: () => _changeSelectedDate(_selectedDate.subtract(const Duration(days: 1))),
+          ),
+          Column(
+            children: [
+              Text(
+                DateFormat('EEEE').format(_selectedDate),
+                style: theme.textTheme.titleMedium?.copyWith(color: accentColor, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                DateFormat('MMM d, yyyy').format(_selectedDate),
+                style: theme.textTheme.bodySmall?.copyWith(color: textDarkGrey.withOpacity(0.6)),
+              ),
+            ],
+          ),
+          IconButton(
+            icon: Icon(Icons.chevron_right, color: accentColor),
+            onPressed: () => _changeSelectedDate(_selectedDate.add(const Duration(days: 1))),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildBody(AppLocalizations l10n) {
+  Widget _buildBody(AppLocalizations l10n, Color accentColor) {
     final theme = Theme.of(context);
-    final Color contextualAccentColor = AppTheme.getAccentColorForContext('teachers');
 
     if (_isLoading) {
-      return Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(contextualAccentColor)));
+      return Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(accentColor)));
     }
 
     if (_errorMessage != null) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text(_errorMessage!, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.error)),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 64, color: theme.colorScheme.error.withOpacity(0.5)),
+              const SizedBox(height: 16),
+              Text(_errorMessage!, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.error), textAlign: TextAlign.center),
+            ],
+          ),
         ),
       );
     }
 
     if (_timetableEntries.isEmpty) {
       return Center(
-        child: Text(l10n.no_timetable_entries_found, style: theme.textTheme.bodyLarge),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.event_busy, size: 80, color: accentColor.withOpacity(0.3)),
+            const SizedBox(height: 16),
+            Text(l10n.no_timetable_entries_found, style: TextStyle(fontSize: 16, color: textDarkGrey.withOpacity(0.6))),
+          ],
+        ),
       );
     }
 
     return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       itemCount: _timetableEntries.length,
       itemBuilder: (context, index) {
         final entry = _timetableEntries[index];
-        return TimetableEntryCard(
-          entry: entry,
-          classMap: _classMap,
-          l10n: l10n,
-          selectedDate: _selectedDate,
-        );
+        return _buildEnhancedTimetableCard(entry, accentColor, theme, index);
       },
+    );
+  }
+
+  Widget _buildEnhancedTimetableCard(timetable_model.Timetable entry, Color accentColor, ThemeData theme, int index) {
+    final className = _classMap[entry.classId]?.name ?? 'Unknown Class';
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: cardBackgroundColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withAlpha(20),
+            spreadRadius: 1,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              width: 4,
+              height: 80,
+              decoration: BoxDecoration(
+                color: accentColor,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: accentColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          '${entry.startTimeString} - ${entry.endTimeString}',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: accentColor),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    entry.subjectName,
+                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(Icons.class_, size: 16, color: textDarkGrey.withOpacity(0.6)),
+                      const SizedBox(width: 4),
+                      Text(
+                        className,
+                        style: theme.textTheme.bodySmall?.copyWith(color: textDarkGrey.withOpacity(0.6)),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: accentColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.book, color: accentColor, size: 24),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

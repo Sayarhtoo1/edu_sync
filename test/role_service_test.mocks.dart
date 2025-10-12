@@ -115,11 +115,16 @@ class MockAuthService extends _i1.Mock implements _i2.AuthService {
 
   @override
   _i3.Future<List<_i5.User>> getUsersByRole(
-    _i6.UserRole? role,
-    int? schoolId,
-  ) =>
+    _i6.UserRole role,
+    int schoolId, {
+    bool forceRefresh = false,
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#getUsersByRole, [role, schoolId]),
+            Invocation.method(
+              #getUsersByRole,
+              [role, schoolId],
+              {#forceRefresh: forceRefresh},
+            ),
             returnValue: _i3.Future<List<_i5.User>>.value(<_i5.User>[]),
           )
           as _i3.Future<List<_i5.User>>);

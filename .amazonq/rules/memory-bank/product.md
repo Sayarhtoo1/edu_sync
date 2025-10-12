@@ -1,102 +1,104 @@
 # Product Overview
 
 ## Project Purpose
-EduSync Myanmar is a comprehensive school management system built with Flutter, designed to streamline educational administration and communication for schools in Myanmar. The platform connects administrators, teachers, parents, and students through a unified digital ecosystem.
+EduSync Myanmar is a comprehensive school management system built with Flutter, designed to streamline educational administration for schools in Myanmar. The platform provides a unified solution for managing students, teachers, staff, parents, and administrative operations with bilingual support (English and Myanmar).
 
 ## Value Proposition
-- Centralized school management with role-based access control (Admin, Teacher, Parent, Student)
-- Real-time communication through announcements and notifications
-- Offline-first architecture with local caching for reliable access
-- Multi-language support (English and Myanmar/Burmese)
-- Cloud-based data synchronization via Supabase backend
+- **Multi-role Management**: Supports Admin, Teacher, Parent, Manager, Donator, and Student roles with role-specific dashboards and features
+- **Comprehensive School Operations**: Handles attendance, timetables, exams, grades, announcements, lesson plans, and custom forms
+- **Financial Management**: Complete finance module including fee structures, donations, salary payments, income, and expense tracking
+- **Exam System**: Full-featured exam management with marks entry, analytics, report cards, templates, and approval workflows
+- **Offline-First Architecture**: Uses Drift (SQLite) for local caching with Supabase backend synchronization
+- **Bilingual Support**: Native Myanmar language support with localization infrastructure
 
-## Key Features and Capabilities
+## Key Features
 
-### User Management
-- Multi-role authentication system (Admin, Teacher, Parent, Student)
-- User profile management with photo support
-- School-based user organization and access control
-- Password reset functionality with deep linking
+### Administrative Features
+- User and role management with Supabase authentication
+- School profile and settings management
+- Staff and student management with comprehensive profiles
+- Class and timetable management
+- Custom form builder with response tracking
+- Announcement system for school-wide communications
+- Analytics dashboard with performance insights
+- Finance overview with income/expense tracking
 
-### Academic Management
-- Class and subject management
-- Timetable creation and scheduling
-- Exam management with subject-wise marks tracking
-- Lesson plan creation and sharing
-- Grade management and analytics
-- Student performance tracking and reporting
+### Exam Management
+- Exam creation and scheduling with calendar view
+- Subject and grade management
+- Marks entry and approval workflows
+- Report card generation (PDF export)
+- Exam analytics and performance tracking
+- Exam templates for recurring assessments
+- Notification preferences for exam events
 
-### Attendance System
-- Staff and student attendance tracking
-- Attendance report generation
-- Historical attendance data with offline support
-- Real-time attendance status updates
+### Teacher Features
+- Modern teacher dashboard with class overview
+- Attendance marking for students
+- Lesson plan management
+- Student management and performance tracking
+- Marks input for exams
+- Timetable viewing
 
-### Communication
-- School-wide announcement system
-- Role-based announcement targeting
-- In-app notification popup system
-- Real-time notification subscriptions
+### Parent Features
+- Child attendance monitoring
+- Child schedule and timetable viewing
+- Exam schedule and report card access
+- Announcements and daily reports
+- Student performance tracking
 
-### Finance Management
-- Income and expense tracking
+### Financial Features
+- Fee structure management with payment tracking
+- Donation management for donors
+- Salary payment processing for staff
+- Income and expense categorization
 - Financial overview and reporting
-- Budget management for schools
-
-### Custom Forms
-- Dynamic form builder for data collection
-- Form response management
-- Customizable field types and validation
-
-### Analytics & Reporting
-- Exam performance analytics
-- Attendance reports
-- Financial summaries
-- Student progress tracking
-- Dashboard visualizations with Syncfusion charts
-
-### Additional Features
-- Hijri calendar integration
-- CSV export functionality
-- Google Maps integration for location services
-- Profile photo management with image picker
-- Deep linking support for password reset and navigation
 
 ## Target Users
 
-### School Administrators
-- Complete system access and configuration
-- User management (teachers, parents, students)
-- Financial oversight and reporting
-- School-wide announcements and policies
+### Primary Users
+- **School Administrators**: Complete control over school operations, user management, and system configuration
+- **Teachers**: Daily classroom management, attendance, lesson planning, and marks entry
+- **Parents**: Monitor children's academic progress, attendance, and school communications
+- **Students**: Access personal academic records, schedules, and performance data
 
-### Teachers
-- Class and subject management
-- Attendance marking
-- Exam and grade management
-- Lesson plan creation
-- Student performance monitoring
-- Parent communication
-
-### Parents
-- View children's academic progress
-- Access attendance records
-- Receive school announcements
-- Monitor exam results and grades
-- Communication with teachers
-
-### Students
-- View personal timetable and schedule
-- Access exam results and grades
-- Receive announcements
-- View lesson plans and assignments
+### Secondary Users
+- **School Managers**: Financial oversight and operational analytics
+- **Donators**: Track donations and view school financial transparency
+- **Staff Members**: Access personal profiles and attendance records
 
 ## Use Cases
 
-1. **Daily Attendance Management**: Teachers mark attendance for their classes, with real-time sync to the cloud and offline capability
-2. **Exam Management**: Administrators create exams, teachers input marks, parents and students view results
-3. **School Communication**: Administrators broadcast announcements to specific roles or entire school community
-4. **Academic Planning**: Teachers create and share lesson plans, manage timetables
-5. **Financial Tracking**: Administrators track school income and expenses, generate financial reports
-6. **Performance Analytics**: View student performance trends, exam analytics, and attendance patterns
-7. **Multi-School Support**: System supports multiple schools with isolated data per school_id
+### Daily Operations
+- Mark student attendance across multiple classes
+- View and manage daily timetables
+- Post and read school announcements
+- Track staff attendance and status
+
+### Academic Management
+- Create and schedule exams across grades
+- Enter and approve student marks
+- Generate report cards for distribution
+- Analyze student performance trends
+- Manage lesson plans and curriculum
+
+### Financial Operations
+- Process fee payments from parents
+- Record donations from supporters
+- Manage staff salary payments
+- Track school income and expenses
+- Generate financial reports
+
+### Communication
+- Broadcast announcements to specific roles
+- Send exam notifications to parents
+- Share daily reports with parents
+- Distribute custom forms for data collection
+
+## Technical Highlights
+- **Cross-Platform**: Runs on Android, iOS, Windows, Linux, macOS, and Web
+- **Real-time Sync**: Supabase backend with real-time data synchronization
+- **Offline Support**: Local database with automatic sync when online
+- **Modern UI**: Material Design 3 with custom theming
+- **Scalable Architecture**: Provider pattern with service layer separation
+- **Type-Safe**: Comprehensive data models with null safety

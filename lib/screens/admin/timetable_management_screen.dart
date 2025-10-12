@@ -5,13 +5,9 @@ import 'package:edu_sync/services/auth_service.dart';
 import 'package:edu_sync/models/school_class.dart' as app_class;
 import 'package:edu_sync/services/class_service.dart';
 import 'add_edit_timetable_entry_screen.dart';
-import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Import AppLocalizations
-import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
-import 'package:provider/provider.dart'; // Import provider
-// Import AppDatabase
-// Import Connectivity
-// Import SharedPreferences
-// Import Supabase
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
+import 'package:edu_sync/theme/app_theme.dart';
+import 'package:provider/provider.dart';
 
 class TimetableManagementScreen extends StatefulWidget {
   const TimetableManagementScreen({super.key});
@@ -56,13 +52,33 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
   }
 
   Future<void> _loadTimetableForSelectedClass() async {
-    if (_selectedClass == null || _selectedClass!.id == null) return; // Add null check for id
+    if (_selectedClass == null || _selectedClass!.id == null) return;
     setState(() => _isLoading = true);
-    // _selectedClass.id is int?, getTimetableForClass expects int
-    _timetableEntries = await _timetableService.getTimetableForClass(_selectedClass!.id!); 
+    _timetableEntries = await _timetableService.getTimetableForClass(_selectedClass!.id!);
     if (mounted) {
       setState(() => _isLoading = false);
     }
+  }
+
+  List<Map<String, dynamic>> _groupTimetableEntries() {
+    final Map<String, Map<String, dynamic>> grouped = {};
+    
+    for (final entry in _timetableEntries) {
+      final key = '${entry.subjectName}_${entry.startTimeString}_${entry.endTimeString}_${entry.teacherId ?? ""}';
+      
+      if (grouped.containsKey(key)) {
+        (grouped[key]!['days'] as List<String>).add(entry.dayOfWeek);
+        (grouped[key]!['ids'] as List<int>).add(entry.id);
+      } else {
+        grouped[key] = {
+          'entry': entry,
+          'days': [entry.dayOfWeek],
+          'ids': [entry.id],
+        };
+      }
+    }
+    
+    return grouped.values.toList();
   }
 
   void _navigateToAddEditEntry({Timetable? entry}) async {
@@ -120,82 +136,208 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
     final Color contextualAccentColor = AppTheme.getAccentColorForContext('students');
 
     return Scaffold(
-      appBar: AppBar( 
+      backgroundColor: appBackgroundColor,
+      appBar: AppBar(
+        elevation: 0,
         title: Text(l10n?.manageTimetablesTitle ?? 'Manage Timetables'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.add, color: contextualAccentColor),
-            tooltip: l10n?.addEntryButton ?? 'Add Entry',
-            onPressed: () => _navigateToAddEditEntry(),
-          ),
-        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _navigateToAddEditEntry(),
+        backgroundColor: contextualAccentColor,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: Text(l10n?.addEntryButton ?? 'Add Entry', style: const TextStyle(color: Colors.white)),
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(contextualAccentColor)))
           : Column(
               children: [
                 if (_availableClasses.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
+                  Container(
+                    margin: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: cardBackgroundColor,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withAlpha(20),
+                          spreadRadius: 1,
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
                     child: DropdownButtonFormField<app_class.SchoolClass>(
                       value: _selectedClass,
-                      hint: Text(l10n?.selectClassToViewTimetableHint ?? 'Select Class to View Timetable', style: theme.textTheme.bodyLarge),
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        prefixIcon: Icon(Icons.class_, color: contextualAccentColor),
+                        hintText: l10n?.selectClassToViewTimetableHint ?? 'Select Class',
+                      ),
+                      isExpanded: true,
                       items: _availableClasses.map((app_class.SchoolClass cls) {
                         return DropdownMenuItem<app_class.SchoolClass>(
                           value: cls,
-                          child: Text(cls.name, style: theme.textTheme.bodyLarge),
+                          child: Text(cls.name, style: theme.textTheme.bodyLarge, overflow: TextOverflow.ellipsis),
                         );
                       }).toList(),
                       onChanged: (app_class.SchoolClass? newValue) {
-                        setState(() {
-                          _selectedClass = newValue;
-                        });
-                        if (newValue != null) {
-                          _loadTimetableForSelectedClass();
-                        }
+                        setState(() => _selectedClass = newValue);
+                        if (newValue != null) _loadTimetableForSelectedClass();
                       },
                     ),
                   ),
                 Expanded(
                   child: _selectedClass == null
-                      ? Center(child: Text(l10n?.pleaseSelectClassToViewTimetableText ?? 'Please select a class to view its timetable.', style: theme.textTheme.bodyLarge))
+                      ? _buildEmptyState(l10n?.pleaseSelectClassToViewTimetableText ?? 'Please select a class', Icons.class_, contextualAccentColor)
                       : _timetableEntries.isEmpty
-                          ? Center(child: Text('${l10n?.noTimetableEntriesForText ?? 'No timetable entries for'} ${_selectedClass!.name}. ${l10n?.addOneText ?? 'Add one to get started!'}', style: theme.textTheme.bodyLarge))
+                          ? _buildEmptyState('${l10n?.noTimetableEntriesForText ?? 'No entries for'} ${_selectedClass!.name}', Icons.event_busy, contextualAccentColor)
                           : RefreshIndicator(
-                                onRefresh: _loadTimetableForSelectedClass,
-                                color: contextualAccentColor,
-                                child: ListView.builder(
-                                  itemCount: _timetableEntries.length,
-                                  itemBuilder: (context, index) {
-                                    final entry = _timetableEntries[index];
-                                    return Card(
-                                      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                      child: ListTile(
-                                        title: Text('${entry.subjectName} (${entry.dayOfWeek})', style: theme.textTheme.titleMedium),
-                                        subtitle: Text('${entry.startTimeString} - ${entry.endTimeString} (${l10n?.teacherLabel ?? 'Teacher'} ID: ${entry.teacherId ?? (l10n?.not_specified ?? 'Not Specified')})', style: theme.textTheme.bodySmall),
-                                        trailing: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            IconButton(
-                                              icon: Icon(Icons.edit, color: theme.iconTheme.color ?? textDarkGrey),
-                                              tooltip: l10n?.editButton ?? 'Edit',
-                                              onPressed: () => _navigateToAddEditEntry(entry: entry),
-                                            ),
-                                            IconButton(
-                                              icon: Icon(Icons.delete, color: theme.colorScheme.error),
-                                              tooltip: l10n?.deleteButton ?? 'Delete',
-                                              onPressed: () => _deleteEntry(entry.id),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
+                              onRefresh: _loadTimetableForSelectedClass,
+                              color: contextualAccentColor,
+                              child: Builder(
+                                builder: (context) {
+                                  final groupedEntries = _groupTimetableEntries();
+                                  return ListView.builder(
+                                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
+                                    itemCount: groupedEntries.length,
+                                    itemBuilder: (context, index) => _buildGroupedTimetableCard(context, groupedEntries[index], l10n, theme, contextualAccentColor),
+                                  );
+                                },
                               ),
+                            ),
                 ),
               ],
             ),
+    );
+  }
+
+  Widget _buildEmptyState(String message, IconData icon, Color color) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 80, color: color.withOpacity(0.3)),
+          const SizedBox(height: 16),
+          Text(message, style: TextStyle(fontSize: 16, color: textDarkGrey.withOpacity(0.6)), textAlign: TextAlign.center),
+        ],
+      ),
+    );
+  }
+
+  String _getDaySymbol(String day) {
+    switch (day) {
+      case 'Monday': return 'Mon';
+      case 'Tuesday': return 'Tue';
+      case 'Wednesday': return 'Wed';
+      case 'Thursday': return 'Thu';
+      case 'Friday': return 'Fri';
+      case 'Saturday': return 'Sat';
+      case 'Sunday': return 'Sun';
+      default: return day.substring(0, 3);
+    }
+  }
+
+  Widget _buildGroupedTimetableCard(BuildContext context, Map<String, dynamic> groupedData, AppLocalizations? l10n, ThemeData theme, Color accentColor) {
+    final Timetable entry = groupedData['entry'];
+    final List<String> days = groupedData['days'];
+    final List<int> ids = groupedData['ids'];
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: cardBackgroundColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withAlpha(20),
+            spreadRadius: 1,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: accentColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(Icons.book, color: accentColor, size: 24),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(entry.subjectName, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 4),
+                      Wrap(
+                        spacing: 4,
+                        children: days.map((day) => Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: accentColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(_getDaySymbol(day), style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: accentColor)),
+                        )).toList(),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.edit_outlined, color: accentColor),
+                  onPressed: () => _navigateToAddEditEntry(entry: entry),
+                ),
+                PopupMenuButton<int>(
+                  icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
+                  onSelected: (id) => _deleteEntry(id),
+                  itemBuilder: (context) => ids.map((id) {
+                    final dayIndex = ids.indexOf(id);
+                    return PopupMenuItem<int>(
+                      value: id,
+                      child: Text('Delete ${days[dayIndex]}'),
+                    );
+                  }).toList()..add(PopupMenuItem<int>(
+                    value: -1,
+                    child: Text('Delete All', style: TextStyle(color: theme.colorScheme.error, fontWeight: FontWeight.bold)),
+                    onTap: () {
+                      Future.delayed(Duration.zero, () {
+                        for (final id in ids) {
+                          _deleteEntry(id);
+                        }
+                      });
+                    },
+                  )),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: appBackgroundColor,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.access_time, size: 18, color: accentColor),
+                  const SizedBox(width: 8),
+                  Text('${entry.startTimeString} - ${entry.endTimeString}', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

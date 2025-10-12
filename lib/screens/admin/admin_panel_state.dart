@@ -95,7 +95,15 @@ mixin AdminPanelStateMixin<T extends StatefulWidget> on State<T> {
 
   Future<void> loadDashboardData(BuildContext context) async {
     if (!mounted) return;
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _summaryData = [];
+      _studentCountsByClass = {};
+      _activityLogs = [];
+      _totalIncome = 0.0;
+      _totalExpenses = 0.0;
+      _netBalance = 0.0;
+    });
 
     final schoolProvider = Provider.of<SchoolProvider>(context, listen: false);
     final l10n = AppLocalizations.of(context);

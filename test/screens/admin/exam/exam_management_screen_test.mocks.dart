@@ -30,6 +30,11 @@ import 'package:mockito/mockito.dart' as _i1;
 // ignore_for_file: subtype_of_sealed_class
 // ignore_for_file: invalid_use_of_internal_member
 
+class _FakeExam_0 extends _i1.SmartFake implements _i3.Exam {
+  _FakeExam_0(Object parent, Invocation parentInvocation)
+      : super(parent, parentInvocation);
+}
+
 /// A class which mocks [ExamProvider].
 ///
 /// See the documentation for Mockito's code generation for more information.
@@ -89,7 +94,7 @@ class MockExamProvider extends _i1.Mock implements _i2.ExamProvider {
           as bool);
 
   @override
-  _i7.Future<void> createExam({
+  _i7.Future<_i3.Exam> createExam({
     required int? classId,
     required int? schoolId,
     required String? name,
@@ -108,10 +113,10 @@ class MockExamProvider extends _i1.Mock implements _i2.ExamProvider {
               #description: description,
               #maxMarks: maxMarks,
             }),
-            returnValue: _i7.Future<void>.value(),
-            returnValueForMissingStub: _i7.Future<void>.value(),
+            returnValue: _i7.Future<_i3.Exam>.value(_FakeExam_0(this, Invocation.method(#createExam, []))),
+            returnValueForMissingStub: _i7.Future<_i3.Exam>.value(_FakeExam_0(this, Invocation.method(#createExam, []))),
           )
-          as _i7.Future<void>);
+          as _i7.Future<_i3.Exam>);
 
   @override
   _i7.Future<void> updateExam({
@@ -151,14 +156,16 @@ class MockExamProvider extends _i1.Mock implements _i2.ExamProvider {
 
   @override
   _i7.Future<void> addSubject({
-    required String? name,
-    required int? classId,
-    required int? schoolId,
+    required String name,
+    int? classId,
+    String? code,
+    required int schoolId,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#addSubject, [], {
               #name: name,
               #classId: classId,
+              #code: code,
               #schoolId: schoolId,
             }),
             returnValue: _i7.Future<void>.value(),
@@ -168,16 +175,18 @@ class MockExamProvider extends _i1.Mock implements _i2.ExamProvider {
 
   @override
   _i7.Future<void> updateSubject({
-    required String? id,
-    required String? name,
-    required int? classId,
-    required int? schoolId,
+    required String id,
+    required String name,
+    int? classId,
+    String? code,
+    required int schoolId,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#updateSubject, [], {
               #id: id,
               #name: name,
               #classId: classId,
+              #code: code,
               #schoolId: schoolId,
             }),
             returnValue: _i7.Future<void>.value(),
@@ -258,10 +267,10 @@ class MockExamProvider extends _i1.Mock implements _i2.ExamProvider {
 
   @override
   _i7.Future<void> upsertStudentExamMark({
-    required String? examId,
-    required String? studentId,
-    required String? subjectId,
-    required int? marksObtained,
+    required String examId,
+    required int studentId,
+    required String subjectId,
+    required int marksObtained,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#upsertStudentExamMark, [], {
@@ -277,8 +286,8 @@ class MockExamProvider extends _i1.Mock implements _i2.ExamProvider {
 
   @override
   _i7.Future<void> getStudentReportCard({
-    required String? studentId,
-    required String? examId,
+    required int studentId,
+    required String examId,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#getStudentReportCard, [], {

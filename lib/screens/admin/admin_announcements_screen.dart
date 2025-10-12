@@ -7,7 +7,7 @@ import 'package:edu_sync/providers/school_provider.dart';
 import 'package:edu_sync/services/auth_service.dart';
 import 'package:edu_sync/l10n/gen/app_localizations.dart';
 import 'add_edit_announcement_screen.dart'; 
-import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
+// Import AppTheme
 
 class AdminAnnouncementsScreen extends StatefulWidget {
   const AdminAnnouncementsScreen({super.key});

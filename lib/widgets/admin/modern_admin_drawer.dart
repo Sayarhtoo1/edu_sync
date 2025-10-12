@@ -5,8 +5,34 @@ import 'package:edu_sync/services/auth_service.dart';
 import 'package:edu_sync/providers/school_provider.dart';
 import 'package:edu_sync/screens/admin/admin_settings_screen.dart';
 
-class ModernAdminDrawer extends StatelessWidget {
+class ModernAdminDrawer extends StatefulWidget {
   const ModernAdminDrawer({super.key});
+
+  @override
+  State<ModernAdminDrawer> createState() => _ModernAdminDrawerState();
+}
+
+class _ModernAdminDrawerState extends State<ModernAdminDrawer> {
+  String? _userName;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserName();
+  }
+
+  Future<void> _loadUserName() async {
+    final authService = context.read<AuthService>();
+    final user = authService.getCurrentUser();
+    if (user != null) {
+      final userDetails = await authService.getUserById(user.id);
+      if (mounted) {
+        setState(() {
+          _userName = userDetails?.fullName ?? user.email?.split('@')[0];
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +51,7 @@ class ModernAdminDrawer extends StatelessWidget {
         ),
         child: Column(
           children: [
-            _buildHeader(context, user?.email, schoolProvider.currentSchool?.name),
+            _buildHeader(context, _userName ?? user?.email?.split('@')[0], schoolProvider.currentSchool?.name),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(vertical: 8),
@@ -44,6 +70,11 @@ class ModernAdminDrawer extends StatelessWidget {
                     _buildMenuItem(context, 'Exams', Icons.assignment_rounded, '/admin/exam-management'),
                   ]),
                   const SizedBox(height: 4),
+                  _buildSection(context, 'Attendance', Icons.fact_check_rounded, null, children: [
+                    _buildMenuItem(context, 'Student Attendance Summary', Icons.school_rounded, '/admin/student-attendance-summary'),
+                    _buildMenuItem(context, 'Staff Attendance Summary', Icons.badge_rounded, '/admin/staff-attendance-summary'),
+                  ]),
+                  const SizedBox(height: 4),
                   _buildSection(context, 'Finance', Icons.account_balance_wallet_rounded, null, children: [
                     _buildMenuItem(context, 'Fee Management', Icons.payments_rounded, '/admin/fee-management'),
                     _buildMenuItem(context, 'Donations', Icons.favorite_rounded, '/admin/donation-management'),
@@ -55,7 +86,11 @@ class ModernAdminDrawer extends StatelessWidget {
                     _buildMenuItem(context, 'Forms', Icons.article_rounded, '/admin/manage-custom-forms'),
                   ]),
                   const SizedBox(height: 4),
-                  _buildSection(context, 'Settings', Icons.settings_rounded, null, screen: const AdminSettingsScreen()),
+                  _buildSection(context, 'Settings', Icons.settings_rounded, null, children: [
+                    _buildMenuItem(context, 'School Profile', Icons.business_rounded, '/admin/school-profile'),
+                    _buildMenuItem(context, 'Admin Settings', Icons.admin_panel_settings_rounded, '/admin/settings'),
+                    _buildMenuItem(context, 'App Settings', Icons.settings_applications_rounded, '/app-settings'),
+                  ]),
                 ],
               ),
             ),
@@ -66,7 +101,10 @@ class ModernAdminDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, String? email, String? schoolName) {
+  Widget _buildHeader(BuildContext context, String? userName, String? schoolName) {
+    final schoolProvider = context.watch<SchoolProvider>();
+    final schoolLogo = schoolProvider.currentSchool?.logoUrl;
+    
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 50, 20, 24),
       decoration: BoxDecoration(
@@ -86,20 +124,24 @@ class ModernAdminDrawer extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
-            ),
-            child: CircleAvatar(
-              radius: 36,
-              backgroundColor: Colors.white.withOpacity(0.2),
-              child: const Icon(Icons.admin_panel_settings_rounded, size: 36, color: Colors.white),
-            ),
+            width: 72,
+            height: 72,
+            child: (schoolLogo != null && schoolLogo.isNotEmpty)
+                ? ColorFiltered(
+                    colorFilter: const ColorFilter.mode(
+                      Colors.white,
+                      BlendMode.srcIn,
+                    ),
+                    child: Image.network(
+                      schoolLogo,
+                      fit: BoxFit.contain,
+                    ),
+                  )
+                : const Icon(Icons.school_rounded, size: 48, color: Colors.white),
           ),
           const SizedBox(height: 16),
           Text(
-            email?.split('@')[0].toUpperCase() ?? 'ADMIN',
+            userName?.toUpperCase() ?? 'ADMIN',
             style: const TextStyle(
               color: Colors.white,
               fontSize: 20,
@@ -226,12 +268,14 @@ class ModernAdminDrawer extends StatelessWidget {
               children: [
                 Icon(icon, color: const Color(0xFF64B5F6), size: 18),
                 const SizedBox(width: 16),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF424242),
-                    fontWeight: FontWeight.w500,
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF424242),
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ],
@@ -292,7 +336,7 @@ class ModernAdminDrawer extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'EduSync v2.0.0',
+            'EduSync v3.2.0',
             style: TextStyle(
               fontSize: 11,
               color: Colors.grey[400],

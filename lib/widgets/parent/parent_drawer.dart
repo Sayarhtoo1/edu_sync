@@ -4,8 +4,34 @@ import 'package:go_router/go_router.dart';
 import 'package:edu_sync/services/auth_service.dart';
 import 'package:edu_sync/providers/school_provider.dart';
 
-class ParentDrawer extends StatelessWidget {
+class ParentDrawer extends StatefulWidget {
   const ParentDrawer({super.key});
+
+  @override
+  State<ParentDrawer> createState() => _ParentDrawerState();
+}
+
+class _ParentDrawerState extends State<ParentDrawer> {
+  String? _userName;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserName();
+  }
+
+  Future<void> _loadUserName() async {
+    final authService = context.read<AuthService>();
+    final user = authService.getCurrentUser();
+    if (user != null) {
+      final userDetails = await authService.getUserById(user.id);
+      if (mounted) {
+        setState(() {
+          _userName = userDetails?.fullName ?? user.email?.split('@')[0];
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,16 +46,14 @@ class ParentDrawer extends StatelessWidget {
         ),
         child: Column(
           children: [
-            _buildHeader(context, user?.email, schoolProvider.currentSchool?.name),
+            _buildHeader(context, _userName ?? user?.email?.split('@')[0], schoolProvider.currentSchool?.name),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 children: [
-                  _buildMenuItem(context, 'Dashboard', Icons.dashboard_rounded, '/parent'),
+                  _buildMenuItem(context, 'Dashboard', Icons.dashboard_rounded, '/parent-dashboard'),
                   const SizedBox(height: 4),
-                  _buildMenuItem(context, 'My Children', Icons.child_care_rounded, '/parent/children'),
-                  const SizedBox(height: 4),
-                  _buildMenuItem(context, 'Announcements', Icons.campaign_rounded, '/parent/announcements'),
+                  _buildMenuItem(context, 'App Settings', Icons.settings_applications_rounded, '/app-settings'),
                 ],
               ),
             ),
@@ -40,7 +64,10 @@ class ParentDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, String? email, String? schoolName) {
+  Widget _buildHeader(BuildContext context, String? userName, String? schoolName) {
+    final schoolProvider = context.watch<SchoolProvider>();
+    final schoolLogo = schoolProvider.currentSchool?.logoUrl;
+    
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 50, 20, 24),
       decoration: BoxDecoration(
@@ -55,11 +82,12 @@ class ParentDrawer extends StatelessWidget {
             child: CircleAvatar(
               radius: 36,
               backgroundColor: Colors.white.withOpacity(0.2),
-              child: const Icon(Icons.family_restroom_rounded, size: 36, color: Colors.white),
+              backgroundImage: (schoolLogo != null && schoolLogo.isNotEmpty) ? NetworkImage(schoolLogo) : null,
+              child: (schoolLogo == null || schoolLogo.isEmpty) ? const Icon(Icons.school_rounded, size: 36, color: Colors.white) : null,
             ),
           ),
           const SizedBox(height: 16),
-          Text(email?.split('@')[0].toUpperCase() ?? 'PARENT', style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+          Text(userName?.toUpperCase() ?? 'PARENT', style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
           const SizedBox(height: 6),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -88,7 +116,7 @@ class ParentDrawer extends StatelessWidget {
         title: Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF2C2C2C))),
         onTap: () {
           Navigator.pop(context);
-          if (route == '/parent') {
+          if (route == '/parent-dashboard') {
             context.go(route);
           } else {
             context.push(route);
@@ -128,7 +156,7 @@ class ParentDrawer extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Text('EduSync v2.0.0', style: TextStyle(fontSize: 11, color: Colors.grey[400], fontWeight: FontWeight.w500)),
+          Text('EduSync v3.2.0', style: TextStyle(fontSize: 11, color: Colors.grey[400], fontWeight: FontWeight.w500)),
         ],
       ),
     );

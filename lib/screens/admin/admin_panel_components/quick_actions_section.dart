@@ -1,15 +1,8 @@
 import 'package:edu_sync/screens/admin/admin_announcements_screen.dart';
-import 'package:edu_sync/screens/common/attendance_report_screen.dart';
 import 'package:edu_sync/screens/teacher/attendance_marking_screen.dart';
 import 'package:edu_sync/screens/teacher/teacher_timetable_screen.dart';
-import 'package:edu_sync/screens/admin/teacher_status_overview_screen.dart';
-import 'package:edu_sync/screens/staff/staff_attendance_screen.dart';
-import 'package:edu_sync/screens/admin/exam/modern_exam_management_screen.dart';
-import 'package:edu_sync/screens/admin/exam/subject_management_screen.dart';
-import 'package:edu_sync/screens/admin/exam/grade_management_screen.dart';
-import 'package:edu_sync/screens/teacher/exam/input_marks_screen.dart';
 import 'package:edu_sync/screens/admin/fee/fee_structure_management_screen.dart';
-import 'package:edu_sync/screens/admin/fee/donation_management_screen.dart';
+import 'package:go_router/go_router.dart';
 import 'package:edu_sync/widgets/admin_action_card.dart';
 import 'package:flutter/material.dart';
 import 'package:edu_sync/l10n/gen/app_localizations.dart';
@@ -51,22 +44,7 @@ class QuickActionsSection extends StatelessWidget {
             'iconFgColor': Colors.white,
             'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AttendanceMarkingScreen())),
           },
-          {
-            'title': l10n.markStaffAttendanceTitle ?? 'Staff Attendance',
-            'icon': Icons.badge_outlined,
-            'bgColor': const Color(0xFFFFF3E0),
-            'iconBgColor': const Color(0xFFFF9800),
-            'iconFgColor': Colors.white,
-            'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const StaffAttendanceScreen())),
-          },
-          {
-            'title': "Attendance Report",
-            'icon': Icons.assessment_outlined,
-            'bgColor': const Color(0xFFF3E5F5),
-            'iconBgColor': const Color(0xFF9C27B0),
-            'iconFgColor': Colors.white,
-            'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AttendanceReportScreen())),
-          },
+
         ],
       },
       {
@@ -78,31 +56,7 @@ class QuickActionsSection extends StatelessWidget {
             'bgColor': const Color(0xFFE1F5FE),
             'iconBgColor': const Color(0xFF03A9F4),
             'iconFgColor': Colors.white,
-            'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ModernExamManagementScreen())),
-          },
-          {
-            'title': "Subject Management",
-            'icon': Icons.menu_book_outlined,
-            'bgColor': const Color(0xFFFCE4EC),
-            'iconBgColor': const Color(0xFFE91E63),
-            'iconFgColor': Colors.white,
-            'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => SubjectManagementScreen())),
-          },
-          {
-            'title': "Grade Management",
-            'icon': Icons.grade_outlined,
-            'bgColor': const Color(0xFFFFF9C4),
-            'iconBgColor': const Color(0xFFFBC02D),
-            'iconFgColor': Colors.white,
-            'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => GradeManagementScreen())),
-          },
-          {
-            'title': "Input Marks",
-            'icon': Icons.edit_note_outlined,
-            'bgColor': const Color(0xFFE0F2F1),
-            'iconBgColor': const Color(0xFF009688),
-            'iconFgColor': Colors.white,
-            'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => InputMarksScreen())),
+            'onTap': () => context.go('/admin/exam-overview'),
           },
         ],
       },
@@ -117,14 +71,7 @@ class QuickActionsSection extends StatelessWidget {
             'iconFgColor': Colors.white,
             'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TeacherTimetableScreen())),
           },
-          {
-            'title': l10n.teacherStatusOverviewTitle ?? 'Teacher Overview',
-            'icon': Icons.people_outline,
-            'bgColor': const Color(0xFFE8EAF6),
-            'iconBgColor': const Color(0xFF3F51B5),
-            'iconFgColor': Colors.white,
-            'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TeacherStatusOverviewScreen())),
-          },
+
         ],
       },
       {
@@ -140,11 +87,11 @@ class QuickActionsSection extends StatelessWidget {
           },
           {
             'title': "Donations",
-            'icon': Icons.favorite_border_outlined,
-            'bgColor': const Color(0xFFFFEBEE),
-            'iconBgColor': const Color(0xFFF44336),
+            'icon': Icons.volunteer_activism_outlined,
+            'bgColor': const Color(0xFFFFF3E0),
+            'iconBgColor': const Color(0xFFFF9800),
             'iconFgColor': Colors.white,
-            'onTap': () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DonationManagementScreen())),
+            'onTap': () => context.go('/admin/donation-management'),
           },
         ],
       },
@@ -201,7 +148,7 @@ class QuickActionsSection extends StatelessWidget {
               const SizedBox(height: 16),
             ],
           );
-        }).toList(),
+        }),
       ],
     );
   }

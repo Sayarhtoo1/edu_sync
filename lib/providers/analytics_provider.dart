@@ -74,14 +74,13 @@ class AnalyticsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> fetchStudentPerformance(int studentId) async { // Renamed method
+  Future<void> fetchStudentPerformance(int studentId) async {
     _isLoading = true;
     notifyListeners();
     try {
-      _studentPerformance = await _examService.getStudentPerformance(studentId); // Changed to Map
+      _studentPerformance = await _examService.getStudentPerformance(studentId);
     } catch (e) {
-      // Handle error
-      _studentPerformance = null; // Changed to null
+      _studentPerformance = null;
     }
     _isLoading = false;
     notifyListeners();

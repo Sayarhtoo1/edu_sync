@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:edu_sync/screens/teacher/teacher_dashboard_screen.dart';
+import 'package:edu_sync/screens/teacher/modern_teacher_dashboard.dart';
 import 'package:edu_sync/screens/teacher/teacher_timetable_screen.dart';
 import 'package:edu_sync/screens/teacher/attendance_marking_screen.dart';
 import 'package:edu_sync/screens/teacher/lesson_plan_management_screen.dart';
@@ -26,7 +26,7 @@ class TeacherDrawerItems extends StatelessWidget {
           title: Text('Dashboard', style: TextStyle(color: drawerTextDarkGrey)),
           onTap: () {
             Navigator.pop(context);
-            Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => TeacherDashboardScreen()));
+            Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const ModernTeacherDashboard()));
           },
         ),
         ListTile(

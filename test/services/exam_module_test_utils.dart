@@ -59,8 +59,8 @@ class ExamModuleTestUtils {
     return Subject(
       id: id ?? testSubjectId,
       name: name ?? 'Test Subject',
-      classId: testClassId,
-      schoolId: testSchoolId,
+      classId: int.tryParse(testClassId),
+      schoolId: int.parse(testSchoolId),
       createdAt: DateTime.now(),
     );
   }
@@ -73,7 +73,7 @@ class ExamModuleTestUtils {
   }) {
     return Grade(
       id: id ?? '1',
-      schoolId: testSchoolId,
+      schoolId: int.parse(testSchoolId),
       gradeName: gradeName ?? 'A',
       minPercentage: minPercentage ?? 90,
       maxPercentage: maxPercentage ?? 100,

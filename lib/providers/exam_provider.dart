@@ -1,15 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/exam_service.dart';
+import '../services/exam_marks_service.dart';
+import '../services/exam_report_service.dart';
+import '../services/exam_analytics_enhanced_service.dart';
 import '../models/exam.dart';
 import '../models/subject.dart';
 import '../models/grade.dart';
-import '../models/student.dart'; // Import Student model
+import '../models/student.dart';
 import '../models/exam_subject.dart';
 import '../services/cache_service.dart';
 
 class ExamProvider with ChangeNotifier {
   final ExamService _examService = ExamService();
+  final ExamMarksService _marksService = ExamMarksService();
+  final ExamReportService _reportService = ExamReportService();
+  final ExamAnalyticsEnhancedService _analyticsService = ExamAnalyticsEnhancedService(supabaseClient: Supabase.instance.client);
   final CacheService _cacheService = CacheService();
+
+  SupabaseClient get supabaseClient => Supabase.instance.client;
+  ExamMarksService get marksService => _marksService;
 
   List<Exam> _exams = [];
   List<Subject> _subjects = [];
@@ -23,14 +33,15 @@ class ExamProvider with ChangeNotifier {
   List<Exam> get exams => _exams;
   List<Subject> get subjects => _subjects;
   List<Grade> get grades => _grades;
-  List<Student> get students => _students; // Getter for students
+  List<Student> get students => _students;
   List<ExamSubject> get examSubjects => _examSubjects;
   List<dynamic> get reportCard => _reportCard;
-  List<dynamic> get detailedReportCard => _detailedReportCard; // Getter for detailed report card
+  List<dynamic> get detailedReportCard => _detailedReportCard;
   List<dynamic> get classResults => _classResults;
-  ExamService get examService => _examService; // Expose ExamService
+  ExamService get examService => _examService;
+  ExamReportService get reportService => _reportService;
 
-  Future<void> createExam({
+  Future<Exam> createExam({
     required int classId,
     required int schoolId,
     required String name,
@@ -40,7 +51,7 @@ class ExamProvider with ChangeNotifier {
     int? maxMarks,
   }) async {
     try {
-      await _examService.addExam(
+      final exam = await _examService.addExam(
         classId: classId,
         schoolId: schoolId,
         name: name,
@@ -50,8 +61,9 @@ class ExamProvider with ChangeNotifier {
         maxMarks: maxMarks,
       );
       await fetchExams(schoolId.toString());
+      return exam;
     } catch (e) {
-      // Handle error
+      rethrow;
     }
   }
 
@@ -88,20 +100,22 @@ class ExamProvider with ChangeNotifier {
       _exams.removeWhere((exam) => exam.id == id);
       notifyListeners();
     } catch (e) {
-      // Handle error
+      rethrow;
     }
   }
 
   Future<void> addSubject({
     required String name,
-    required int classId,
     required int schoolId,
+    int? classId,
+    String? code,
   }) async {
     try {
       await _examService.addSubject(
         name: name,
-        classId: classId,
         schoolId: schoolId,
+        classId: classId,
+        code: code,
       );
       await fetchSubjects(schoolId.toString());
     } catch (e) {
@@ -112,15 +126,17 @@ class ExamProvider with ChangeNotifier {
   Future<void> updateSubject({
     required String id,
     required String name,
-    required int classId,
     required int schoolId,
+    int? classId,
+    String? code,
   }) async {
     try {
       await _examService.updateSubject(
         id: id,
         name: name,
-        classId: classId,
         schoolId: schoolId,
+        classId: classId,
+        code: code,
       );
       await fetchSubjects(schoolId.toString());
     } catch (e) {
@@ -211,7 +227,7 @@ class ExamProvider with ChangeNotifier {
 
   Future<void> upsertStudentExamMark({
     required String examId,
-    required String studentId,
+    required int studentId,
     required String subjectId,
     required int marksObtained,
   }) async {
@@ -249,7 +265,7 @@ class ExamProvider with ChangeNotifier {
   }
 
   Future<void> getStudentReportCard({
-    required String studentId,
+    required int studentId,
     required String examId,
   }) async {
     _reportCard = await _examService.getStudentReportCard(
@@ -260,15 +276,13 @@ class ExamProvider with ChangeNotifier {
   }
 
   Future<void> getDetailedStudentReportCard({
-    required String studentId,
+    required int studentId,
     required String examId,
-    required int schoolId,
   }) async {
     try {
       _detailedReportCard = await _examService.getDetailedStudentReportCard(
         studentId: studentId,
         examId: examId,
-        schoolId: schoolId,
       );
       notifyListeners();
     } catch (e) {
@@ -333,5 +347,166 @@ class ExamProvider with ChangeNotifier {
     } catch (e) {
       // Handle error
     }
+  }
+
+  Future<void> saveExamSubjects(String examId, List<Subject> subjects) async {
+    try {
+      for (final subject in subjects) {
+        await _examService.upsertExamSubject(
+          examId: examId,
+          subjectId: subject.id,
+          maxMarks: subject.maxMarks ?? 100,
+          passingMarks: subject.passingMarks ?? 40,
+        );
+      }
+      await fetchExamSubjectsForExam(examId);
+      notifyListeners();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getStudentsForMarksEntry({
+    required String examId,
+    required String subjectId,
+  }) async {
+    return await _marksService.getStudentsForMarksEntry(
+      examId: examId,
+      subjectId: subjectId,
+    );
+  }
+
+  Future<void> saveStudentMark({
+    required String examId,
+    required int studentId,
+    required String subjectId,
+    required int marksObtained,
+  }) async {
+    await _marksService.saveStudentMark(
+      examId: examId,
+      studentId: studentId,
+      subjectId: subjectId,
+      marksObtained: marksObtained,
+    );
+    notifyListeners();
+  }
+
+  Future<void> bulkSaveMarks({
+    required String examId,
+    required String subjectId,
+    required List<Map<String, dynamic>> marks,
+  }) async {
+    await _marksService.bulkSaveMarks(
+      examId: examId,
+      subjectId: subjectId,
+      marks: marks,
+    );
+    notifyListeners();
+  }
+
+  Future<Map<String, dynamic>> getMarksEntryProgress({
+    required String examId,
+    required String subjectId,
+  }) async {
+    return await _marksService.getMarksEntryProgress(
+      examId: examId,
+      subjectId: subjectId,
+    );
+  }
+
+  String calculateGrade(int marksObtained, int totalMarks) {
+    return _marksService.calculateGrade(marksObtained, totalMarks, _grades);
+  }
+
+  bool isPassed(int marksObtained, int passingMarks) {
+    return _marksService.isPassed(marksObtained, passingMarks);
+  }
+
+  Future<Map<String, dynamic>> getReportCard({
+    required int studentId,
+    required String examId,
+  }) async {
+    return await _reportService.getStudentReportCard(
+      studentId: studentId,
+      examId: examId,
+    );
+  }
+
+  Future<int> getStudentRank({
+    required int studentId,
+    required String examId,
+  }) async {
+    return await _reportService.getStudentRank(
+      studentId: studentId,
+      examId: examId,
+    );
+  }
+
+  Future<Map<String, dynamic>> getClassAverage(String examId) async {
+    return await _reportService.getClassAverage(examId);
+  }
+
+  Future<List<Map<String, dynamic>>> getTopPerformers({
+    required String examId,
+    int limit = 10,
+  }) async {
+    return await _reportService.getTopPerformers(
+      examId: examId,
+      limit: limit,
+    );
+  }
+
+  String calculateOverallGrade(double percentage) {
+    return _reportService.calculateOverallGrade(percentage, _grades);
+  }
+
+  String getRemarks(String grade) {
+    return _reportService.getRemarks(grade);
+  }
+
+  Future<Map<String, dynamic>> getStudentPerformanceTrend({
+    required int studentId,
+    required int classId,
+  }) async {
+    return await _analyticsService.getStudentPerformanceTrend(
+      studentId: studentId,
+      classId: classId,
+    );
+  }
+
+  Future<Map<String, dynamic>> getSubjectWiseAnalysis({
+    required String examId,
+    required int classId,
+  }) async {
+    return await _analyticsService.getSubjectWiseAnalysis(
+      examId: examId,
+      classId: classId,
+    );
+  }
+
+  Future<Map<String, dynamic>> getClassPerformanceDistribution({
+    required String examId,
+  }) async {
+    return await _analyticsService.getClassPerformanceDistribution(examId: examId);
+  }
+
+  Future<List<Map<String, dynamic>>> getTopPerformersDetailed({
+    required String examId,
+    int limit = 10,
+  }) async {
+    return await _analyticsService.getTopPerformersDetailed(
+      examId: examId,
+      limit: limit,
+    );
+  }
+
+  Future<Map<String, dynamic>> getExamComparison({
+    required List<String> examIds,
+    required int classId,
+  }) async {
+    return await _analyticsService.getExamComparison(
+      examIds: examIds,
+      classId: classId,
+    );
   }
 }

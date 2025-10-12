@@ -25,7 +25,7 @@ class StudentService {
         query = query.eq('class_id', classId);
       }
 
-      final response = await query;
+      final response = await query.order('full_name', ascending: true);
       final students = response.map((data) => Student.fromMap(data)).toList();
       return students;
     } catch (e) {
@@ -59,20 +59,29 @@ class StudentService {
   Future<int?> createStudent({
     required String studentName,
     required int schoolId,
-    int? classId, // Made nullable
+    int? classId,
     DateTime? dateOfBirth,
     String? profilePhotoUrl,
     String? gender,
+    String? phoneNumber1,
+    String? phoneNumber2,
   }) async {
     try {
-      final response = await _supabaseClient.from('students').insert({
+      final Map<String, dynamic> data = {
         'full_name': studentName,
         'school_id': schoolId,
-        'class_id': classId,
-        'date_of_birth': dateOfBirth?.toIso8601String(),
-        'profile_photo_url': profilePhotoUrl,
-        'gender': gender,
-      }).select('id').single();
+      };
+      
+      if (classId != null) data['class_id'] = classId;
+      if (dateOfBirth != null) data['date_of_birth'] = dateOfBirth.toIso8601String();
+      if (profilePhotoUrl != null && profilePhotoUrl.isNotEmpty) data['profile_photo_url'] = profilePhotoUrl;
+      if (gender != null && gender.isNotEmpty) data['gender'] = gender;
+      if (phoneNumber1 != null && phoneNumber1.isNotEmpty) data['phone_number_1'] = phoneNumber1;
+      if (phoneNumber2 != null && phoneNumber2.isNotEmpty) data['phone_number_2'] = phoneNumber2;
+      
+      logger.i('Creating student with data: $data');
+      
+      final response = await _supabaseClient.from('students').insert(data).select('id').single();
       return response['id'] as int?;
     } catch (e) {
       logger.e('Error creating student: $e');
@@ -84,26 +93,35 @@ class StudentService {
   Future<int?> createStudentWithParent({
     required String studentName,
     required int schoolId,
-    int? classId, // Made nullable
-    required String parentId, // ParentId is required for this RPC
+    int? classId,
+    required String parentId,
     required String relationType,
     DateTime? dateOfBirth,
     String? profilePhotoUrl,
     String? gender,
+    String? phoneNumber1,
+    String? phoneNumber2,
   }) async {
     try {
+      final Map<String, dynamic> params = {
+        'p_student_name': studentName,
+        'p_school_id': schoolId,
+        'p_parent_id': parentId,
+        'p_relation_type': relationType,
+      };
+      
+      if (classId != null) params['p_class_id'] = classId;
+      if (dateOfBirth != null) params['p_date_of_birth'] = dateOfBirth.toIso8601String();
+      if (profilePhotoUrl != null && profilePhotoUrl.isNotEmpty) params['p_profile_photo_url'] = profilePhotoUrl;
+      if (gender != null && gender.isNotEmpty) params['p_gender'] = gender;
+      if (phoneNumber1 != null && phoneNumber1.isNotEmpty) params['p_phone_number_1'] = phoneNumber1;
+      if (phoneNumber2 != null && phoneNumber2.isNotEmpty) params['p_phone_number_2'] = phoneNumber2;
+      
+      logger.i('Creating student with parent, params: $params');
+      
       final newStudentId = await _supabaseClient.rpc(
         'create_student_and_link_parent',
-        params: {
-          'p_student_name': studentName,
-          'p_school_id': schoolId,
-          'p_class_id': classId,
-          'p_parent_id': parentId,
-          'p_relation_type': relationType,
-          'p_date_of_birth': dateOfBirth?.toIso8601String(),
-          'p_profile_photo_url': profilePhotoUrl,
-          'p_gender': gender,
-        },
+        params: params,
       );
       return newStudentId as int?;
     } catch (e) {

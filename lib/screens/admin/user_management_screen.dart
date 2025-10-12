@@ -158,7 +158,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> with Single
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
-        title: Text('${_currentRoleView == 'Teacher' ? l10n?.teachers ?? 'Teachers' : l10n?.parents ?? 'Parents'}', style: const TextStyle(color: Color(0xFF2C2C2C), fontWeight: FontWeight.bold)),
+        title: Text(_currentRoleView == 'Teacher' ? l10n?.teachers ?? 'Teachers' : l10n?.parents ?? 'Parents', style: const TextStyle(color: Color(0xFF2C2C2C), fontWeight: FontWeight.bold)),
         iconTheme: const IconThemeData(color: Color(0xFF2C2C2C)),
         bottom: TabBar(
           controller: _tabController,

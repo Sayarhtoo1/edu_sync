@@ -355,6 +355,10 @@ class _ExamListScreenState extends State<ExamListScreen> {
                                   child: Text('Edit'),
                                 ),
                                 const PopupMenuItem(
+                                  value: 'subjects',
+                                  child: Text('Manage Subjects'),
+                                ),
+                                const PopupMenuItem(
                                   value: 'view',
                                   child: Text('View Details'),
                                 ),
@@ -433,6 +437,9 @@ class _ExamListScreenState extends State<ExamListScreen> {
       case 'edit':
         _navigateToEditExam(exam);
         break;
+      case 'subjects':
+        _navigateToManageSubjects(exam);
+        break;
       case 'view':
         _showExamDetails(exam);
         break;
@@ -440,6 +447,10 @@ class _ExamListScreenState extends State<ExamListScreen> {
         _deleteExam(exam);
         break;
     }
+  }
+
+  void _navigateToManageSubjects(Exam exam) {
+    Navigator.of(context).pushNamed('/admin/exam-subject-management', arguments: exam);
   }
 
   Future<void> _deleteSelectedExams() async {

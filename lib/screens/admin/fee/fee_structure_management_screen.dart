@@ -4,6 +4,7 @@ import '../../../models/fee_structure.dart';
 import '../../../services/fee_structure_service.dart';
 import '../../../services/auth_service.dart';
 import 'add_edit_fee_structure_screen.dart';
+import 'fee_structure_students_screen.dart';
 
 class FeeStructureManagementScreen extends StatefulWidget {
   const FeeStructureManagementScreen({super.key});
@@ -117,6 +118,12 @@ class _FeeStructureManagementScreenState extends State<FeeStructureManagementScr
                               onPressed: () => _deleteFeeStructure(fee.id),
                             ),
                           ],
+                        ),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => FeeStructureStudentsScreen(feeStructure: fee),
+                          ),
                         ),
                       ),
                     );

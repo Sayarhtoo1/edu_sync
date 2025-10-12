@@ -28,6 +28,8 @@ import 'package:edu_sync/services/schedule_summary_service.dart';
 import 'package:edu_sync/services/fee_structure_service.dart';
 import 'package:edu_sync/services/fee_payment_service.dart';
 import 'package:edu_sync/services/donation_service.dart';
+import 'package:edu_sync/services/salary_service.dart';
+import 'package:edu_sync/services/finance_category_service.dart';
 import 'package:edu_sync/providers/admin_panel_provider.dart';
 import 'package:edu_sync/providers/exam_provider.dart';
 import 'package:edu_sync/providers/class_provider.dart';
@@ -80,6 +82,12 @@ Future<List<SingleChildWidget>> initializeProviders() async {
     ),
     ProxyProvider<SupabaseClient, DonationService>(
       update: (_, supabase, __) => DonationService(supabase),
+    ),
+    ProxyProvider<SupabaseClient, SalaryService>(
+      update: (_, supabase, __) => SalaryService(supabase),
+    ),
+    ProxyProvider<SupabaseClient, FinanceCategoryService>(
+      update: (_, supabase, __) => FinanceCategoryService(supabase),
     ),
     ProxyProvider<AuthService, RoleService>(
       update: (_, authService, _) => RoleService(authService),

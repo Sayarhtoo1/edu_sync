@@ -7,6 +7,7 @@ import '../../../../theme/app_theme.dart';
 class ExamFormFields {
   // Basic Info Step
   static Widget buildBasicInfoStep({
+    required BuildContext context,
     required TextEditingController nameController,
     required TextEditingController examinerController,
     required DateTime? selectedDate,
@@ -90,10 +91,10 @@ class ExamFormFields {
           InkWell(
             onTap: () async {
               final date = await showDatePicker(
-                context: navigatorKey.currentContext!,
+                context: context,
                 initialDate: selectedDate ?? DateTime.now(),
-                firstDate: DateTime.now().subtract(const Duration(days: 365)),
-                lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
+                firstDate: DateTime(2020),
+                lastDate: DateTime(2030),
               );
               if (date != null) {
                 onDateChanged(date);
@@ -582,6 +583,3 @@ class ExamFormFields {
     );
   }
 }
-
-// Global navigator key for date picker
-final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();

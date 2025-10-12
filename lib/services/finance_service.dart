@@ -17,19 +17,44 @@ class FinanceService {
           .select()
           .eq('school_id', schoolId)
           .eq('entry_type', 'Income')
-          .order('date', ascending: false); // Order by date descending
+          .order('created_at', ascending: false);
 
       final incomes = response.map((record) {
-        // Ensure amount is parsed as double
         record['amount'] = (record['amount'] as num).toDouble();
         return Income.fromMap(record);
       }).toList();
+      
+      // Add donations as income
+      final donations = await _getDonationIncomes(schoolId);
+      incomes.addAll(donations);
+      incomes.sort((a, b) => b.date.compareTo(a.date));
           
       return incomes;
     } catch (e) {
       logger.e('Error fetching income records: $e');
-      // Depending on the app's requirements, you might want to return an empty list
-      // or re-throw the exception to be handled by the UI layer.
+      return [];
+    }
+  }
+
+  Future<List<Income>> _getDonationIncomes(int schoolId) async {
+    try {
+      final response = await _supabaseClient
+          .from('donations')
+          .select()
+          .eq('school_id', schoolId)
+          .eq('status', 'Received')
+          .order('donation_date', ascending: false);
+      
+      return response.map((d) => Income(
+        id: null,
+        schoolId: schoolId,
+        amount: (d['amount'] as num).toDouble(),
+        description: '${d['donator_name']}${d['purpose'] != null ? ' - ${d['purpose']}' : ''}',
+        date: DateTime.parse(d['donation_date']),
+        category: 'Donation',
+      )).toList();
+    } catch (e) {
+      logger.e('Error fetching donation incomes: $e');
       return [];
     }
   }
@@ -98,17 +123,44 @@ class FinanceService {
           .select()
           .eq('school_id', schoolId)
           .eq('entry_type', 'Expense')
-          .order('date', ascending: false); // Order by date descending
+          .order('created_at', ascending: false);
 
       final expenses = response.map((record) {
-        // Ensure amount is parsed as double
         record['amount'] = (record['amount'] as num).toDouble();
         return Expense.fromMap(record);
       }).toList();
+      
+      // Add salary payments as expenses
+      final salaries = await _getSalaryExpensesAsList(schoolId);
+      expenses.addAll(salaries);
+      expenses.sort((a, b) => b.date.compareTo(a.date));
           
       return expenses;
     } catch (e) {
       logger.e('Error fetching expense records: $e');
+      return [];
+    }
+  }
+
+  Future<List<Expense>> _getSalaryExpensesAsList(int schoolId) async {
+    try {
+      final response = await _supabaseClient
+          .from('salary_payments')
+          .select('*, users!salary_payments_staff_id_fkey(full_name)')
+          .eq('school_id', schoolId)
+          .eq('status', 'Paid')
+          .order('payment_date', ascending: false);
+      
+      return response.map((s) => Expense(
+        id: null,
+        schoolId: schoolId,
+        amount: (s['amount'] as num).toDouble(),
+        description: '${s['users']['full_name']} (${s['payment_month']})',
+        date: DateTime.parse(s['payment_date']),
+        category: 'Salary',
+      )).toList();
+    } catch (e) {
+      logger.e('Error fetching salary expenses list: $e');
       return [];
     }
   }
@@ -233,10 +285,35 @@ class FinanceService {
         }
       }
 
+      // Add salary expenses
+      final salaryExpenses = await _getSalaryExpenses(schoolId, startDate, endDate);
+      totalOutcome += salaryExpenses;
+
       return {'income': totalIncome, 'outcome': totalOutcome};
     } catch (e) {
       logger.e('Error fetching financial summary: $e');
       return {'income': 0, 'outcome': 0};
+    }
+  }
+
+  Future<double> _getSalaryExpenses(int schoolId, DateTime startDate, DateTime endDate) async {
+    try {
+      final response = await _supabaseClient
+          .from('salary_payments')
+          .select('amount')
+          .eq('school_id', schoolId)
+          .eq('status', 'Paid')
+          .gte('payment_date', startDate.toIso8601String())
+          .lte('payment_date', endDate.toIso8601String());
+      
+      double total = 0;
+      for (var record in response) {
+        total += (record['amount'] as num).toDouble();
+      }
+      return total;
+    } catch (e) {
+      logger.e('Error fetching salary expenses: $e');
+      return 0;
     }
   }
 
@@ -328,6 +405,30 @@ class FinanceService {
       return categorizedExpenses;
     } catch (e) {
       logger.e('Error fetching categorized expenses: $e');
+      return {};
+    }
+  }
+
+  Future<Map<String, double>> getCategoryBreakdown(int schoolId) async {
+    try {
+      final incomes = await getIncomes(schoolId);
+      final expenses = await getExpenses(schoolId);
+      
+      final Map<String, double> breakdown = {};
+      
+      for (var income in incomes) {
+        final category = income.category ?? 'Other Income';
+        breakdown[category] = (breakdown[category] ?? 0) + income.amount;
+      }
+      
+      for (var expense in expenses) {
+        final category = expense.category ?? 'Other Expense';
+        breakdown[category] = (breakdown[category] ?? 0) + expense.amount;
+      }
+      
+      return breakdown;
+    } catch (e) {
+      logger.e('Error fetching category breakdown: $e');
       return {};
     }
   }

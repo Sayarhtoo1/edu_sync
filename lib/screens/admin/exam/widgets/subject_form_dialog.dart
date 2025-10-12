@@ -114,12 +114,11 @@ class _SubjectFormDialogState extends State<SubjectFormDialog>
     final subject = Subject(
       id: widget.subject?.id ?? '',
       name: _nameController.text.trim(),
-      classId: widget.subject?.classId ?? '',
-      schoolId: widget.subject?.schoolId ?? '',
+      classId: widget.subject?.classId,
+      schoolId: widget.subject?.schoolId ?? 0,
       createdAt: widget.subject?.createdAt ?? DateTime.now(),
       maxMarks: maxMarks,
       passingMarks: passingMarks,
-      gradeScale: widget.subject?.gradeScale,
     );
 
     // Call save callback

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:edu_sync/services/auth_service.dart';
+import 'package:edu_sync/providers/school_provider.dart';
 import 'package:edu_sync/widgets/parent/parent_drawer.dart';
 import 'package:edu_sync/screens/common/attendance_report_screen.dart';
 
@@ -22,10 +23,15 @@ class _ModernParentDashboardState extends State<ModernParentDashboard> with Tick
     _fadeController = AnimationController(duration: const Duration(milliseconds: 800), vsync: this);
     _fadeAnimation = CurvedAnimation(parent: _fadeController, curve: Curves.easeIn);
     
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final authService = context.read<AuthService>();
       final user = authService.getCurrentUser();
-      setState(() => _parentName = user?.email?.split('@')[0]);
+      if (user != null) {
+        final userDetails = await authService.getUserById(user.id);
+        if (mounted) {
+          setState(() => _parentName = userDetails?.fullName ?? user.email?.split('@')[0]);
+        }
+      }
       _fadeController.forward();
     });
   }
@@ -43,7 +49,42 @@ class _ModernParentDashboardState extends State<ModernParentDashboard> with Tick
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
-        title: const Text('Parent Dashboard', style: TextStyle(color: Color(0xFF2C2C2C), fontWeight: FontWeight.bold)),
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+        title: Row(
+          children: [
+            Consumer<SchoolProvider>(
+              builder: (context, schoolProvider, _) {
+                final schoolLogo = schoolProvider.currentSchool?.logoUrl;
+                return Container(
+                  width: 36,
+                  height: 36,
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4)],
+                  ),
+                  child: schoolLogo != null && schoolLogo.isNotEmpty
+                      ? Image.network(schoolLogo, fit: BoxFit.contain)
+                      : const Icon(Icons.school, size: 20, color: Colors.grey),
+                );
+              },
+            ),
+            const SizedBox(width: 8),
+            const Flexible(
+              child: Text(
+                'Parent Dashboard',
+                style: TextStyle(color: Color(0xFF2C2C2C), fontWeight: FontWeight.bold),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
         iconTheme: const IconThemeData(color: Color(0xFF2C2C2C)),
         actions: [
           IconButton(icon: const Icon(Icons.notifications_outlined), onPressed: () {}),
@@ -91,10 +132,22 @@ class _ModernParentDashboardState extends State<ModernParentDashboard> with Tick
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
-            child: const Icon(Icons.family_restroom_rounded, color: Colors.white, size: 32),
+          Consumer<SchoolProvider>(
+            builder: (context, schoolProvider, _) {
+              final schoolLogo = schoolProvider.currentSchool?.logoUrl;
+              return Container(
+                width: 56,
+                height: 56,
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: schoolLogo != null && schoolLogo.isNotEmpty
+                    ? Image.network(schoolLogo, fit: BoxFit.contain)
+                    : const Icon(Icons.school_rounded, color: Colors.white, size: 32),
+              );
+            },
           ),
         ],
       ),
@@ -103,9 +156,9 @@ class _ModernParentDashboardState extends State<ModernParentDashboard> with Tick
 
   Widget _buildQuickActions() {
     final actions = [
-      {'title': 'Children', 'icon': Icons.child_care_outlined, 'color': const Color(0xFF9C27B0), 'route': '/parent/children'},
       {'title': 'Attendance', 'icon': Icons.how_to_reg_outlined, 'color': const Color(0xFF2196F3), 'screen': const AttendanceReportScreen()},
-      {'title': 'Exams', 'icon': Icons.assignment_outlined, 'color': const Color(0xFFFF9800), 'route': '/parent/exams'},
+      {'title': 'Child Attendance', 'icon': Icons.calendar_today_outlined, 'color': const Color(0xFF9C27B0), 'route': '/parent/child-attendance'},
+      {'title': 'Child Schedule', 'icon': Icons.schedule_outlined, 'color': const Color(0xFFFF9800), 'route': '/parent/child-schedule'},
       {'title': 'Announcements', 'icon': Icons.campaign_outlined, 'color': const Color(0xFF4CAF50), 'route': '/parent/announcements'},
     ];
 
@@ -129,6 +182,8 @@ class _ModernParentDashboardState extends State<ModernParentDashboard> with Tick
                 onTap: () {
                   if (action['screen'] != null) {
                     Navigator.push(context, MaterialPageRoute(builder: (_) => action['screen'] as Widget));
+                  } else if (action['route'] != null) {
+                    Navigator.pushNamed(context, action['route'] as String);
                   }
                 },
                 child: Container(

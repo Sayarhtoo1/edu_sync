@@ -12,7 +12,6 @@ import 'package:edu_sync/models/user_role.dart';
 class AuthService {
   final SupabaseClient _supabaseClient;
   final SharedPreferences _prefs;
-  final Connectivity _connectivity;
   final NotificationService _notificationService;
 
 
@@ -23,7 +22,6 @@ class AuthService {
     required NotificationService notificationService,
   })  : _supabaseClient = supabaseClient,
         _prefs = sharedPreferences,
-        _connectivity = connectivity,
         _notificationService = notificationService;
         
   void listenToAuthChanges() {
@@ -159,7 +157,7 @@ class AuthService {
   }
 
   // Fetch users by role (e.g., 'Teacher', 'Parent') for a specific school
-  Future<List<app_user.User>> getUsersByRole(UserRole role, int schoolId) async {
+  Future<List<app_user.User>> getUsersByRole(UserRole role, int schoolId, {bool forceRefresh = false}) async {
     try {
       List<Map<String, dynamic>> response;
       if (role == UserRole.Teacher) {
@@ -168,13 +166,15 @@ class AuthService {
             .from('users')
             .select()
             .eq('school_id', schoolId)
-            .or('role.eq.${UserRole.Teacher.name},role.eq.${UserRole.Admin.name}');
+            .or('role.eq.${UserRole.Teacher.name},role.eq.${UserRole.Admin.name}')
+            .order('created_at', ascending: false);
       } else {
         response = await _supabaseClient
             .from('users')
             .select()
             .eq('role', role.name)
-            .eq('school_id', schoolId);
+            .eq('school_id', schoolId)
+            .order('created_at', ascending: false);
       }
 
       return response.map((userData) => app_user.User.fromJson(userData)).toList();
@@ -328,6 +328,8 @@ class AuthService {
     required int schoolId,
     String? fullName,
     String? profilePhotoUrl,
+    String? phoneNumber,
+    double? salary,
   }) async {
     try {
       final response = await _supabaseClient.functions.invoke(
@@ -339,6 +341,8 @@ class AuthService {
           'school_id': schoolId,
           'full_name': fullName,
           'profile_photo_url': profilePhotoUrl,
+          'phone_number_1': phoneNumber,
+          'salary': salary,
         },
       );
 
@@ -368,7 +372,8 @@ class AuthService {
         'profile_photo_url': user.profilePhotoUrl,
         'role': user.role,
         'school_id': user.schoolId,
-        'phone_number': user.phoneNumber,
+        'phone_number_1': user.phoneNumber1,
+        'phone_number_2': user.phoneNumber2,
         'salary': user.salary,
         'updated_at': DateTime.now().toIso8601String(),
       }).eq('id', user.id);
@@ -382,12 +387,23 @@ class AuthService {
   // Delete a user (by Admin)
   Future<bool> deleteUser(String userId) async {
     try {
-      // First, delete from auth.users (requires admin privileges)
-      await _supabaseClient.auth.admin.deleteUser(userId);
-      // Then, the trigger on auth.users should handle deletion from public.users if set up for ON DELETE CASCADE
-      // Or, delete manually if trigger is not sufficient or for cleanup.
-      // await _supabaseClient.from('users').delete().eq('id', userId); // This might be redundant if FK is ON DELETE CASCADE
-      logger.i("User $userId deleted from auth.users. Corresponding public.users entry should be removed by trigger/cascade.");
+      final response = await _supabaseClient.functions.invoke(
+        'delete-user-by-admin',
+        body: {'user_id': userId},
+      );
+
+      if (response.data == null) {
+        logger.e('Edge Function "delete-user-by-admin" returned no data.');
+        return false;
+      }
+
+      final responseData = response.data as Map<String, dynamic>;
+      if (responseData.containsKey('error')) {
+        logger.e('Error from delete-user-by-admin Edge Function: ${responseData['error']}');
+        return false;
+      }
+
+      logger.i("User $userId deleted successfully.");
       return true;
     } catch (e) {
       logger.e('Error deleting user: $e');

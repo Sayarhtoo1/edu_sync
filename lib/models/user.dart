@@ -5,7 +5,8 @@ class User {
   final String? fullName;
   final int? schoolId;
   final String? email;
-  final String? phoneNumber;
+  final String? phoneNumber1;
+  final String? phoneNumber2;
   final double? salary;
 
   User({
@@ -15,7 +16,8 @@ class User {
     this.fullName,
     this.schoolId,
     this.email,
-    this.phoneNumber,
+    this.phoneNumber1,
+    this.phoneNumber2,
     this.salary,
   });
 
@@ -27,7 +29,8 @@ class User {
       fullName: map['full_name'],
       schoolId: map['school_id'],
       email: map['email'],
-      phoneNumber: map['phone_number'],
+      phoneNumber1: map['phone_number_1'] ?? map['phone_number'],
+      phoneNumber2: map['phone_number_2'],
       salary: map['salary'] != null ? (map['salary'] as num).toDouble() : null,
     );
   }
@@ -39,7 +42,8 @@ class User {
     String? fullName,
     int? schoolId,
     String? email,
-    String? phoneNumber,
+    String? phoneNumber1,
+    String? phoneNumber2,
     double? salary,
   }) {
     return User(
@@ -49,7 +53,8 @@ class User {
       fullName: fullName ?? this.fullName,
       schoolId: schoolId ?? this.schoolId,
       email: email ?? this.email,
-      phoneNumber: phoneNumber ?? this.phoneNumber,
+      phoneNumber1: phoneNumber1 ?? this.phoneNumber1,
+      phoneNumber2: phoneNumber2 ?? this.phoneNumber2,
       salary: salary ?? this.salary,
     );
   }
@@ -62,7 +67,8 @@ class User {
       'full_name': fullName,
       'school_id': schoolId,
       'email': email,
-      'phone_number': phoneNumber,
+      'phone_number_1': phoneNumber1,
+      'phone_number_2': phoneNumber2,
       'salary': salary,
     };
   }

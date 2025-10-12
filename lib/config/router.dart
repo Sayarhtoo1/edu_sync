@@ -1,4 +1,5 @@
 import 'package:edu_sync/screens/admin/staff_management_screen.dart';
+import 'package:edu_sync/screens/admin/school_profile_screen.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -18,6 +19,7 @@ import 'package:edu_sync/screens/auth/login_screen.dart';
 import 'package:edu_sync/screens/auth/reset_password_screen.dart';
 import 'package:edu_sync/screens/admin/modern_admin_dashboard.dart';
 import 'package:edu_sync/screens/teacher/modern_teacher_dashboard.dart';
+import 'package:edu_sync/screens/teacher/teacher_student_management_screen.dart';
 import 'package:edu_sync/screens/parent/modern_parent_dashboard.dart';
 import 'package:edu_sync/screens/manager/manager_dashboard_screen.dart';
 import 'package:edu_sync/screens/admin/user_management_screen.dart';
@@ -25,7 +27,6 @@ import 'package:edu_sync/screens/admin/student_management_screen.dart'; // Corre
 import 'package:edu_sync/screens/admin/view_form_responses_screen.dart';
 import 'package:edu_sync/screens/admin/class_management_screen.dart';
 import 'package:edu_sync/screens/admin/timetable_management_screen.dart';
-import 'package:edu_sync/screens/admin/finance_management_screen.dart';
 import 'package:edu_sync/screens/admin/edit_school_profile_screen.dart';
 import 'package:edu_sync/screens/teacher/attendance_marking_screen.dart';
 import 'package:edu_sync/screens/teacher/lesson_plan_management_screen.dart';
@@ -46,12 +47,41 @@ import 'package:edu_sync/models/staff.dart' as model;
 import 'package:edu_sync/models/student.dart' as model;
 
 // Import new exam screens
+import 'package:edu_sync/screens/admin/exam_management_screen.dart';
 import 'package:edu_sync/screens/admin/exam/exam_overview_screen.dart';
-import 'package:edu_sync/screens/admin/exam/exam_list_screen.dart';
 import 'package:edu_sync/screens/admin/exam/exam_form_screen.dart';
+import 'package:edu_sync/screens/admin/exam/exam_subject_management_screen.dart';
+import 'package:edu_sync/screens/admin/exam/subject_management_screen.dart';
+import 'package:edu_sync/screens/admin/exam/grade_management_screen.dart';
+import 'package:edu_sync/screens/admin/exam/marks_entry_screen.dart';
+import 'package:edu_sync/screens/common/report_card_screen.dart';
+import 'package:edu_sync/screens/teacher/exam/input_marks_screen.dart';
+import 'package:edu_sync/screens/admin/exam/exam_analytics_screen.dart';
+import 'package:edu_sync/screens/admin/exam/exam_calendar_screen.dart';
+import 'package:edu_sync/screens/settings/exam_notification_preferences_screen.dart';
+import 'package:edu_sync/screens/admin/exam/exam_template_screen.dart';
+import 'package:edu_sync/screens/student/student_performance_screen.dart';
+import 'package:edu_sync/screens/parent/child_exam_schedule_screen.dart';
+import 'package:edu_sync/screens/admin/exam/marks_approval_screen.dart';
+import 'package:edu_sync/screens/admin/exam/all_report_cards_screen.dart';
+import 'package:edu_sync/models/exam.dart' as exam_model;
 import 'package:edu_sync/screens/admin/fee/fee_structure_management_screen.dart';
-import 'package:edu_sync/screens/admin/fee/donation_management_screen.dart';
+import 'package:edu_sync/screens/admin/finance/donation_management_screen.dart';
+import 'package:edu_sync/screens/admin/salary_management_screen.dart';
+import 'package:edu_sync/screens/admin/finance/finance_overview_screen.dart';
+import 'package:edu_sync/screens/admin/finance/enhanced_finance_overview_screen.dart';
+import 'package:edu_sync/screens/admin/finance/income_management_screen.dart';
+import 'package:edu_sync/screens/admin/finance/expense_management_screen.dart';
+import 'package:edu_sync/screens/admin/finance/fee_payment_management_screen.dart';
+import 'package:edu_sync/screens/admin/finance/add_edit_fee_payment_screen.dart';
+import 'package:edu_sync/screens/admin/finance/category_management_screen.dart';
+import 'package:edu_sync/screens/admin/finance/add_edit_category_screen.dart';
+import 'package:edu_sync/models/fee_payment.dart';
+import 'package:edu_sync/models/finance_category.dart';
 import 'package:edu_sync/screens/donator/modern_donator_dashboard.dart';
+import 'package:edu_sync/screens/admin/staff_status_overview_screen.dart';
+import 'package:edu_sync/screens/admin/staff_attendance_summary_screen.dart';
+import 'package:edu_sync/screens/common/enhanced_student_attendance_summary.dart';
 
 // A class that converts a stream into a listenable for GoRouter.
 class GoRouterRefreshStream extends ChangeNotifier {
@@ -202,12 +232,31 @@ GoRouter initializeRouter() {
         builder: (context, state) => EditSchoolProfileScreen(school: state.extra as app_school.School),
       ),
       GoRoute(
+        path: '/admin/school-profile',
+        name: 'school-profile',
+        builder: (context, state) => const SchoolProfileScreen(),
+      ),
+      GoRoute(
         path: '/admin/user-management',
         builder: (context, state) => const UserManagementScreen(),
       ),
       GoRoute(
         path: '/admin/staff-management',
         builder: (context, state) => const StaffManagementScreen(),
+      ),
+      GoRoute(
+        path: '/admin/staff-status',
+        builder: (context, state) => const StaffStatusOverviewScreen(),
+      ),
+      GoRoute(
+        path: '/admin/staff-attendance-summary',
+        name: 'staff-attendance-summary',
+        builder: (context, state) => const StaffAttendanceSummaryScreen(),
+      ),
+      GoRoute(
+        path: '/admin/student-attendance-summary',
+        name: 'student-attendance-summary',
+        builder: (context, state) => const EnhancedStudentAttendanceSummary(),
       ),
       GoRoute(
         path: '/admin/student-management',
@@ -223,11 +272,29 @@ GoRouter initializeRouter() {
       ),
       GoRoute(
         path: '/admin/finance-management',
-        builder: (context, state) => const FinanceManagementScreen(),
+        builder: (context, state) => const FinanceOverviewScreen(),
+      ),
+      GoRoute(
+        path: '/admin/finance-dashboard',
+        name: 'finance-dashboard',
+        builder: (context, state) => const EnhancedFinanceOverviewScreen(),
+      ),
+      GoRoute(
+        path: '/admin/income-management',
+        builder: (context, state) => const IncomeManagementScreen(),
+      ),
+      GoRoute(
+        path: '/admin/expense-management',
+        builder: (context, state) => const ExpenseManagementScreen(),
       ),
       GoRoute(
         path: '/teacher/attendance-marking',
         builder: (context, state) => const AttendanceMarkingScreen(),
+      ),
+      GoRoute(
+        path: '/teacher/student-attendance-summary',
+        name: 'teacher-student-attendance-summary',
+        builder: (context, state) => const EnhancedStudentAttendanceSummary(),
       ),
       GoRoute(
         path: '/teacher/lesson-plan-management',
@@ -252,6 +319,10 @@ GoRouter initializeRouter() {
       GoRoute(
         path: '/teacher/timetable',
         builder: (context, state) => const TeacherTimetableScreen(),
+      ),
+      GoRoute(
+        path: '/teacher/students',
+        builder: (context, state) => const TeacherStudentManagementScreen(),
       ),
       GoRoute(
         path: '/parent/child-attendance',
@@ -286,8 +357,25 @@ GoRouter initializeRouter() {
         },
       ),
       GoRoute(
+        path: '/report-card/:studentId/:examId',
+        name: 'report-card',
+        builder: (context, state) {
+          final studentId = int.parse(state.pathParameters['studentId']!);
+          final examId = state.pathParameters['examId']!;
+          return ReportCardScreen(studentId: studentId, examId: examId);
+        },
+      ),
+      GoRoute(
         path: '/student/profile',
-        builder: (context, state) => StudentProfileScreen(student: state.extra as model.Student),
+        builder: (context, state) {
+          final student = state.extra as model.Student?;
+          if (student == null) {
+            return const Scaffold(
+              body: Center(child: Text('Student not found')),
+            );
+          }
+          return StudentProfileScreen(student: student);
+        },
       ),
       GoRoute(
         path: '/staff/profile',
@@ -302,12 +390,131 @@ GoRouter initializeRouter() {
       GoRoute(
         path: '/admin/exam-management',
         name: 'exam-management',
-        builder: (context, state) => const ExamListScreen(),
+        builder: (context, state) => const ExamManagementScreen(),
       ),
       GoRoute(
         path: '/admin/exam-form',
         name: 'exam-form',
         builder: (context, state) => ExamFormScreen(exam: state.extra as dynamic),
+      ),
+      GoRoute(
+        path: '/admin/exam-subject-management',
+        name: 'exam-subject-management',
+        builder: (context, state) => ExamSubjectManagementScreen(exam: state.extra as exam_model.Exam),
+      ),
+      GoRoute(
+        path: '/admin/subject-management',
+        name: 'subject-management',
+        builder: (context, state) => const SubjectManagementScreen(),
+      ),
+      GoRoute(
+        path: '/admin/grade-management',
+        name: 'grade-management',
+        builder: (context, state) => const GradeManagementScreen(),
+      ),
+      GoRoute(
+        path: '/exam-management/create',
+        builder: (context, state) => const ExamFormScreen(),
+      ),
+      GoRoute(
+        path: '/exam-management/edit/:examId',
+        builder: (context, state) {
+          final examId = state.pathParameters['examId']!;
+          return ExamFormScreen(exam: state.extra as exam_model.Exam?);
+        },
+      ),
+      GoRoute(
+        path: '/input-marks/:examId',
+        builder: (context, state) {
+          final examId = state.pathParameters['examId']!;
+          return InputMarksScreen(examId: examId);
+        },
+      ),
+      GoRoute(
+        path: '/admin/marks-entry/:examId',
+        name: 'marks-entry',
+        builder: (context, state) {
+          final examId = state.pathParameters['examId']!;
+          final extra = state.extra as Map<String, String>?;
+          return MarksEntryScreen(
+            examId: examId,
+            examName: extra?['examName'],
+          );
+        },
+      ),
+      GoRoute(
+        path: '/exam-analytics/:examId',
+        name: 'exam-analytics',
+        builder: (context, state) {
+          final examId = state.pathParameters['examId']!;
+          final extra = state.extra as Map<String, String>?;
+          return ExamAnalyticsScreen(
+            examId: examId,
+            examName: extra?['examName'] ?? 'Exam Analytics',
+          );
+        },
+      ),
+      GoRoute(
+        path: '/exam-calendar/:schoolId',
+        name: 'exam-calendar',
+        builder: (context, state) {
+          final schoolId = int.parse(state.pathParameters['schoolId']!);
+          return ExamCalendarScreen(schoolId: schoolId);
+        },
+      ),
+      GoRoute(
+        path: '/exam-notification-preferences',
+        name: 'exam-notification-preferences',
+        builder: (context, state) => const ExamNotificationPreferencesScreen(),
+      ),
+      GoRoute(
+        path: '/exam-templates/:schoolId',
+        name: 'exam-templates',
+        builder: (context, state) {
+          final schoolId = int.parse(state.pathParameters['schoolId']!);
+          return ExamTemplateScreen(schoolId: schoolId);
+        },
+      ),
+      GoRoute(
+        path: '/student-performance/:studentId/:classId',
+        name: 'student-performance',
+        builder: (context, state) {
+          final studentId = int.parse(state.pathParameters['studentId']!);
+          final classId = int.parse(state.pathParameters['classId']!);
+          return StudentPerformanceScreen(studentId: studentId, classId: classId);
+        },
+      ),
+      GoRoute(
+        path: '/child-exam-schedule/:classId',
+        name: 'child-exam-schedule',
+        builder: (context, state) {
+          final classId = int.parse(state.pathParameters['classId']!);
+          return ChildExamScheduleScreen(classId: classId);
+        },
+      ),
+      GoRoute(
+        path: '/marks-approval/:schoolId',
+        name: 'marks-approval',
+        builder: (context, state) {
+          final schoolId = int.parse(state.pathParameters['schoolId']!);
+          return MarksApprovalScreen(schoolId: schoolId);
+        },
+      ),
+      GoRoute(
+        path: '/all-report-cards/:examId',
+        name: 'all-report-cards',
+        builder: (context, state) {
+          final examId = state.pathParameters['examId']!;
+          final extra = state.extra as Map<String, String>?;
+          return AllReportCardsScreen(
+            examId: examId,
+            examName: extra?['examName'] ?? 'Exam',
+          );
+        },
+      ),
+      GoRoute(
+        path: '/exam-settings',
+        builder: (context, state) => const AdminSettingsScreen(),
       ),
       // Fee Management routes
       GoRoute(
@@ -315,24 +522,40 @@ GoRouter initializeRouter() {
         builder: (context, state) => const FeeStructureManagementScreen(),
       ),
       GoRoute(
+        path: '/admin/fee-payment-management',
+        name: 'fee-payment-management',
+        builder: (context, state) => const FeePaymentManagementScreen(),
+      ),
+      GoRoute(
+        path: '/admin/add-fee-payment',
+        name: 'add-fee-payment',
+        builder: (context, state) => AddEditFeePaymentScreen(
+          payment: state.extra as FeePayment?,
+        ),
+      ),
+      GoRoute(
+        path: '/admin/finance-categories',
+        name: 'finance-categories',
+        builder: (context, state) => const CategoryManagementScreen(),
+      ),
+      GoRoute(
+        path: '/admin/add-finance-category',
+        name: 'add-finance-category',
+        builder: (context, state) => AddEditCategoryScreen(
+          category: state.extra as FinanceCategory?,
+        ),
+      ),
+      GoRoute(
         path: '/admin/donation-management',
         builder: (context, state) => const DonationManagementScreen(),
+      ),
+      GoRoute(
+        path: '/admin/salary-management',
+        builder: (context, state) => const SalaryManagementScreen(),
       ),
       // Donator routes
       GoRoute(
         path: '/donator-dashboard',
-        builder: (context, state) => const ModernDonatorDashboard(),
-      ),
-      GoRoute(
-        path: '/teacher',
-        builder: (context, state) => const ModernTeacherDashboard(),
-      ),
-      GoRoute(
-        path: '/parent',
-        builder: (context, state) => const ModernParentDashboard(),
-      ),
-      GoRoute(
-        path: '/donator',
         builder: (context, state) => const ModernDonatorDashboard(),
       ),
     ],

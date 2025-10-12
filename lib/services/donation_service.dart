@@ -74,4 +74,17 @@ class DonationService {
       return {'total_amount': 0.0, 'total_donations': 0, 'donations': []};
     }
   }
+
+  Future<bool> deleteDonation(String donationId) async {
+    try {
+      await _supabase
+          .from('donations')
+          .delete()
+          .eq('id', donationId);
+      return true;
+    } catch (e) {
+      logger.e('Error deleting donation: $e');
+      return false;
+    }
+  }
 }

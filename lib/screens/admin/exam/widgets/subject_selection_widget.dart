@@ -55,7 +55,7 @@ class _SubjectSelectionWidgetState extends State<SubjectSelectionWidget> {
       }
 
       // Class filter
-      if (_selectedClassId.isNotEmpty && subject.classId != _selectedClassId) {
+      if (_selectedClassId.isNotEmpty && subject.classId?.toString() != _selectedClassId) {
         return false;
       }
 
@@ -82,7 +82,7 @@ class _SubjectSelectionWidgetState extends State<SubjectSelectionWidget> {
   Widget _buildClassFilter() {
     final examProvider = Provider.of<ExamProvider>(context);
     final subjects = examProvider.subjects;
-    final classIds = subjects.map((s) => s.classId).toSet().toList();
+    final classIds = subjects.map((s) => s.classId?.toString()).where((id) => id != null).toSet().toList();
 
     if (classIds.length <= 1) return const SizedBox.shrink();
 
@@ -104,7 +104,7 @@ class _SubjectSelectionWidgetState extends State<SubjectSelectionWidget> {
               label: Text(className),
               selected: _selectedClassId == classId,
               onSelected: (selected) {
-                setState(() => _selectedClassId = selected ? classId : '');
+                setState(() => _selectedClassId = selected ? classId! : '');
               },
             );
           }),
@@ -113,9 +113,9 @@ class _SubjectSelectionWidgetState extends State<SubjectSelectionWidget> {
     );
   }
 
-  String _getClassName(String classId) {
+  String _getClassName(String? classId) {
     // This should ideally come from ClassProvider
-    return 'Class $classId';
+    return 'Class ${classId ?? 'Unknown'}';
   }
 
   Widget _buildSubjectGrid() {

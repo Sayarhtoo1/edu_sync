@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:edu_sync/services/auth_service.dart';
 import 'package:edu_sync/services/donation_service.dart';
 import 'package:edu_sync/models/donation.dart';
+import 'package:edu_sync/providers/school_provider.dart';
 import 'package:edu_sync/widgets/donator/donator_drawer.dart';
 import 'package:edu_sync/screens/donator/make_donation_screen.dart';
 
@@ -41,13 +42,14 @@ class _ModernDonatorDashboardState extends State<ModernDonatorDashboard> with Ti
     final user = authService.getCurrentUser();
     
     if (user != null) {
+      final userDetails = await authService.getUserById(user.id);
       final donations = await donationService.getDonationsByDonator(user.id);
       double total = 0;
       for (var d in donations) {
         if (d.status == 'Received') total += d.amount;
       }
       setState(() {
-        _donatorName = user.email?.split('@')[0];
+        _donatorName = userDetails?.fullName ?? user.email?.split('@')[0];
         _donations = donations;
         _totalDonated = total;
         _isLoading = false;
@@ -68,7 +70,42 @@ class _ModernDonatorDashboardState extends State<ModernDonatorDashboard> with Ti
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
-        title: const Text('Donator Dashboard', style: TextStyle(color: Color(0xFF2C2C2C), fontWeight: FontWeight.bold)),
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+        title: Row(
+          children: [
+            Consumer<SchoolProvider>(
+              builder: (context, schoolProvider, _) {
+                final schoolLogo = schoolProvider.currentSchool?.logoUrl;
+                return Container(
+                  width: 36,
+                  height: 36,
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4)],
+                  ),
+                  child: schoolLogo != null && schoolLogo.isNotEmpty
+                      ? Image.network(schoolLogo, fit: BoxFit.contain)
+                      : const Icon(Icons.school, size: 20, color: Colors.grey),
+                );
+              },
+            ),
+            const SizedBox(width: 8),
+            const Flexible(
+              child: Text(
+                'Donator Dashboard',
+                style: TextStyle(color: Color(0xFF2C2C2C), fontWeight: FontWeight.bold),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
         iconTheme: const IconThemeData(color: Color(0xFF2C2C2C)),
       ),
       drawer: const DonatorDrawer(),
@@ -127,10 +164,22 @@ class _ModernDonatorDashboardState extends State<ModernDonatorDashboard> with Ti
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
-            child: const Icon(Icons.volunteer_activism_rounded, color: Colors.white, size: 32),
+          Consumer<SchoolProvider>(
+            builder: (context, schoolProvider, _) {
+              final schoolLogo = schoolProvider.currentSchool?.logoUrl;
+              return Container(
+                width: 56,
+                height: 56,
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: schoolLogo != null && schoolLogo.isNotEmpty
+                    ? Image.network(schoolLogo, fit: BoxFit.contain)
+                    : const Icon(Icons.school_rounded, color: Colors.white, size: 32),
+              );
+            },
           ),
         ],
       ),

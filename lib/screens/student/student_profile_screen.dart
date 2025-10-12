@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:provider/provider.dart' as provider;
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../models/student.dart';
 import '../../models/school_class.dart';
 import '../../models/attendance.dart' as app_attendance;
@@ -8,8 +10,10 @@ import '../../models/grade.dart';
 import '../../services/class_service.dart';
 import '../../services/attendance_service.dart';
 import '../../services/exam_service.dart';
+import '../../services/student_service.dart';
 
 class _StudentProfileData {
+  final Student student;
   final SchoolClass? schoolClass;
   final List<app_attendance.Attendance> attendanceRecords;
   final List<Grade>? grades;
@@ -17,6 +21,7 @@ class _StudentProfileData {
   final List<dynamic>? recentExams;
 
   _StudentProfileData({
+    required this.student,
     this.schoolClass,
     required this.attendanceRecords,
     this.grades,
@@ -46,16 +51,20 @@ class _StudentProfileScreenState extends ConsumerState<StudentProfileScreen> {
   }
 
   Future<_StudentProfileData> _fetchProfileData() async {
+    final studentService = provider.Provider.of<StudentService>(context, listen: false);
     final classService = ref.read(classServiceProvider);
     final attendanceService = ref.read(attendanceServiceProvider);
     final examService = ref.read(examServiceProvider);
 
+    // Fetch fresh student data from backend
+    final freshStudent = await studentService.getStudentById(widget.student.id, widget.student.schoolId) ?? widget.student;
+
     SchoolClass? schoolClass;
-    if (widget.student.classId != null) {
-      schoolClass = await classService.getClassById(widget.student.classId!);
+    if (freshStudent.classId != null) {
+      schoolClass = await classService.getClassById(freshStudent.classId!);
     }
 
-    final attendanceRecords = await attendanceService.getAttendanceForStudent(widget.student.id);
+    final attendanceRecords = await attendanceService.getAttendanceForStudent(freshStudent.id);
 
     // Fetch additional data for enhanced profile
     List<Grade>? grades;
@@ -64,12 +73,12 @@ class _StudentProfileScreenState extends ConsumerState<StudentProfileScreen> {
 
     try {
       // Get grades for the school
-      if (widget.student.schoolId != 0) {
-        grades = await examService.getGradesBySchoolId(widget.student.schoolId);
+      if (freshStudent.schoolId != 0) {
+        grades = await examService.getGradesBySchoolId(freshStudent.schoolId);
       }
 
       // Get student performance data
-      performanceData = await examService.getStudentPerformance(widget.student.id);
+      performanceData = await examService.getStudentPerformance(freshStudent.id);
 
       // Get recent exams (you might need to implement this method in ExamService)
       // For now, we'll use a placeholder
@@ -81,6 +90,7 @@ class _StudentProfileScreenState extends ConsumerState<StudentProfileScreen> {
     }
 
     return _StudentProfileData(
+      student: freshStudent,
       schoolClass: schoolClass,
       attendanceRecords: attendanceRecords,
       grades: grades,
@@ -126,11 +136,12 @@ class _StudentProfileScreenState extends ConsumerState<StudentProfileScreen> {
           }
 
           final profileData = snapshot.data!;
+          final student = profileData.student;
           final attendanceSummary = _calculateAttendanceSummary(profileData.attendanceRecords);
           final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
           final todayAttendance = profileData.attendanceRecords.firstWhere(
             (record) => DateFormat('yyyy-MM-dd').format(record.date) == today,
-            orElse: () => app_attendance.Attendance(id: null, studentId: widget.student.id, classId: widget.student.classId ?? 0, date: DateTime.now(), status: 'N/A'),
+            orElse: () => app_attendance.Attendance(id: null, studentId: student.id, classId: student.classId ?? 0, date: DateTime.now(), status: 'N/A'),
           );
 
           return CustomScrollView(
@@ -140,10 +151,10 @@ class _StudentProfileScreenState extends ConsumerState<StudentProfileScreen> {
                 floating: false,
                 pinned: true,
                 flexibleSpace: FlexibleSpaceBar(
-                  title: Text(widget.student.fullName),
-                  background: widget.student.profilePhotoUrl != null
+                  title: Text(student.fullName),
+                  background: student.profilePhotoUrl != null
                       ? Image.network(
-                          widget.student.profilePhotoUrl!,
+                          student.profilePhotoUrl!,
                           fit: BoxFit.cover,
                         )
                       : Container(
@@ -164,8 +175,12 @@ class _StudentProfileScreenState extends ConsumerState<StudentProfileScreen> {
                         color: Colors.blue,
                         children: [
                           _buildInfoRow(Icons.class_, 'Class', profileData.schoolClass?.name ?? 'N/A'),
-                          _buildInfoRow(Icons.cake, 'Date of Birth', widget.student.dateOfBirth?.toLocal().toString().split(' ')[0] ?? 'N/A'),
-                          _buildInfoRow(Icons.person_outline, 'Gender', widget.student.gender ?? 'N/A'),
+                          _buildInfoRow(Icons.cake, 'Date of Birth', student.dateOfBirth?.toLocal().toString().split(' ')[0] ?? 'N/A'),
+                          _buildInfoRow(Icons.person_outline, 'Gender', student.gender ?? 'N/A'),
+                          if (student.phoneNumber1 != null && student.phoneNumber1!.isNotEmpty)
+                            _buildPhoneRow('Phone 1', student.phoneNumber1!),
+                          if (student.phoneNumber2 != null && student.phoneNumber2!.isNotEmpty)
+                            _buildPhoneRow('Phone 2', student.phoneNumber2!),
                         ],
                       ),
                       const SizedBox(height: 16),
@@ -197,12 +212,12 @@ class _StudentProfileScreenState extends ConsumerState<StudentProfileScreen> {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [color.withValues(alpha: 0.1), color.withValues(alpha: 0.05)],
+          colors: [color.withOpacity(0.1), color.withOpacity(0.05)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
+        border: Border.all(color: color.withOpacity(0.2), width: 1),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -218,7 +233,7 @@ class _StudentProfileScreenState extends ConsumerState<StudentProfileScreen> {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: color.withValues(alpha: 0.8),
+                    color: color.withOpacity(0.8),
                   ),
                 ),
               ],
@@ -239,7 +254,7 @@ class _StudentProfileScreenState extends ConsumerState<StudentProfileScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.grey.withValues(alpha: 0.1),
+              color: Colors.grey.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, size: 20, color: Colors.grey[600]),
@@ -271,6 +286,84 @@ class _StudentProfileScreenState extends ConsumerState<StudentProfileScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildPhoneRow(String label, String phoneNumber) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.grey.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(Icons.phone, size: 20, color: Colors.grey[600]),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  phoneNumber,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.phone, color: Colors.green),
+            onPressed: () => _makePhoneCall(phoneNumber),
+            tooltip: 'Call',
+          ),
+          IconButton(
+            icon: const Icon(Icons.message, color: Colors.blue),
+            onPressed: () => _sendMessage(phoneNumber),
+            tooltip: 'Message',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _makePhoneCall(String phoneNumber) async {
+    final uri = Uri(scheme: 'tel', path: phoneNumber);
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not launch phone dialer: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _sendMessage(String phoneNumber) async {
+    final uri = Uri(scheme: 'sms', path: phoneNumber);
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not launch messaging app: $e')),
+        );
+      }
+    }
   }
 
   Widget _buildAttendanceCard({
@@ -393,11 +486,11 @@ class _StudentProfileScreenState extends ConsumerState<StudentProfileScreen> {
     int totalExams = 0;
     double avgPercentage = 0.0;
 
-    if (performanceData != null && performanceData.isNotEmpty) {
+    if (performanceData != null) {
       overallGPA = performanceData['overall_gpa']?.toString() ?? 'N/A';
       overallGrade = performanceData['overall_grade']?.toString() ?? 'N/A';
-      totalExams = performanceData['total_exams'] ?? 0;
-      avgPercentage = (performanceData['average_percentage'] ?? 0.0).toDouble();
+      totalExams = (performanceData['total_exams'] ?? 0) is int ? performanceData['total_exams'] : int.tryParse(performanceData['total_exams']?.toString() ?? '0') ?? 0;
+      avgPercentage = (performanceData['average_percentage'] ?? 0.0) is double ? performanceData['average_percentage'] : double.tryParse(performanceData['average_percentage']?.toString() ?? '0') ?? 0.0;
     }
 
     return _buildInfoCard(
@@ -522,18 +615,25 @@ class _StudentProfileScreenState extends ConsumerState<StudentProfileScreen> {
   }
 
   Widget _buildAdditionalInfoCard() {
-    return _buildInfoCard(
-      title: 'Additional Information',
-      icon: Icons.info,
-      color: Colors.teal,
-      children: [
-        _buildInfoRow(Icons.school, 'Student ID', widget.student.id.toString()),
-        _buildInfoRow(Icons.business, 'School ID', widget.student.schoolId.toString()),
-        _buildInfoRow(Icons.badge, 'Enrollment Status', 'Active'),
-        _buildInfoRow(Icons.date_range, 'Member Since', 'Jan 2024'), // You can calculate this from created date if available
-        if (widget.student.profilePhotoUrl != null)
-          _buildInfoRow(Icons.photo, 'Profile Photo', 'Uploaded'),
-      ],
+    return FutureBuilder<_StudentProfileData>(
+      future: _profileDataFuture,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const SizedBox.shrink();
+        final profileData = snapshot.data!;
+        return _buildInfoCard(
+          title: 'Additional Information',
+          icon: Icons.info,
+          color: Colors.teal,
+          children: [
+            _buildInfoRow(Icons.school, 'Student ID', profileData.student.id.toString()),
+            _buildInfoRow(Icons.business, 'School ID', profileData.student.schoolId.toString()),
+            _buildInfoRow(Icons.badge, 'Enrollment Status', 'Active'),
+            _buildInfoRow(Icons.date_range, 'Member Since', 'Jan 2024'),
+            if (profileData.student.profilePhotoUrl != null)
+              _buildInfoRow(Icons.photo, 'Profile Photo', 'Uploaded'),
+          ],
+        );
+      },
     );
   }
 
@@ -550,4 +650,8 @@ final attendanceServiceProvider = Provider<AttendanceService>((ref) {
 
 final examServiceProvider = Provider<ExamService>((ref) {
   return ExamService();
+});
+
+final studentServiceProvider = Provider<StudentService>((ref) {
+  throw UnimplementedError('Use Provider.of<StudentService>(context) instead');
 });

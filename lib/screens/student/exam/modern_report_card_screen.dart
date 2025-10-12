@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/exam_provider.dart';
-import '../../../l10n/gen/app_localizations.dart';
 import '../../../providers/school_provider.dart';
 import '../../../models/grade.dart';
 import '../../../services/exam_analytics_service.dart';
@@ -54,9 +53,8 @@ class _ModernReportCardScreenState extends State<ModernReportCardScreen>
 
     if (schoolId != null) {
       await examProvider.getDetailedStudentReportCard(
-        studentId: widget.studentId,
+        studentId: int.parse(widget.studentId),
         examId: widget.examId,
-        schoolId: schoolId,
       );
       await examProvider.fetchGrades(schoolId.toString());
     }
@@ -64,7 +62,7 @@ class _ModernReportCardScreenState extends State<ModernReportCardScreen>
 
   @override
   Widget build(BuildContext context) {
-    final localizations = AppLocalizations.of(context);
+    // final localizations = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     return Scaffold(

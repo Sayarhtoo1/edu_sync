@@ -111,9 +111,7 @@ class _SubjectCardWidgetState extends State<SubjectCardWidget>
     if (widget.isSelected) {
       return AppTheme.getAccentColorForContext('form');
     }
-
-    final percentage = widget.subject.passingPercentage;
-    return widget.subject.getGradeColor(percentage).withOpacity(0.3);
+    return Colors.grey.withOpacity(0.3);
   }
 
   void _handleTapDown(TapDownDetails details) {
@@ -227,28 +225,16 @@ class _SubjectCardWidgetState extends State<SubjectCardWidget>
 
                         const Spacer(),
 
-                        // Exam configuration info
-                        if (widget.subject.maxMarks != null ||
-                            widget.subject.passingMarks != null) ...[
-                          _buildConfigRow(
-                            icon: Icons.assignment,
-                            label: 'Max Marks',
-                            value: widget.subject.maxMarks?.toString() ?? 'Not set',
-                            color: Colors.blue.shade600,
+                        if (widget.subject.code != null && widget.subject.code!.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Text(
+                              'Code: ${widget.subject.code}',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: textLightGrey,
+                              ),
+                            ),
                           ),
-                          const SizedBox(height: 8),
-                          _buildConfigRow(
-                            icon: Icons.verified,
-                            label: 'Passing Marks',
-                            value: widget.subject.passingMarks?.toString() ?? 'Not set',
-                            color: Colors.green.shade600,
-                          ),
-                          if (widget.subject.passingPercentage > 0) ...[
-                            const SizedBox(height: 8),
-                            _buildPassingPercentageBar(),
-                          ],
-                        ] else
-                          _buildNoConfigMessage(),
 
                         const SizedBox(height: 12),
 
@@ -317,67 +303,6 @@ class _SubjectCardWidgetState extends State<SubjectCardWidget>
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildPassingPercentageBar() {
-    final percentage = widget.subject.passingPercentage;
-    final gradeColor = widget.subject.getGradeColor(percentage);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Passing Rate: ${percentage.toStringAsFixed(1)}%',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: textLightGrey,
-            fontSize: 10,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Container(
-          height: 4,
-          decoration: BoxDecoration(
-            color: gradeColor.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(2),
-          ),
-          child: FractionallySizedBox(
-            alignment: Alignment.centerLeft,
-            widthFactor: percentage / 100,
-            child: Container(
-              decoration: BoxDecoration(
-                color: gradeColor,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildNoConfigMessage() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Icon(
-            Icons.info_outline,
-            size: 16,
-            color: textLightGrey,
-          ),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              'Configure exam settings',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: textLightGrey,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 

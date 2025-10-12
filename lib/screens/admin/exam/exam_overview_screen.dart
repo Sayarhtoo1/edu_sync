@@ -97,19 +97,23 @@ class _ExamOverviewScreenState extends State<ExamOverviewScreen> {
 
   AppBar _buildAppBar() {
     return AppBar(
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () => Navigator.of(context).pop(),
+      ),
       title: const Text('Exam Overview'),
       backgroundColor: appBackgroundColor,
       elevation: 0,
       actions: [
         IconButton(
-          icon: const Icon(Icons.analytics_outlined),
-          onPressed: () => context.push('/exam-analytics'),
-          tooltip: 'Exam Analytics',
+          icon: const Icon(Icons.list_alt),
+          onPressed: () => context.push('/admin/exam-management'),
+          tooltip: 'Exam List',
         ),
         IconButton(
           icon: const Icon(Icons.settings_outlined),
-          onPressed: () => context.push('/exam-settings'),
-          tooltip: 'Exam Settings',
+          onPressed: () => context.push('/admin/settings'),
+          tooltip: 'Settings',
         ),
       ],
     );
@@ -211,7 +215,7 @@ class _ExamOverviewScreenState extends State<ExamOverviewScreen> {
 
   Widget _buildFloatingActionButton() {
     return FloatingActionButton.extended(
-      onPressed: () => context.push('/exam-management/create'),
+      onPressed: () => context.push('/admin/exam-form'),
       icon: const Icon(Icons.add),
       label: const Text('Create Exam'),
       backgroundColor: defaultAccentColor,

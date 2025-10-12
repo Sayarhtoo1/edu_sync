@@ -6,7 +6,6 @@ import '../../services/auth_service.dart';
 import '../../models/user.dart' as app_user;
 import 'add_edit_staff_screen_corrected.dart';
 import 'package:edu_sync/l10n/gen/app_localizations.dart';
-import 'package:edu_sync/theme/app_theme.dart';
 
 class StaffManagementScreen extends StatefulWidget {
   const StaffManagementScreen({super.key});
@@ -98,7 +97,7 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
             fullName: staff.fullName,
             schoolId: staff.schoolId,
             email: staff.email,
-            phoneNumber: staff.phoneNumber,
+            phoneNumber: staff.phoneNumber1,
             salary: staff.salary,
           ) : null,
           schoolId: _currentSchoolId!,
@@ -110,8 +109,8 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
   }
 
   Future<void> _deleteStaff(String userId) async {
-    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     final confirm = await showDialog<bool>(
       context: context,
@@ -190,7 +189,7 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
                             fullName: staff.fullName,
                             schoolId: staff.schoolId,
                             email: staff.email,
-                            phoneNumber: staff.phoneNumber,
+                            phoneNumber: staff.phoneNumber1,
                             salary: staff.salary,
                           )),
                           child: Container(
@@ -198,7 +197,7 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(12),
-                              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))],
+                              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 2))],
                             ),
                             child: ListTile(
                               contentPadding: const EdgeInsets.all(16),
@@ -206,7 +205,7 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
                                 width: 48,
                                 height: 48,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFFF9800).withOpacity(0.1),
+                                  color: const Color(0xFFFF9800).withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(12),
                                   image: staff.profilePhotoUrl != null && staff.profilePhotoUrl!.isNotEmpty
                                       ? DecorationImage(image: NetworkImage(staff.profilePhotoUrl!), fit: BoxFit.cover)
@@ -217,7 +216,7 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
                                     : null,
                               ),
                               title: Text(staff.fullName ?? 'N/A', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                              subtitle: Text(staff.role ?? 'No role assigned', style: TextStyle(color: Colors.grey[600])),
+                              subtitle: Text(staff.role ?? 'Staff', style: TextStyle(color: Colors.grey[600])),
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [

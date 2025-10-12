@@ -72,20 +72,12 @@ class _AddEditStaffScreenState extends State<AddEditStaffScreen> {
 
     try {
       app_user.User? resultUser;
-      String staffIdToUpdate = _isEditing ? widget.staff!.id : '';
-      String tempStaffIdForPhoto = staffIdToUpdate;
-
-      if (!_isEditing) {
-        tempStaffIdForPhoto = DateTime.now().millisecondsSinceEpoch.toString();
-      }
-
-      if (_profilePhotoFile != null) {
-        String idForPhotoPath = _isEditing ? staffIdToUpdate : tempStaffIdForPhoto;
-        final fileName = 'profile.${_profilePhotoFile!.path.split('.').last}';
-        photoUrl = await _authService.uploadProfilePhoto(idForPhotoPath, _profilePhotoFile!.path, fileName);
-      }
 
       if (_isEditing) {
+        if (_profilePhotoFile != null) {
+          final fileName = 'profile.${_profilePhotoFile!.path.split('.').last}';
+          photoUrl = await _authService.uploadProfilePhoto(widget.staff!.id, _profilePhotoFile!.path, fileName);
+        }
         final updatedUser = app_user.User(
           id: widget.staff!.id,
           fullName: _nameController.text,
@@ -93,7 +85,7 @@ class _AddEditStaffScreenState extends State<AddEditStaffScreen> {
           role: _selectedRole.name,
           profilePhotoUrl: photoUrl,
           schoolId: widget.staff!.schoolId,
-          phoneNumber: _phoneController.text.isEmpty ? null : _phoneController.text,
+          phoneNumber1: _phoneController.text.isEmpty ? null : _phoneController.text,
           salary: _salaryController.text.isEmpty ? null : double.tryParse(_salaryController.text),
         );
         final success = await _authService.updateUser(updatedUser);
@@ -115,6 +107,8 @@ class _AddEditStaffScreenState extends State<AddEditStaffScreen> {
           schoolId: widget.schoolId,
           fullName: _nameController.text,
           profilePhotoUrl: photoUrl,
+          phoneNumber: _phoneController.text.isEmpty ? null : _phoneController.text,
+          salary: _salaryController.text.isEmpty ? null : double.tryParse(_salaryController.text),
         );
 
         logger.i('Staff user created successfully');
@@ -124,24 +118,24 @@ class _AddEditStaffScreenState extends State<AddEditStaffScreen> {
         }
         resultUser = newUser;
 
-        if (_profilePhotoFile != null && photoUrl == null) {
-             final correctFileName = 'profile.${_profilePhotoFile!.path.split('.').last}';
-             final correctPhotoUrl = await _authService.uploadProfilePhoto(resultUser.id, _profilePhotoFile!.path, correctFileName);
-             if (correctPhotoUrl != null) {
-                final updatedUser = app_user.User(
-                  id: resultUser.id,
-                  fullName: resultUser.fullName,
-                  email: resultUser.email,
-                  role: resultUser.role,
-                  profilePhotoUrl: correctPhotoUrl,
-                  schoolId: resultUser.schoolId,
-                  phoneNumber: resultUser.phoneNumber,
-                  salary: resultUser.salary,
-                );
-                await _authService.updateUser(updatedUser);
-             } else {
-                logger.e("Photo upload failed for new staff ${resultUser.id} after creation.");
-             }
+        if (_profilePhotoFile != null) {
+          final correctFileName = 'profile.${_profilePhotoFile!.path.split('.').last}';
+          final correctPhotoUrl = await _authService.uploadProfilePhoto(resultUser.id, _profilePhotoFile!.path, correctFileName);
+          if (correctPhotoUrl != null) {
+            final updatedUser = app_user.User(
+              id: resultUser.id,
+              fullName: resultUser.fullName,
+              email: resultUser.email,
+              role: resultUser.role,
+              profilePhotoUrl: correctPhotoUrl,
+              schoolId: resultUser.schoolId,
+              phoneNumber1: resultUser.phoneNumber1,
+              salary: resultUser.salary,
+            );
+            await _authService.updateUser(updatedUser);
+          } else {
+            logger.e("Photo upload failed for new staff ${resultUser.id} after creation.");
+          }
         }
       }
 
@@ -149,7 +143,6 @@ class _AddEditStaffScreenState extends State<AddEditStaffScreen> {
       if (mounted) Navigator.of(context).pop(true);
 
     } catch (e) {
-      final l10n = AppLocalizations.of(context);
       String specificError = e.toString();
       if (e.toString().contains('Profile photo upload failed')) {
         specificError = 'Profile photo upload failed.';
@@ -177,7 +170,6 @@ class _AddEditStaffScreenState extends State<AddEditStaffScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final Color contextualAccentColor = AppTheme.getAccentColorForContext('staff');
 
@@ -255,7 +247,7 @@ class _AddEditStaffScreenState extends State<AddEditStaffScreen> {
                       decoration: BoxDecoration(
                         color: theme.inputDecorationTheme.fillColor ?? Colors.grey.withAlpha(50),
                         borderRadius: BorderRadius.circular(12.0),
-                        border: Border.all(color: Colors.grey.withOpacity(0.5))
+                        border: Border.all(color: Colors.grey.withValues(alpha: 0.5))
                       ),
                       child: _profilePhotoFile != null
                           ? Image.file(_profilePhotoFile!, height: 90, fit: BoxFit.contain)

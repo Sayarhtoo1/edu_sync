@@ -92,16 +92,21 @@ class _ExamFormScreenState extends State<ExamFormScreen> {
     // Implementation for loading draft from local storage
     // For now, just populate with existing exam data if editing
     if (widget.exam != null) {
-      _populateFormWithExam(widget.exam!);
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (mounted) {
+        _populateFormWithExam(widget.exam!);
+      }
     }
   }
 
   void _populateFormWithExam(Exam exam) {
-    _nameController.text = exam.name;
-    _examinerController.text = exam.examinerName;
-    _selectedDate = exam.examDate;
-    _descriptionController.text = exam.description ?? '';
-    _maxMarksController.text = exam.maxMarks?.toString() ?? '';
+    setState(() {
+      _nameController.text = exam.name;
+      _examinerController.text = exam.examinerName;
+      _selectedDate = exam.examDate;
+      _descriptionController.text = exam.description ?? '';
+      _maxMarksController.text = exam.maxMarks?.toString() ?? '';
+    });
 
     // Load class and subjects for this exam
     _loadExamDetails(exam);
@@ -110,15 +115,25 @@ class _ExamFormScreenState extends State<ExamFormScreen> {
   Future<void> _loadExamDetails(Exam exam) async {
     try {
       final examProvider = Provider.of<ExamProvider>(context, listen: false);
+      final classProvider = Provider.of<ClassProvider>(context, listen: false);
 
       // Load class details
-      final classes = Provider.of<ClassProvider>(context, listen: false).classes;
-      _selectedClass = classes.where((c) => c.id == exam.classId).firstOrNull;
+      final classes = classProvider.classes;
+      final selectedClass = classes.where((c) => c.id == exam.classId).firstOrNull;
 
       // Load subjects for this exam
       await examProvider.fetchExamSubjectsForExam(exam.id);
-      // Note: This would need to be enhanced to get the actual Subject objects
-      // For now, we'll work with IDs
+      final examSubjects = examProvider.examSubjects;
+      
+      // Get the actual Subject objects from the exam subjects
+      final selectedSubjects = _availableSubjects.where((subject) {
+        return examSubjects.any((es) => es.subjectId == subject.id);
+      }).toList();
+
+      setState(() {
+        _selectedClass = selectedClass;
+        _selectedSubjects = selectedSubjects;
+      });
     } catch (e) {
       setState(() => _errorMessage = e.toString());
     }
@@ -169,6 +184,7 @@ class _ExamFormScreenState extends State<ExamFormScreen> {
       if (schoolId == null) throw Exception('No school selected');
 
       final examProvider = Provider.of<ExamProvider>(context, listen: false);
+      String examId;
 
       if (widget.exam != null) {
         // Update existing exam
@@ -182,9 +198,10 @@ class _ExamFormScreenState extends State<ExamFormScreen> {
           description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
           maxMarks: _maxMarksController.text.isEmpty ? null : int.parse(_maxMarksController.text),
         );
+        examId = widget.exam!.id;
       } else {
         // Create new exam
-        await examProvider.createExam(
+        final newExam = await examProvider.createExam(
           classId: _selectedClass!.id!,
           schoolId: schoolId,
           name: _nameController.text,
@@ -193,6 +210,12 @@ class _ExamFormScreenState extends State<ExamFormScreen> {
           description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
           maxMarks: _maxMarksController.text.isEmpty ? null : int.parse(_maxMarksController.text),
         );
+        examId = newExam.id;
+      }
+
+      // Save exam subjects if any selected
+      if (_selectedSubjects.isNotEmpty) {
+        await examProvider.saveExamSubjects(examId, _selectedSubjects);
       }
 
       if (mounted) {
@@ -201,7 +224,7 @@ class _ExamFormScreenState extends State<ExamFormScreen> {
             content: Text(widget.exam != null ? 'Exam updated successfully' : 'Exam created successfully'),
           ),
         );
-        Navigator.of(context).pop(true);
+        Navigator.of(context).pop();
       }
     } catch (e) {
       setState(() => _errorMessage = e.toString());
@@ -363,6 +386,10 @@ class _ExamFormScreenState extends State<ExamFormScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: Text(isEditing ? 'Edit Exam' : 'Create Exam'),
         actions: [
           if (_hasUnsavedChanges())
@@ -417,6 +444,7 @@ class _ExamFormScreenState extends State<ExamFormScreen> {
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
                   ExamFormFields.buildBasicInfoStep(
+                    context: context,
                     nameController: _nameController,
                     examinerController: _examinerController,
                     selectedDate: _selectedDate,
@@ -438,64 +466,62 @@ class _ExamFormScreenState extends State<ExamFormScreen> {
               ),
             ),
           ),
-
-          // Navigation Buttons
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: theme.cardTheme.color,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                if (_currentStep != FormStep.basic)
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _goToPreviousStep,
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: const Text('Previous'),
-                    ),
-                  )
-                else
-                  const Spacer(),
-                const SizedBox(width: 16),
-                Expanded(
-                  flex: 2,
-                  child: ElevatedButton(
-                    onPressed: _canGoNext() ? _goToNextStep : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: accentColor,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
-                          )
-                        : Text(
-                            _currentStep == FormStep.settings
-                                ? (isEditing ? 'Update Exam' : 'Create Exam')
-                                : 'Next',
-                          ),
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
+      ),
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.cardTheme.color,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            if (_currentStep != FormStep.basic)
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: _goToPreviousStep,
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: const Text('Previous'),
+                ),
+              )
+            else
+              const Spacer(),
+            const SizedBox(width: 16),
+            Expanded(
+              flex: 2,
+              child: ElevatedButton(
+                onPressed: _canGoNext() ? _goToNextStep : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: accentColor,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : Text(
+                        _currentStep == FormStep.settings
+                            ? (isEditing ? 'Update Exam' : 'Create Exam')
+                            : 'Next',
+                      ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
