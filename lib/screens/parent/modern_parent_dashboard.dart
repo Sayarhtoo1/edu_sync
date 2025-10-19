@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:edu_sync/services/auth_service.dart';
+import 'package:edu_sync/services/notification_service.dart';
 import 'package:edu_sync/providers/school_provider.dart';
 import 'package:edu_sync/widgets/parent/parent_drawer.dart';
+import 'package:edu_sync/widgets/announcement_popup_dialog.dart';
 import 'package:edu_sync/screens/common/attendance_report_screen.dart';
 
 class ModernParentDashboard extends StatefulWidget {
@@ -16,12 +19,26 @@ class _ModernParentDashboardState extends State<ModernParentDashboard> with Tick
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
   String? _parentName;
+  StreamSubscription? _announcementSubscription;
 
   @override
   void initState() {
     super.initState();
     _fadeController = AnimationController(duration: const Duration(milliseconds: 800), vsync: this);
     _fadeAnimation = CurvedAnimation(parent: _fadeController, curve: Curves.easeIn);
+    
+    final notificationService = Provider.of<NotificationService>(context, listen: false);
+    _announcementSubscription = notificationService.inAppAnnouncements.listen((announcement) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AnnouncementPopupDialog(
+            announcement: announcement,
+            onDismiss: () => Navigator.of(context).pop(),
+          ),
+        );
+      }
+    });
     
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final authService = context.read<AuthService>();
@@ -39,6 +56,7 @@ class _ModernParentDashboardState extends State<ModernParentDashboard> with Tick
   @override
   void dispose() {
     _fadeController.dispose();
+    _announcementSubscription?.cancel();
     super.dispose();
   }
 

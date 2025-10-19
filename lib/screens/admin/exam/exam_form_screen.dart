@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../../models/exam.dart';
 import '../../../models/school_class.dart';
 import '../../../models/subject.dart';
@@ -7,9 +8,8 @@ import '../../../providers/exam_provider.dart';
 import '../../../providers/class_provider.dart';
 import '../../../providers/school_provider.dart';
 import '../../../theme/app_theme.dart';
-import 'widgets/exam_form_fields.dart';
 
-enum FormStep { basic, subjects, settings }
+enum FormStep { basic, classScheduling, subjects, settings }
 
 class ExamFormScreen extends StatefulWidget {
   final Exam? exam; // For editing existing exam
@@ -38,6 +38,12 @@ class _ExamFormScreenState extends State<ExamFormScreen> {
   List<Subject> _selectedSubjects = [];
   List<Subject> _availableSubjects = [];
   final bool _autoSaveEnabled = true;
+  
+  // Multi-class exam support
+  final Set<int> _selectedClasses = {};
+  final Map<int, DateTime> _classDates = {};
+  final Map<int, List<Subject>> _classSubjects = {}; // Subjects per class
+  String? _selectedExamType;
 
   // Auto-save timer
   DateTime _lastSaveTime = DateTime.now();
@@ -150,7 +156,7 @@ class _ExamFormScreenState extends State<ExamFormScreen> {
       final schoolId = schoolProvider.currentSchool?.id.toString();
 
       if (schoolId != null) {
-        // Load classes and subjects
+        // Load classes and all subjects
         await Future.wait([
           Provider.of<ClassProvider>(context, listen: false).fetchClasses(schoolId),
           Provider.of<ExamProvider>(context, listen: false).fetchSubjects(schoolId),
@@ -169,6 +175,77 @@ class _ExamFormScreenState extends State<ExamFormScreen> {
     }
   }
 
+  List<Subject> _getSubjectsForClass(int classId) {
+    return _availableSubjects.where((subject) => subject.classId == classId).toList();
+  }
+
+  List<Subject> _getAllSelectedSubjects() {
+    final allSubjects = <Subject>[];
+    _classSubjects.forEach((classId, subjects) {
+      allSubjects.addAll(subjects);
+    });
+    return allSubjects;
+  }
+
+  Widget _buildSubjectsStepPerClass() {
+    final classes = Provider.of<ClassProvider>(context).classes;
+    
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Select Subjects per Class', style: Theme.of(context).textTheme.titleLarge),
+            OutlinedButton.icon(
+              onPressed: () async {
+                await context.pushNamed('subject-management');
+                await _loadData();
+              },
+              icon: const Icon(Icons.settings, size: 18),
+              label: const Text('Manage'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        ..._selectedClasses.map((classId) {
+          final className = classes.firstWhere((c) => c.id == classId).name;
+          final classSubjects = _getSubjectsForClass(classId);
+          final selectedForClass = _classSubjects[classId] ?? [];
+          
+          return Card(
+            margin: const EdgeInsets.only(bottom: 16),
+            child: ExpansionTile(
+              title: Text(className, style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text('${selectedForClass.length} subjects selected'),
+              children: [
+                ...classSubjects.map((subject) {
+                  final isSelected = selectedForClass.any((s) => s.id == subject.id);
+                  return CheckboxListTile(
+                    value: isSelected,
+                    title: Text(subject.name),
+                    onChanged: (selected) {
+                      setState(() {
+                        if (!_classSubjects.containsKey(classId)) {
+                          _classSubjects[classId] = [];
+                        }
+                        if (selected!) {
+                          _classSubjects[classId]!.add(subject);
+                        } else {
+                          _classSubjects[classId]!.removeWhere((s) => s.id == subject.id);
+                        }
+                      });
+                    },
+                  );
+                }),
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
   Future<void> _saveExam() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -182,47 +259,30 @@ class _ExamFormScreenState extends State<ExamFormScreen> {
       final schoolId = schoolProvider.currentSchool?.id;
 
       if (schoolId == null) throw Exception('No school selected');
+      if (_selectedClasses.isEmpty) throw Exception('Please select at least one class');
 
       final examProvider = Provider.of<ExamProvider>(context, listen: false);
-      String examId;
 
-      if (widget.exam != null) {
-        // Update existing exam
-        await examProvider.updateExam(
-          id: widget.exam!.id,
-          classId: _selectedClass!.id!,
-          schoolId: schoolId,
-          name: _nameController.text,
-          examDate: _selectedDate!,
-          examinerName: _examinerController.text,
-          description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
-          maxMarks: _maxMarksController.text.isEmpty ? null : int.parse(_maxMarksController.text),
-        );
-        examId = widget.exam!.id;
-      } else {
-        // Create new exam
-        final newExam = await examProvider.createExam(
-          classId: _selectedClass!.id!,
-          schoolId: schoolId,
-          name: _nameController.text,
-          examDate: _selectedDate!,
-          examinerName: _examinerController.text,
-          description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
-          maxMarks: _maxMarksController.text.isEmpty ? null : int.parse(_maxMarksController.text),
-        );
-        examId = newExam.id;
-      }
+      // Create multi-class exam
+      final newExam = await examProvider.createMultiClassExam(
+        schoolId: schoolId,
+        name: _nameController.text,
+        classIds: _selectedClasses.toList(),
+        classDates: _classDates,
+        examType: _selectedExamType,
+        examinerName: 'School',
+        description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
+      );
 
       // Save exam subjects if any selected
-      if (_selectedSubjects.isNotEmpty) {
-        await examProvider.saveExamSubjects(examId, _selectedSubjects);
+      final allSubjects = _getAllSelectedSubjects();
+      if (allSubjects.isNotEmpty) {
+        await examProvider.saveExamSubjects(newExam.id, allSubjects);
       }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(widget.exam != null ? 'Exam updated successfully' : 'Exam created successfully'),
-          ),
+          const SnackBar(content: Text('Exam created successfully')),
         );
         Navigator.of(context).pop();
       }
@@ -238,7 +298,9 @@ class _ExamFormScreenState extends State<ExamFormScreen> {
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          _buildStepCircle(FormStep.basic, 'Basic Info'),
+          _buildStepCircle(FormStep.basic, 'Basic'),
+          _buildStepLine(),
+          _buildStepCircle(FormStep.classScheduling, 'Classes'),
           _buildStepLine(),
           _buildStepCircle(FormStep.subjects, 'Subjects'),
           _buildStepLine(),
@@ -310,6 +372,8 @@ class _ExamFormScreenState extends State<ExamFormScreen> {
     switch (step) {
       case FormStep.basic:
         return Icons.info;
+      case FormStep.classScheduling:
+        return Icons.class_;
       case FormStep.subjects:
         return Icons.subject;
       case FormStep.settings:
@@ -320,14 +384,13 @@ class _ExamFormScreenState extends State<ExamFormScreen> {
   bool _isStepCompleted(FormStep step) {
     switch (step) {
       case FormStep.basic:
-        return _nameController.text.isNotEmpty &&
-               _selectedDate != null &&
-               _selectedClass != null &&
-               _examinerController.text.isNotEmpty;
+        return _nameController.text.isNotEmpty;
+      case FormStep.classScheduling:
+        return _selectedClasses.isNotEmpty && _classDates.length == _selectedClasses.length;
       case FormStep.subjects:
-        return _selectedSubjects.isNotEmpty;
+        return _classSubjects.isNotEmpty && _classSubjects.values.every((subjects) => subjects.isNotEmpty);
       case FormStep.settings:
-        return true; // Settings are optional
+        return true;
       default:
         return false;
     }
@@ -358,16 +421,90 @@ class _ExamFormScreenState extends State<ExamFormScreen> {
   bool _canGoNext() {
     switch (_currentStep) {
       case FormStep.basic:
-        return _nameController.text.isNotEmpty &&
-               _selectedDate != null &&
-               _selectedClass != null &&
-               _examinerController.text.isNotEmpty;
+        return _nameController.text.isNotEmpty;
+      case FormStep.classScheduling:
+        return _selectedClasses.isNotEmpty && _classDates.length == _selectedClasses.length;
       case FormStep.subjects:
-        return _selectedSubjects.isNotEmpty;
+        return _classSubjects.isNotEmpty && _classSubjects.values.every((subjects) => subjects.isNotEmpty);
       case FormStep.settings:
         return true;
       default:
         return false;
+    }
+  }
+
+  Widget _buildClassSchedulingStep() {
+    final classes = Provider.of<ClassProvider>(context).classes;
+    
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        DropdownButtonFormField<String>(
+          value: _selectedExamType,
+          decoration: const InputDecoration(
+            labelText: 'Exam Type',
+            border: OutlineInputBorder(),
+          ),
+          items: ['Midterm', 'Final', 'Quiz', 'Monthly', 'Unit Test', 'Other']
+              .map((type) => DropdownMenuItem(value: type, child: Text(type)))
+              .toList(),
+          onChanged: (value) => setState(() => _selectedExamType = value),
+        ),
+        const SizedBox(height: 24),
+        Text('Select Classes', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 16),
+        ...classes.map((schoolClass) => CheckboxListTile(
+          title: Text(schoolClass.name),
+          value: _selectedClasses.contains(schoolClass.id),
+          onChanged: (selected) {
+            setState(() {
+              if (selected!) {
+                _selectedClasses.add(schoolClass.id!);
+                _classDates[schoolClass.id!] = DateTime.now().add(const Duration(days: 7));
+              } else {
+                _selectedClasses.remove(schoolClass.id);
+                _classDates.remove(schoolClass.id);
+              }
+            });
+          },
+        )),
+        if (_selectedClasses.isNotEmpty) ...[
+          const SizedBox(height: 24),
+          Text('Schedule Exam Dates', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 16),
+          ..._selectedClasses.map((classId) {
+            final className = classes.firstWhere((c) => c.id == classId).name;
+            return Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: ListTile(
+                title: Text(className),
+                subtitle: Text(
+                  _classDates[classId] != null
+                      ? '${_classDates[classId]!.day}/${_classDates[classId]!.month}/${_classDates[classId]!.year}'
+                      : 'Not set',
+                ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.calendar_today),
+                  onPressed: () => _selectDateForClass(classId),
+                ),
+              ),
+            );
+          }),
+        ],
+      ],
+    );
+  }
+
+  Future<void> _selectDateForClass(int classId) async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: _classDates[classId] ?? DateTime.now(),
+      firstDate: DateTime.now().subtract(const Duration(days: 730)),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    
+    if (date != null) {
+      setState(() => _classDates[classId] = date);
     }
   }
 
@@ -443,24 +580,43 @@ class _ExamFormScreenState extends State<ExamFormScreen> {
                 controller: _pageController,
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
-                  ExamFormFields.buildBasicInfoStep(
-                    context: context,
-                    nameController: _nameController,
-                    examinerController: _examinerController,
-                    selectedDate: _selectedDate,
-                    selectedClass: _selectedClass,
-                    classes: Provider.of<ClassProvider>(context).classes,
-                    onDateChanged: (date) => setState(() => _selectedDate = date),
-                    onClassChanged: (schoolClass) => setState(() => _selectedClass = schoolClass),
+                  ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      TextFormField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Exam Name *',
+                          hintText: 'e.g., Midterm Exam 2025',
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
+                        onChanged: (_) => setState(() {}),
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _descriptionController,
+                        decoration: const InputDecoration(
+                          labelText: 'Description',
+                          hintText: 'Optional exam details',
+                          border: OutlineInputBorder(),
+                        ),
+                        maxLines: 3,
+                      ),
+                    ],
                   ),
-                  ExamFormFields.buildSubjectsStep(
-                    selectedSubjects: _selectedSubjects,
-                    availableSubjects: _availableSubjects,
-                    onSubjectsChanged: (subjects) => setState(() => _selectedSubjects = subjects),
-                  ),
-                  ExamFormFields.buildSettingsStep(
-                    descriptionController: _descriptionController,
-                    maxMarksController: _maxMarksController,
+                  _buildClassSchedulingStep(),
+                  _buildSubjectsStepPerClass(),
+                  ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      const Text(
+                        'Additional Settings',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text('Review your exam details and click Create Exam to finish.'),
+                    ],
                   ),
                 ],
               ),

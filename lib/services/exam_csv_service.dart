@@ -14,11 +14,13 @@ class ExamCsvService {
   Future<void> exportMarksTemplate({
     required String examId,
     required String subjectId,
+    required int classId,
   }) async {
     try {
       final students = await _marksService.getStudentsForMarksEntry(
         examId: examId,
         subjectId: subjectId,
+        classId: classId,
       );
 
       final rows = [
@@ -41,11 +43,13 @@ class ExamCsvService {
   Future<void> exportMarksData({
     required String examId,
     required String subjectId,
+    required int classId,
   }) async {
     try {
       final students = await _marksService.getStudentsForMarksEntry(
         examId: examId,
         subjectId: subjectId,
+        classId: classId,
       );
 
       final rows = [

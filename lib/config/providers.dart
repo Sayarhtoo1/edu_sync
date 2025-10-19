@@ -30,6 +30,7 @@ import 'package:edu_sync/services/fee_payment_service.dart';
 import 'package:edu_sync/services/donation_service.dart';
 import 'package:edu_sync/services/salary_service.dart';
 import 'package:edu_sync/services/finance_category_service.dart';
+import 'package:edu_sync/services/financial_report_service.dart';
 import 'package:edu_sync/providers/admin_panel_provider.dart';
 import 'package:edu_sync/providers/exam_provider.dart';
 import 'package:edu_sync/providers/class_provider.dart';
@@ -40,7 +41,7 @@ Future<List<SingleChildWidget>> initializeProviders() async {
   await notificationService.initialize();
 
   final appDatabase = AppDatabase(NativeDatabase.memory());
-  final cacheService = CacheService();
+  final cacheService = CacheService(appDatabase);
   final migrationService = MigrationService(appDatabase);
   await migrationService.migrateData();
 
@@ -52,36 +53,48 @@ Future<List<SingleChildWidget>> initializeProviders() async {
     ChangeNotifierProvider.value(value: notificationService),
 
 
-    // App Services
-    ProxyProvider4<SupabaseClient, SharedPreferences, Connectivity, NotificationService, AuthService>(
-      update: (_, supabase, prefs, connectivity, notificationService, _) => AuthService(
-        supabaseClient: supabase,
-        sharedPreferences: prefs,
-        connectivity: connectivity,
-        notificationService: notificationService,
-      ),
-    ),
+    // Database and Cache first
     Provider<AppDatabase>.value(value: appDatabase),
-    Provider<SchoolService>(create: (_) => SchoolService()),
-    Provider<StudentService>(create: (_) => StudentService(appDatabase)),
-    Provider<ClassService>(create: (_) => ClassService()),
-    Provider<TimetableService>(create: (_) => TimetableService()),
-    Provider<AttendanceService>(create: (_) => AttendanceService()),
+    Provider<CacheService>.value(value: cacheService),
+    
+    // App Services
+    ProxyProvider5<SupabaseClient, SharedPreferences, Connectivity, NotificationService, CacheService, AuthService>(
+      update: (_, supabase, prefs, connectivity, notificationService, cache, previous) {
+        final authService = previous ?? AuthService(
+          supabaseClient: supabase,
+          sharedPreferences: prefs,
+          connectivity: connectivity,
+          notificationService: notificationService,
+        );
+        authService.setCacheService(cache);
+        return authService;
+      },
+    ),
+    Provider<SchoolService>(create: (_) => SchoolService(cacheService)),
+    Provider<StudentService>(create: (_) => StudentService(appDatabase, cacheService)),
+    Provider<ClassService>(create: (_) => ClassService(cacheService)),
+    ProxyProvider2<SupabaseClient, CacheService, TimetableService>(
+      update: (_, supabase, cache, __) => TimetableService(supabase, cache),
+    ),
+    Provider<AttendanceService>(create: (_) => AttendanceService(cacheService)),
     Provider<LessonPlanService>(create: (_) => LessonPlanService()),
     Provider<CustomFormService>(create: (_) => CustomFormService()),
     Provider<FormResponseService>(create: (_) => FormResponseService()),
-    Provider<AnnouncementService>(create: (_) => AnnouncementService()),
-    Provider<FinanceService>(create: (_) => FinanceService()),
-    Provider<CacheService>.value(value: cacheService),
-    Provider<UserService>(create: (_) => UserService(Supabase.instance.client)),
+    ProxyProvider2<SupabaseClient, CacheService, AnnouncementService>(
+      update: (_, supabase, cache, __) => AnnouncementService(supabase, cache),
+    ),
+    Provider<FinanceService>(create: (_) => FinanceService(cacheService)),
+    ProxyProvider2<SupabaseClient, CacheService, UserService>(
+      update: (_, supabase, cache, __) => UserService(supabase, cache),
+    ),
     ProxyProvider<SupabaseClient, FeeStructureService>(
       update: (_, supabase, __) => FeeStructureService(supabase),
     ),
     ProxyProvider<SupabaseClient, FeePaymentService>(
       update: (_, supabase, __) => FeePaymentService(supabase),
     ),
-    ProxyProvider<SupabaseClient, DonationService>(
-      update: (_, supabase, __) => DonationService(supabase),
+    ProxyProvider2<SupabaseClient, CacheService, DonationService>(
+      update: (_, supabase, cache, __) => DonationService(supabase, cache),
     ),
     ProxyProvider<SupabaseClient, SalaryService>(
       update: (_, supabase, __) => SalaryService(supabase),
@@ -89,6 +102,7 @@ Future<List<SingleChildWidget>> initializeProviders() async {
     ProxyProvider<SupabaseClient, FinanceCategoryService>(
       update: (_, supabase, __) => FinanceCategoryService(supabase),
     ),
+    Provider<FinancialReportService>(create: (_) => FinancialReportService()),
     ProxyProvider<AuthService, RoleService>(
       update: (_, authService, _) => RoleService(authService),
     ),
@@ -106,7 +120,7 @@ Future<List<SingleChildWidget>> initializeProviders() async {
         authService: context.read<AuthService>(),
         classService: context.read<ClassService>(),
       ),
-      update: (context, timetableService, authService, classService, previous) => AdminPanelProvider(
+      update: (context, timetableService, authService, classService, previous) => previous ?? AdminPanelProvider(
         timetableService: timetableService,
         authService: authService,
         classService: classService,
@@ -124,6 +138,9 @@ Future<List<SingleChildWidget>> initializeProviders() async {
     ),
     ChangeNotifierProvider(create: (_) => LocaleProvider()),
     ChangeNotifierProvider(create: (_) => ExamProvider()),
-    ChangeNotifierProvider(create: (_) => ClassProvider()), // Add ClassProvider here
+    ChangeNotifierProxyProvider<ClassService, ClassProvider>(
+      create: (context) => ClassProvider(context.read<ClassService>()),
+      update: (_, classService, previous) => previous ?? ClassProvider(classService),
+    ),
   ];
 }

@@ -8,6 +8,13 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <!-- Optional: For vibration -->
     <uses-permission android:name="android.permission.VIBRATE"/>
+    <!-- Required for exact alarms (Android 12+) -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
+    <!-- Required for wake lock to show notifications when screen is off -->
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <!-- Required for full screen intent notifications -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
 
     <application
         android:label="edu_sync"

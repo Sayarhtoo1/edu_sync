@@ -1,12 +1,11 @@
 import 'package:edu_sync/models/user_role.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:edu_sync/services/auth_service.dart';
 import 'package:go_router/go_router.dart';
 import 'package:edu_sync/providers/school_provider.dart';
 import 'package:edu_sync/models/school.dart';
-import 'package:edu_sync/l10n/gen/app_localizations.dart';
-import 'package:edu_sync/services/notification_service.dart';
 
 // Modern drawer colors matching the school dashboard design
 const Color drawerBackgroundColor = Color(0xFF4A5568); // Dark blue-grey
@@ -296,9 +295,11 @@ class AppDrawer extends StatelessWidget {
                       child: (currentSchool?.logoUrl != null && currentSchool!.logoUrl.isNotEmpty)
                           ? ClipRRect(
                               borderRadius: BorderRadius.circular(8),
-                              child: Image.network(
-                                currentSchool.logoUrl,
+                              child: CachedNetworkImage(
+                                imageUrl: currentSchool.logoUrl,
                                 fit: BoxFit.cover,
+                                placeholder: (context, url) => const Icon(Icons.school, size: 28, color: drawerBackgroundColor),
+                                errorWidget: (context, url, error) => const Icon(Icons.school, size: 28, color: drawerBackgroundColor),
                               ),
                             )
                           : const Icon(Icons.school, size: 28, color: drawerBackgroundColor),

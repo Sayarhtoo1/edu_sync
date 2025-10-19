@@ -4,7 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:edu_sync/utils/logger.dart';
 import 'package:edu_sync/services/notification_service.dart';
-
+import 'package:edu_sync/services/cache_service.dart';
 
 import 'package:edu_sync/models/user.dart' as app_user; // Aliased to avoid conflict with supabase_flutter.User
 import 'package:edu_sync/models/user_role.dart';
@@ -13,7 +13,7 @@ class AuthService {
   final SupabaseClient _supabaseClient;
   final SharedPreferences _prefs;
   final NotificationService _notificationService;
-
+  CacheService? _cache;
 
   AuthService({
     required SupabaseClient supabaseClient,
@@ -23,23 +23,34 @@ class AuthService {
   })  : _supabaseClient = supabaseClient,
         _prefs = sharedPreferences,
         _notificationService = notificationService;
+  
+  void setCacheService(CacheService cache) {
+    _cache = cache;
+  }
         
   void listenToAuthChanges() {
     _supabaseClient.auth.onAuthStateChange.listen((data) async {
       final AuthChangeEvent event = data.event;
       if (event == AuthChangeEvent.signedIn) {
         logger.i('User signed in, subscribing to announcements.');
-        final role = await getUserRole();
-        final schoolId = await getCurrentUserSchoolId();
-        final user = getCurrentUser();
-        if (role != null && schoolId != null && user != null) {
-          _notificationService.subscribeToAnnouncements(schoolId, user.id, role);
-        }
+        await ensureAnnouncementSubscription();
       } else if (event == AuthChangeEvent.signedOut) {
         logger.i('User signed out, unsubscribing from announcements.');
         _notificationService.unsubscribeFromAnnouncements();
       }
     });
+  }
+  
+  Future<void> ensureAnnouncementSubscription() async {
+    final role = await getUserRole();
+    final schoolId = await getCurrentUserSchoolId();
+    final user = getCurrentUser();
+    if (role != null && schoolId != null && user != null) {
+      logger.i('Subscribing to announcements: schoolId=$schoolId, userId=${user.id}, role=$role');
+      _notificationService.subscribeToAnnouncements(schoolId, user.id, role);
+    } else {
+      logger.w('Cannot subscribe to announcements: role=$role, schoolId=$schoolId, user=${user?.id}');
+    }
   }
 
   Future<User?> signUp(String email, String password, String role, {String? fullName, int? schoolIdIfKnown, String? profilePhotoUrl}) async {
@@ -161,7 +172,6 @@ class AuthService {
     try {
       List<Map<String, dynamic>> response;
       if (role == UserRole.Teacher) {
-        // If fetching teachers, also include users with 'Admin' role
         response = await _supabaseClient
             .from('users')
             .select()
@@ -177,9 +187,16 @@ class AuthService {
             .order('created_at', ascending: false);
       }
 
-      return response.map((userData) => app_user.User.fromJson(userData)).toList();
+      final users = response.map((userData) => app_user.User.fromJson(userData)).toList();
+      if (_cache != null) {
+        await _cache!.cacheUsers(users);
+      }
+      return users;
     } catch (e) {
-      logger.e('Error fetching users by role: $e');
+      logger.w('Error fetching users by role, using cache: $e');
+      if (_cache != null) {
+        return await _cache!.getCachedUsers(schoolId);
+      }
       return [];
     }
   }
@@ -193,9 +210,16 @@ class AuthService {
           .eq('school_id', schoolId)
           .or('role.eq.${UserRole.Admin.name},role.eq.${UserRole.Teacher.name}');
 
-      return response.map((userData) => app_user.User.fromJson(userData)).toList();
+      final users = response.map((userData) => app_user.User.fromJson(userData)).toList();
+      if (_cache != null) {
+        await _cache!.cacheUsers(users);
+      }
+      return users;
     } catch (e) {
-      logger.e('Error fetching staff by school: $e');
+      logger.w('Error fetching staff by school, using cache: $e');
+      if (_cache != null) {
+        return await _cache!.getCachedUsers(schoolId);
+      }
       return [];
     }
   }

@@ -9,7 +9,9 @@ import 'cache_service.dart';
  
  class SchoolService {
    final SupabaseClient _supabaseClient = Supabase.instance.client;
-   final CacheService _cacheService = CacheService();
+   final CacheService _cache;
+
+   SchoolService(this._cache);
  
    // Create a new school profile using an RPC function for atomicity
    Future<School?> createSchool({
@@ -56,7 +58,7 @@ import 'cache_service.dart';
    Future<School?> getSchoolById(int schoolId) async {
      final connectivityResult = await Connectivity().checkConnectivity();
      if (connectivityResult == ConnectivityResult.none) {
-       return await _cacheService.getSchool(schoolId);
+       return await _cache.getCachedSchool(schoolId);
      } else {
        try {
          final response = await _supabaseClient
@@ -73,11 +75,11 @@ import 'cache_service.dart';
            contact: response['contact_info'] ?? '',
            hijriDayAdjustment: response['hijri_day_adjustment'], // Correctly retrieve from DB
          );
-         await _cacheService.saveSchool(school);
+         await _cache.cacheSchool(school);
          return school;
        } catch (e) {
          logger.e('Error fetching school: ${e.toString()}');
-         return await _cacheService.getSchool(schoolId);
+         return await _cache.getCachedSchool(schoolId);
        }
      }
    }
@@ -126,10 +128,12 @@ import 'cache_service.dart';
           .select()
           .eq('school_id', schoolId)
           .order('name', ascending: true);
-      return (response as List).map((e) => SchoolClass.fromMap(e)).toList();
+      final classes = (response as List).map((e) => SchoolClass.fromMap(e)).toList();
+      await _cache.cacheClasses(classes);
+      return classes;
     } catch (e) {
       logger.e('Error fetching classes: ${e.toString()}');
-      return [];
+      return await _cache.getCachedClasses(schoolId);
     }
   }
 
@@ -140,10 +144,12 @@ import 'cache_service.dart';
           .select()
           .eq('school_id', schoolId)
           .order('full_name', ascending: true);
-      return (response as List).map((e) => Student.fromMap(e)).toList();
+      final students = (response as List).map((e) => Student.fromMap(e)).toList();
+      await _cache.cacheStudents(students);
+      return students;
     } catch (e) {
       logger.e('Error fetching students: ${e.toString()}');
-      return [];
+      return await _cache.getCachedStudents(schoolId);
     }
   }
 }

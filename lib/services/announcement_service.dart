@@ -5,23 +5,27 @@ import 'api_service.dart';
 import 'cache_service.dart';
 
 class AnnouncementService {
-  final SupabaseClient _supabaseClient = Supabase.instance.client;
-  final CacheService _cacheService = CacheService();
+  final SupabaseClient _supabaseClient;
+  final CacheService _cacheService;
   final ApiService _apiService = ApiService();
+  
+  AnnouncementService(this._supabaseClient, this._cacheService);
 
   Future<List<Announcement>> getAnnouncements(int schoolId) async {
-    return await _apiService.fetchData<List<Announcement>>(
-      onlineRequest: () async {
-        final response = await _supabaseClient
-            .from('announcements')
-            .select()
-            .eq('school_id', schoolId)
-            .order('created_at', ascending: false);
-        return response.map((data) => Announcement.fromMap(data)).toList();
-      },
-      offlineRequest: () => _cacheService.getAnnouncements(schoolId),
-      cacheData: (data) => _cacheService.saveAnnouncements(schoolId, data),
-    );
+    try {
+      final response = await _supabaseClient
+          .from('announcements')
+          .select()
+          .eq('school_id', schoolId)
+          .order('created_at', ascending: false);
+      final announcements = response.map((data) => Announcement.fromMap(data)).toList();
+      
+      await _cacheService.cacheAnnouncements(announcements);
+      return announcements;
+    } catch (e) {
+      logger.w('Supabase failed, using cache: $e');
+      return await _cacheService.getCachedAnnouncements(schoolId);
+    }
   }
 
   // For Admins: Create a new announcement
@@ -32,7 +36,14 @@ class AnnouncementService {
           .insert(announcement.toMap()..remove('id'))
           .select()
           .single();
-      return Announcement.fromMap(response);
+      
+      final createdAnnouncement = Announcement.fromMap(response);
+      logger.i('Announcement created successfully: ${createdAnnouncement.id}');
+      
+      // Realtime subscription will handle notifications automatically
+      // No need to manually trigger notifications here
+      
+      return createdAnnouncement;
     } catch (e) {
       logger.e('Error creating announcement: $e');
       return null;

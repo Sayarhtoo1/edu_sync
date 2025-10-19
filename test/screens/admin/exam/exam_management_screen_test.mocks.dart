@@ -120,25 +120,21 @@ class MockExamProvider extends _i1.Mock implements _i2.ExamProvider {
 
   @override
   _i7.Future<void> updateExam({
-    required String? id,
-    required int? classId,
-    required int? schoolId,
-    required String? name,
-    required DateTime? examDate,
-    required String? examinerName,
+    required String id,
+    required int schoolId,
+    required String name,
+    String? examType,
+    String? examinerName,
     String? description,
-    int? maxMarks,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#updateExam, [], {
               #id: id,
-              #classId: classId,
               #schoolId: schoolId,
               #name: name,
-              #examDate: examDate,
+              #examType: examType,
               #examinerName: examinerName,
               #description: description,
-              #maxMarks: maxMarks,
             }),
             returnValue: _i7.Future<void>.value(),
             returnValueForMissingStub: _i7.Future<void>.value(),
@@ -157,16 +153,22 @@ class MockExamProvider extends _i1.Mock implements _i2.ExamProvider {
   @override
   _i7.Future<void> addSubject({
     required String name,
+    required int schoolId,
     int? classId,
     String? code,
-    required int schoolId,
+    bool isSubSubject = false,
+    int? maxMarks,
+    int? passingMarks,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#addSubject, [], {
               #name: name,
+              #schoolId: schoolId,
               #classId: classId,
               #code: code,
-              #schoolId: schoolId,
+              #isSubSubject: isSubSubject,
+              #maxMarks: maxMarks,
+              #passingMarks: passingMarks,
             }),
             returnValue: _i7.Future<void>.value(),
             returnValueForMissingStub: _i7.Future<void>.value(),
@@ -177,17 +179,19 @@ class MockExamProvider extends _i1.Mock implements _i2.ExamProvider {
   _i7.Future<void> updateSubject({
     required String id,
     required String name,
-    int? classId,
-    String? code,
     required int schoolId,
+    int? classId,
+    int? maxMarks,
+    int? passingMarks,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#updateSubject, [], {
               #id: id,
               #name: name,
-              #classId: classId,
-              #code: code,
               #schoolId: schoolId,
+              #classId: classId,
+              #maxMarks: maxMarks,
+              #passingMarks: passingMarks,
             }),
             returnValue: _i7.Future<void>.value(),
             returnValueForMissingStub: _i7.Future<void>.value(),

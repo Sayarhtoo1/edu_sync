@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import '../services/exam_service.dart';
 // Assuming SchoolClass model is needed for filtering
-import '../services/cache_service.dart';
 import '../models/subject.dart';
 
 class AnalyticsProvider with ChangeNotifier {
   final ExamService _examService;
-  final CacheService _cacheService = CacheService();
+  // final CacheService _cacheService = CacheService(); // TODO: Phase 2
 
   Map<String, dynamic>? _schoolPerformanceOverview;
   Map<String, dynamic>? _classPerformanceOverview;
@@ -53,7 +52,7 @@ class AnalyticsProvider with ChangeNotifier {
     notifyListeners();
     try {
       if (schoolId != null) {
-        List<Subject> cachedSubjects = await _cacheService.getSubjects(schoolId);
+        List<Subject> cachedSubjects = []; // await _cacheService.getSubjects(schoolId);
         if (cachedSubjects.isNotEmpty) {
           // Potentially use cached data for initial display if available
           // For now, we'll just fetch fresh data and update cache
@@ -64,7 +63,7 @@ class AnalyticsProvider with ChangeNotifier {
         // Assuming subjectPerformance contains enough info to reconstruct Subject objects
         // This might need adjustment based on the actual structure of _subjectPerformance
         List<Subject> subjectsToCache = _subjectPerformance.map((e) => Subject.fromMap(e)).toList();
-        await _cacheService.saveSubjects(schoolId, subjectsToCache);
+        // await _cacheService.saveSubjects(schoolId, subjectsToCache);
       }
     } catch (e) {
       // Handle error

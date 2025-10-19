@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:edu_sync/services/auth_service.dart';
 import 'package:edu_sync/providers/school_provider.dart';
 
@@ -81,12 +82,26 @@ class _DonatorDrawerState extends State<DonatorDrawer> {
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white.withOpacity(0.3), width: 2)),
-            child: CircleAvatar(
-              radius: 36,
-              backgroundColor: Colors.white.withOpacity(0.2),
-              backgroundImage: (schoolLogo != null && schoolLogo.isNotEmpty) ? NetworkImage(schoolLogo) : null,
-              child: (schoolLogo == null || schoolLogo.isEmpty) ? const Icon(Icons.school_rounded, size: 36, color: Colors.white) : null,
-            ),
+            child: (schoolLogo != null && schoolLogo.isNotEmpty)
+                ? CircleAvatar(
+                    radius: 36,
+                    backgroundColor: Colors.white.withOpacity(0.2),
+                    child: ClipOval(
+                      child: CachedNetworkImage(
+                        imageUrl: schoolLogo,
+                        fit: BoxFit.cover,
+                        width: 72,
+                        height: 72,
+                        placeholder: (context, url) => const Icon(Icons.school_rounded, size: 36, color: Colors.white),
+                        errorWidget: (context, url, error) => const Icon(Icons.school_rounded, size: 36, color: Colors.white),
+                      ),
+                    ),
+                  )
+                : CircleAvatar(
+                    radius: 36,
+                    backgroundColor: Colors.white.withOpacity(0.2),
+                    child: const Icon(Icons.school_rounded, size: 36, color: Colors.white),
+                  ),
           ),
           const SizedBox(height: 16),
           Text(userName?.toUpperCase() ?? 'DONATOR', style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: 0.5)),

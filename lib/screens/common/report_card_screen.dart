@@ -92,9 +92,11 @@ class _ReportCardScreenState extends State<ReportCardScreen> {
                   child: Column(
                     children: [
                       ReportCardHeader(
-                        studentName: _reportData!['student']['full_name'],
-                        examName: _reportData!['exam']['name'],
-                        examDate: DateTime.parse(_reportData!['exam']['exam_date']),
+                        studentName: _reportData!['student']['full_name'] ?? 'Unknown',
+                        examName: _reportData!['exam']['name'] ?? 'Unknown Exam',
+                        examDate: _reportData!['exam']['exam_date'] != null 
+                            ? DateTime.parse(_reportData!['exam']['exam_date'])
+                            : DateTime.now(),
                       ),
                       const SizedBox(height: 24),
                       ReportCardTable(

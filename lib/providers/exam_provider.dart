@@ -9,14 +9,15 @@ import '../models/subject.dart';
 import '../models/grade.dart';
 import '../models/student.dart';
 import '../models/exam_subject.dart';
-import '../services/cache_service.dart';
+import '../models/exam_class.dart';
+import '../utils/logger.dart';
 
 class ExamProvider with ChangeNotifier {
   final ExamService _examService = ExamService();
   final ExamMarksService _marksService = ExamMarksService();
   final ExamReportService _reportService = ExamReportService();
   final ExamAnalyticsEnhancedService _analyticsService = ExamAnalyticsEnhancedService(supabaseClient: Supabase.instance.client);
-  final CacheService _cacheService = CacheService();
+  // final CacheService _cacheService = CacheService(); // TODO: Phase 2
 
   SupabaseClient get supabaseClient => Supabase.instance.client;
   ExamMarksService get marksService => _marksService;
@@ -24,11 +25,12 @@ class ExamProvider with ChangeNotifier {
   List<Exam> _exams = [];
   List<Subject> _subjects = [];
   List<Grade> _grades = [];
-  List<Student> _students = []; // Add students list
+  List<Student> _students = [];
   List<ExamSubject> _examSubjects = [];
   List<dynamic> _reportCard = [];
-  List<dynamic> _detailedReportCard = []; // Add detailed report card list
+  List<dynamic> _detailedReportCard = [];
   List<dynamic> _classResults = [];
+  List<ExamClass> _examClasses = [];
 
   List<Exam> get exams => _exams;
   List<Subject> get subjects => _subjects;
@@ -38,6 +40,7 @@ class ExamProvider with ChangeNotifier {
   List<dynamic> get reportCard => _reportCard;
   List<dynamic> get detailedReportCard => _detailedReportCard;
   List<dynamic> get classResults => _classResults;
+  List<ExamClass> get examClasses => _examClasses;
   ExamService get examService => _examService;
   ExamReportService get reportService => _reportService;
 
@@ -69,28 +72,24 @@ class ExamProvider with ChangeNotifier {
 
   Future<void> updateExam({
     required String id,
-    required int classId,
     required int schoolId,
     required String name,
-    required DateTime examDate,
-    required String examinerName,
+    String? examType,
+    String? examinerName,
     String? description,
-    int? maxMarks,
   }) async {
     try {
       await _examService.updateExam(
         id: id,
-        classId: classId,
-        schoolId: schoolId,
         name: name,
-        examDate: examDate,
+        examType: examType,
         examinerName: examinerName,
         description: description,
-        maxMarks: maxMarks,
       );
       await fetchExams(schoolId.toString());
     } catch (e) {
-      // Handle error
+      logger.e('Error updating exam: $e');
+      rethrow;
     }
   }
 
@@ -109,6 +108,9 @@ class ExamProvider with ChangeNotifier {
     required int schoolId,
     int? classId,
     String? code,
+    bool isSubSubject = false,
+    int? maxMarks,
+    int? passingMarks,
   }) async {
     try {
       await _examService.addSubject(
@@ -116,10 +118,14 @@ class ExamProvider with ChangeNotifier {
         schoolId: schoolId,
         classId: classId,
         code: code,
+        isSubSubject: isSubSubject,
+        maxMarks: maxMarks,
+        passingMarks: passingMarks,
       );
       await fetchSubjects(schoolId.toString());
     } catch (e) {
-      // Handle error
+      logger.e('Error in addSubject provider: $e');
+      rethrow;
     }
   }
 
@@ -128,19 +134,21 @@ class ExamProvider with ChangeNotifier {
     required String name,
     required int schoolId,
     int? classId,
-    String? code,
+    int? maxMarks,
+    int? passingMarks,
   }) async {
     try {
       await _examService.updateSubject(
         id: id,
         name: name,
-        schoolId: schoolId,
         classId: classId,
-        code: code,
+        maxMarks: maxMarks,
+        passingMarks: passingMarks,
       );
       await fetchSubjects(schoolId.toString());
     } catch (e) {
-      // Handle error
+      logger.e('Error updating subject: $e');
+      rethrow;
     }
   }
 
@@ -180,14 +188,14 @@ class ExamProvider with ChangeNotifier {
   Future<void> fetchGrades(String schoolId) async {
     try {
       final int schoolIdInt = int.parse(schoolId);
-      List<Grade> cachedGrades = await _cacheService.getGrades(schoolIdInt);
+      List<Grade> cachedGrades = []; // await _cacheService.getGrades(schoolIdInt);
       if (cachedGrades.isNotEmpty) {
         _grades = cachedGrades;
         notifyListeners();
       }
 
       _grades = await _examService.getGradesBySchoolId(schoolIdInt);
-      await _cacheService.saveGrades(schoolIdInt, _grades);
+      // await _cacheService.saveGrades(schoolIdInt, _grades);
       notifyListeners();
     } catch (e) {
       // Handle error
@@ -317,14 +325,14 @@ class ExamProvider with ChangeNotifier {
   Future<void> fetchSubjects(String schoolId) async {
     try {
       final int schoolIdInt = int.parse(schoolId);
-      List<Subject> cachedSubjects = await _cacheService.getSubjects(schoolIdInt);
+      List<Subject> cachedSubjects = []; // await _cacheService.getSubjects(schoolIdInt);
       if (cachedSubjects.isNotEmpty) {
         _subjects = cachedSubjects;
         notifyListeners();
       }
 
       _subjects = await _examService.getSubjectsBySchoolId(schoolIdInt);
-      await _cacheService.saveSubjects(schoolIdInt, _subjects);
+      // await _cacheService.saveSubjects(schoolIdInt, _subjects);
       notifyListeners();
     } catch (e) {
       // Handle error
@@ -369,10 +377,12 @@ class ExamProvider with ChangeNotifier {
   Future<List<Map<String, dynamic>>> getStudentsForMarksEntry({
     required String examId,
     required String subjectId,
+    required int classId,
   }) async {
     return await _marksService.getStudentsForMarksEntry(
       examId: examId,
       subjectId: subjectId,
+      classId: classId,
     );
   }
 
@@ -407,10 +417,12 @@ class ExamProvider with ChangeNotifier {
   Future<Map<String, dynamic>> getMarksEntryProgress({
     required String examId,
     required String subjectId,
+    required int classId,
   }) async {
     return await _marksService.getMarksEntryProgress(
       examId: examId,
       subjectId: subjectId,
+      classId: classId,
     );
   }
 
@@ -508,5 +520,116 @@ class ExamProvider with ChangeNotifier {
       examIds: examIds,
       classId: classId,
     );
+  }
+
+  // Phase 3: Exam Classes Management
+  Future<void> fetchExamClasses(String examId) async {
+    try {
+      _examClasses = await _examService.getExamClasses(examId);
+      notifyListeners();
+    } catch (e) {
+      logger.e('Error in fetchExamClasses: $e');
+    }
+  }
+
+  Future<ExamClass> addExamClass({
+    required String examId,
+    required int classId,
+    required DateTime examDate,
+    TimeOfDay? startTime,
+    TimeOfDay? endTime,
+    String? venue,
+    String? instructions,
+  }) async {
+    final examClass = await _examService.addExamClass(
+      examId: examId,
+      classId: classId,
+      examDate: examDate,
+      startTime: startTime,
+      endTime: endTime,
+      venue: venue,
+      instructions: instructions,
+    );
+    await fetchExamClasses(examId);
+    return examClass;
+  }
+
+  Future<void> updateExamClass({
+    required String id,
+    required String examId,
+    required int classId,
+    required DateTime examDate,
+    TimeOfDay? startTime,
+    TimeOfDay? endTime,
+    String? venue,
+    String? instructions,
+  }) async {
+    await _examService.updateExamClass(
+      id: id,
+      examDate: examDate,
+      startTime: startTime,
+      endTime: endTime,
+      venue: venue,
+      instructions: instructions,
+    );
+    await fetchExamClasses(examId);
+  }
+
+  Future<void> deleteExamClass(String id, String examId) async {
+    await _examService.deleteExamClass(id);
+    await fetchExamClasses(examId);
+  }
+
+  Future<Exam> createMultiClassExam({
+    required int schoolId,
+    required String name,
+    required List<int> classIds,
+    required Map<int, DateTime> classDates,
+    String? examType,
+    String? examinerName,
+    String? description,
+  }) async {
+    final exam = await _examService.createMultiClassExam(
+      schoolId: schoolId,
+      name: name,
+      classIds: classIds,
+      classDates: classDates,
+      examType: examType,
+      examinerName: examinerName,
+      description: description,
+    );
+    await fetchExams(schoolId.toString());
+    return exam;
+  }
+
+  // Phase 3: Subjects with Sub-Subjects
+  Future<void> fetchSubjectsWithSubSubjects(int schoolId, {int? classId}) async {
+    try {
+      _subjects = await _examService.getSubjectsWithSubSubjects(
+        schoolId,
+        classId: classId,
+      );
+      notifyListeners();
+    } catch (e) {
+      logger.e('Error in fetchSubjectsWithSubSubjects: $e');
+    }
+  }
+
+  Future<Subject> addSubSubject({
+    required String parentSubjectId,
+    required String name,
+    required int schoolId,
+    int? maxMarks,
+    int? passingMarks,
+  }) async {
+    final subject = await _examService.addSubSubject(
+      parentSubjectId: parentSubjectId,
+      name: name,
+      schoolId: schoolId,
+      maxMarks: maxMarks,
+      passingMarks: passingMarks,
+    );
+    await fetchSubjectsWithSubSubjects(schoolId);
+    return subject;
   }
 }

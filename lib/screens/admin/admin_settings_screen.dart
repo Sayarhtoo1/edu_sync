@@ -23,8 +23,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    debugPrint('AdminSettingsScreen: didChangeDependencies called'); // Added debug print
-    _schoolService = SchoolService();
+    debugPrint('AdminSettingsScreen: didChangeDependencies called');
+    _schoolService = Provider.of<SchoolService>(context, listen: false);
   }
 
   @override
@@ -109,72 +109,185 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('AdminSettingsScreen: build called'); // Added debug print
     final l10n = AppLocalizations.of(context);
     if (l10n == null) {
-      return const SizedBox.shrink(); // Or a placeholder widget
+      return const SizedBox.shrink();
     }
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
-        title: Text(l10n.adminSettingsTitle ?? 'Admin Settings'),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        title: Text(l10n.adminSettingsTitle ?? 'Admin Settings', style: const TextStyle(color: Color(0xFF2C2C2C), fontWeight: FontWeight.bold)),
+        iconTheme: const IconThemeData(color: Color(0xFF2C2C2C)),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
-              ? Center(child: Text(_errorMessage!))
-              : Padding(
-                  padding: const EdgeInsets.all(16.0),
+              ? Center(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        l10n.hijriCalendarSettingsTitle ?? 'Hijri Calendar Settings',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
+                      const Icon(Icons.error_outline, size: 64, color: Color(0xFFE57373)),
                       const SizedBox(height: 16),
-                      TextField(
-                        controller: _dayAdjustmentController,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          labelText: l10n.dayAdjustmentLabel ?? 'Day Adjustment',
-                          hintText: l10n.dayAdjustmentHint ?? 'Enter day adjustment (e.g., -1, 0, 1)',
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Center(
-                        child: ElevatedButton(
-                          onPressed: _saveSettings,
-                          child: Text(l10n.saveSettingsButton ?? 'Save Settings'),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      ListTile(
-                        title: Text(l10n.schoolLocationSettingsTitle ?? 'School Location Settings'),
-                        trailing: const Icon(Icons.arrow_forward_ios),
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => const SchoolSettingsScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 24),
-                      ListTile(
-                        title: Text(l10n.markAttendanceTitle ?? 'Mark Attendance'),
-                        trailing: const Icon(Icons.arrow_forward_ios),
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => const SchoolSettingsScreen(),
-                            ),
-                          );
-                        },
-                      ),
+                      Text(_errorMessage!, textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF757575))),
                     ],
                   ),
+                )
+              : ListView(
+                  padding: const EdgeInsets.all(16.0),
+                  children: [
+                    _buildSectionHeader('Calendar Settings'),
+                    const SizedBox(height: 8),
+                    _buildSettingsCard([
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF9C27B0).withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Icon(Icons.calendar_today, color: Color(0xFF9C27B0), size: 22),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    l10n.hijriCalendarSettingsTitle ?? 'Hijri Calendar Settings',
+                                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            TextField(
+                              controller: _dayAdjustmentController,
+                              keyboardType: TextInputType.number,
+                              decoration: InputDecoration(
+                                labelText: l10n.dayAdjustmentLabel,
+                                hintText: l10n.dayAdjustmentHint,
+                                filled: true,
+                                fillColor: const Color(0xFFF5F7FA),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: BorderSide.none,
+                                ),
+                                prefixIcon: const Icon(Icons.edit_calendar, color: Color(0xFF9C27B0)),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: _saveSettings,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF9C27B0),
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  elevation: 0,
+                                ),
+                                child: Text(l10n.saveSettingsButton ?? 'Save Settings', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ]),
+                    const SizedBox(height: 24),
+                    _buildSectionHeader('School Management'),
+                    const SizedBox(height: 8),
+                    _buildSettingsCard([
+                      _buildSettingsTile(
+                        icon: Icons.location_on,
+                        iconColor: const Color(0xFF2196F3),
+                        title: l10n.schoolLocationSettingsTitle,
+                        subtitle: 'Configure school location',
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (context) => const SchoolSettingsScreen()),
+                          );
+                        },
+                      ),
+                      const Divider(height: 1, indent: 56),
+                      _buildSettingsTile(
+                        icon: Icons.how_to_reg,
+                        iconColor: const Color(0xFF4CAF50),
+                        title: l10n.markAttendanceTitle,
+                        subtitle: 'Attendance settings',
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (context) => const SchoolSettingsScreen()),
+                          );
+                        },
+                      ),
+                    ]),
+                  ],
                 ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 8),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF757575),
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingsCard(List<Widget> children) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(children: children),
+    );
+  }
+
+  Widget _buildSettingsTile({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    String? subtitle,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: iconColor.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon, color: iconColor, size: 22),
+      ),
+      title: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+      subtitle: subtitle != null ? Text(subtitle, style: const TextStyle(fontSize: 14, color: Color(0xFF757575))) : null,
+      trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Color(0xFF9E9E9E)),
+      onTap: onTap,
     );
   }
 }

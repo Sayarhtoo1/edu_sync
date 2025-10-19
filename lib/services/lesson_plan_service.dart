@@ -2,17 +2,16 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:edu_sync/utils/logger.dart';
 import '../models/lesson_plan.dart';
-import 'cache_service.dart';
 
 class LessonPlanService {
   final SupabaseClient _supabaseClient = Supabase.instance.client;
-  final CacheService _cacheService = CacheService();
+  // final CacheService _cacheService = CacheService(); // TODO: Phase 2
 
   // Fetch lesson plans for a specific class and teacher
   Future<List<LessonPlan>> getLessonPlans({required int classId, String? teacherId, String? subjectName}) async { // Corrected to int
     final connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
-      return await _cacheService.getLessonPlans(classId);
+      return []; // await _cacheService.getLessonPlans(classId);
     } else {
       try {
         // Chain order directly. If conditional filters were needed between select and order,
@@ -27,11 +26,11 @@ class LessonPlanService {
             .order('date', ascending: false);
 
         final lessonPlans = response.map((data) => LessonPlan.fromMap(data)).toList();
-        await _cacheService.saveLessonPlans(classId, lessonPlans);
+        // await _cacheService.saveLessonPlans(classId, lessonPlans);
         return lessonPlans;
       } catch (e) {
         logger.e('Error fetching lesson plans: $e');
-        return await _cacheService.getLessonPlans(classId);
+        return []; // await _cacheService.getLessonPlans(classId);
       }
     }
   }

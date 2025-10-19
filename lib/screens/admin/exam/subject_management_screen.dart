@@ -21,6 +21,7 @@ class _SubjectManagementScreenState extends State<SubjectManagementScreen> {
   List<SchoolClass> _classes = [];
   SchoolClass? _selectedClass;
   final TextEditingController _searchController = TextEditingController();
+  final Map<String, bool> _expandedSubjects = {};
 
   @override
   void initState() {
@@ -75,7 +76,8 @@ class _SubjectManagementScreenState extends State<SubjectManagementScreen> {
     return _subjects.where((subject) {
       final matchesSearch = query.isEmpty || subject.name.toLowerCase().contains(query);
       final matchesClass = _selectedClass == null || subject.classId.toString() == _selectedClass!.id.toString();
-      return matchesSearch && matchesClass;
+      final isParent = subject.parentSubjectId == null;
+      return matchesSearch && matchesClass && isParent;
     }).toList();
   }
 
@@ -86,41 +88,96 @@ class _SubjectManagementScreenState extends State<SubjectManagementScreen> {
 
   void _showAddSubjectDialog() {
     final nameController = TextEditingController();
+    final maxMarksController = TextEditingController();
+    final passingMarksController = TextEditingController();
     SchoolClass? selectedClass;
+    bool hasSubSubjects = false;
+    
+    void addSubject() async {
+      if (nameController.text.isEmpty || selectedClass == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please fill required fields')),
+        );
+        return;
+      }
+      Navigator.pop(context);
+      if (mounted) {
+        await _addSubject(
+          nameController.text,
+          selectedClass!,
+          hasSubSubjects,
+          maxMarksController.text.isEmpty ? null : int.tryParse(maxMarksController.text),
+          passingMarksController.text.isEmpty ? null : int.tryParse(passingMarksController.text),
+        );
+      }
+    }
 
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           title: const Text('Add Subject'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Subject Name',
-                  hintText: 'e.g., Mathematics, English',
-                  border: OutlineInputBorder(),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Subject Name *',
+                    hintText: 'e.g., ဟဒီးစ်, Mathematics',
+                    border: OutlineInputBorder(),
+                  ),
+                  textCapitalization: TextCapitalization.words,
                 ),
-                textCapitalization: TextCapitalization.words,
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<SchoolClass>(
-                value: selectedClass,
-                decoration: const InputDecoration(
-                  labelText: 'Class',
-                  border: OutlineInputBorder(),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<SchoolClass>(
+                  value: selectedClass,
+                  decoration: const InputDecoration(
+                    labelText: 'Class *',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: _classes.map((schoolClass) {
+                    return DropdownMenuItem(
+                      value: schoolClass,
+                      child: Text(schoolClass.name),
+                    );
+                  }).toList(),
+                  onChanged: (value) => setDialogState(() => selectedClass = value),
                 ),
-                items: _classes.map((schoolClass) {
-                  return DropdownMenuItem(
-                    value: schoolClass,
-                    child: Text(schoolClass.name),
-                  );
-                }).toList(),
-                onChanged: (value) => setDialogState(() => selectedClass = value),
-              ),
-            ],
+                const SizedBox(height: 16),
+                CheckboxListTile(
+                  value: hasSubSubjects,
+                  onChanged: (value) => setDialogState(() => hasSubSubjects = value ?? false),
+                  title: const Text('Has Sub-Subjects'),
+                  subtitle: const Text('Max/passing marks set per exam'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+                if (!hasSubSubjects) ...[
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: maxMarksController,
+                    decoration: const InputDecoration(
+                      labelText: 'Max Marks',
+                      hintText: 'Optional',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: passingMarksController,
+                    decoration: const InputDecoration(
+                      labelText: 'Passing Marks',
+                      hintText: 'Optional',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                ],
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -128,19 +185,7 @@ class _SubjectManagementScreenState extends State<SubjectManagementScreen> {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () async {
-                if (nameController.text.isEmpty || selectedClass == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please fill all fields')),
-                  );
-                  return;
-                }
-
-                Navigator.pop(context);
-                if (mounted) {
-                  await _addSubject(nameController.text, selectedClass!);
-                }
-              },
+              onPressed: addSubject,
               child: const Text('Add'),
             ),
           ],
@@ -149,7 +194,13 @@ class _SubjectManagementScreenState extends State<SubjectManagementScreen> {
     );
   }
 
-  Future<void> _addSubject(String name, SchoolClass schoolClass) async {
+  Future<void> _addSubject(
+    String name,
+    SchoolClass schoolClass,
+    bool hasSubSubjects,
+    int? maxMarks,
+    int? passingMarks,
+  ) async {
     setState(() => _isLoading = true);
 
     try {
@@ -161,6 +212,9 @@ class _SubjectManagementScreenState extends State<SubjectManagementScreen> {
           name: name,
           classId: schoolClass.id!,
           schoolId: schoolId,
+          isSubSubject: false,
+          maxMarks: maxMarks,
+          passingMarks: passingMarks,
         );
         await _loadData();
         if (mounted) {
@@ -170,14 +224,26 @@ class _SubjectManagementScreenState extends State<SubjectManagementScreen> {
         }
       }
     } catch (e) {
-      setState(() => _errorMessage = e.toString());
+      if (mounted) {
+        setState(() => _errorMessage = e.toString());
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error adding subject: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   void _showEditSubjectDialog(Subject subject) {
     final nameController = TextEditingController(text: subject.name);
+    final maxMarksController = TextEditingController(text: subject.maxMarks?.toString() ?? '');
+    final passingMarksController = TextEditingController(text: subject.passingMarks?.toString() ?? '');
     SchoolClass? selectedClass = _classes.where((c) => c.id == subject.classId).firstOrNull;
 
     showDialog(
@@ -185,33 +251,55 @@ class _SubjectManagementScreenState extends State<SubjectManagementScreen> {
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           title: const Text('Edit Subject'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Subject Name',
-                  border: OutlineInputBorder(),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Subject Name',
+                    border: OutlineInputBorder(),
+                  ),
+                  textCapitalization: TextCapitalization.words,
                 ),
-                textCapitalization: TextCapitalization.words,
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<SchoolClass>(
-                value: selectedClass,
-                decoration: const InputDecoration(
-                  labelText: 'Class',
-                  border: OutlineInputBorder(),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<SchoolClass>(
+                  value: selectedClass,
+                  decoration: const InputDecoration(
+                    labelText: 'Class',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: _classes.map((schoolClass) {
+                    return DropdownMenuItem(
+                      value: schoolClass,
+                      child: Text(schoolClass.name),
+                    );
+                  }).toList(),
+                  onChanged: (value) => setDialogState(() => selectedClass = value),
                 ),
-                items: _classes.map((schoolClass) {
-                  return DropdownMenuItem(
-                    value: schoolClass,
-                    child: Text(schoolClass.name),
-                  );
-                }).toList(),
-                onChanged: (value) => setDialogState(() => selectedClass = value),
-              ),
-            ],
+                const SizedBox(height: 16),
+                TextField(
+                  controller: maxMarksController,
+                  decoration: const InputDecoration(
+                    labelText: 'Max Marks',
+                    hintText: 'Optional',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: passingMarksController,
+                  decoration: const InputDecoration(
+                    labelText: 'Passing Marks',
+                    hintText: 'Optional',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -229,7 +317,13 @@ class _SubjectManagementScreenState extends State<SubjectManagementScreen> {
 
                 Navigator.pop(context);
                 if (mounted) {
-                  await _updateSubject(subject, nameController.text, selectedClass!);
+                  await _updateSubject(
+                    subject,
+                    nameController.text,
+                    selectedClass!,
+                    maxMarksController.text.isEmpty ? null : int.tryParse(maxMarksController.text),
+                    passingMarksController.text.isEmpty ? null : int.tryParse(passingMarksController.text),
+                  );
                 }
               },
               child: const Text('Update'),
@@ -240,7 +334,13 @@ class _SubjectManagementScreenState extends State<SubjectManagementScreen> {
     );
   }
 
-  Future<void> _updateSubject(Subject subject, String name, SchoolClass schoolClass) async {
+  Future<void> _updateSubject(
+    Subject subject,
+    String name,
+    SchoolClass schoolClass,
+    int? maxMarks,
+    int? passingMarks,
+  ) async {
     setState(() => _isLoading = true);
 
     try {
@@ -253,6 +353,8 @@ class _SubjectManagementScreenState extends State<SubjectManagementScreen> {
           name: name,
           classId: schoolClass.id!,
           schoolId: schoolId,
+          maxMarks: maxMarks,
+          passingMarks: passingMarks,
         );
         await _loadData();
         if (mounted) {
@@ -262,9 +364,19 @@ class _SubjectManagementScreenState extends State<SubjectManagementScreen> {
         }
       }
     } catch (e) {
-      setState(() => _errorMessage = e.toString());
+      if (mounted) {
+        setState(() => _errorMessage = e.toString());
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error updating subject: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -301,6 +413,161 @@ class _SubjectManagementScreenState extends State<SubjectManagementScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Subject deleted successfully')),
+          );
+        }
+      }
+    } catch (e) {
+      setState(() => _errorMessage = e.toString());
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Widget _buildSubjectTree(Subject subject, int level) {
+    final isExpanded = _expandedSubjects[subject.id] ?? true;
+    final subSubjects = _subjects.where((s) => s.parentSubjectId == subject.id).toList();
+    final hasSubSubjects = subSubjects.isNotEmpty;
+    
+    return Column(
+      children: [
+        Card(
+          margin: EdgeInsets.only(left: level * 20.0, bottom: 8),
+          child: ListTile(
+            leading: Icon(
+              hasSubSubjects 
+                  ? (isExpanded ? Icons.folder_open : Icons.folder)
+                  : Icons.subject,
+              color: level == 0 ? defaultAccentColor : Colors.grey,
+            ),
+            title: Text(
+              subject.name,
+              style: TextStyle(
+                fontWeight: level == 0 ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+            subtitle: hasSubSubjects
+                ? Text('${subSubjects.length} sub-subjects')
+                : Text(_getClassName(subject.classId.toString())),
+            onTap: hasSubSubjects
+                ? () => setState(() => _expandedSubjects[subject.id] = !isExpanded)
+                : null,
+            trailing: PopupMenuButton<String>(
+              onSelected: (action) => _handleSubjectAction(action, subject),
+              itemBuilder: (context) => [
+                if (!subject.isSubSubject)
+                  const PopupMenuItem(value: 'add-sub', child: Text('Add Sub-Subject')),
+                const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                const PopupMenuItem(value: 'delete', child: Text('Delete')),
+              ],
+            ),
+          ),
+        ),
+        if (hasSubSubjects && isExpanded)
+          ...subSubjects.map((sub) => _buildSubjectTree(sub, level + 1)),
+      ],
+    );
+  }
+
+  void _handleSubjectAction(String action, Subject subject) {
+    switch (action) {
+      case 'add-sub':
+        _showAddSubSubjectDialog(subject);
+        break;
+      case 'edit':
+        _showEditSubjectDialog(subject);
+        break;
+      case 'delete':
+        _deleteSubject(subject);
+        break;
+    }
+  }
+
+  void _showAddSubSubjectDialog(Subject parentSubject) {
+    final nameController = TextEditingController();
+    final maxMarksController = TextEditingController();
+    final passingMarksController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Add Sub-Subject under ${parentSubject.name}'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: 'Sub-Subject Name *',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: maxMarksController,
+              decoration: const InputDecoration(
+                labelText: 'Max Marks',
+                hintText: 'Optional',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: passingMarksController,
+              decoration: const InputDecoration(
+                labelText: 'Passing Marks',
+                hintText: 'Optional',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.number,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (nameController.text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please enter sub-subject name')),
+                );
+                return;
+              }
+              Navigator.pop(context);
+              await _addSubSubject(
+                parentSubject,
+                nameController.text,
+                maxMarksController.text.isEmpty ? null : int.parse(maxMarksController.text),
+                passingMarksController.text.isEmpty ? null : int.parse(passingMarksController.text),
+              );
+            },
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _addSubSubject(Subject parent, String name, int? maxMarks, int? passingMarks) async {
+    setState(() => _isLoading = true);
+    try {
+      final schoolProvider = Provider.of<SchoolProvider>(context, listen: false);
+      final schoolId = schoolProvider.currentSchool?.id;
+      if (schoolId != null) {
+        await Provider.of<ExamProvider>(context, listen: false).addSubSubject(
+          parentSubjectId: parent.id,
+          name: name,
+          schoolId: schoolId,
+          maxMarks: maxMarks,
+          passingMarks: passingMarks,
+        );
+        await _loadData();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('$name added successfully')),
           );
         }
       }
@@ -435,44 +702,9 @@ class _SubjectManagementScreenState extends State<SubjectManagementScreen> {
                         ),
                       )
                     : ListView.builder(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
                         itemCount: filteredSubjects.length,
-                        itemBuilder: (context, index) {
-                          final subject = filteredSubjects[index];
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: defaultAccentColor.withOpacity(0.1),
-                                child: Icon(Icons.subject, color: defaultAccentColor),
-                              ),
-                              title: Text(
-                                subject.name,
-                                style: const TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              subtitle: Text(_getClassName(subject.classId.toString())),
-                              trailing: PopupMenuButton<String>(
-                                onSelected: (action) {
-                                  if (action == 'edit') {
-                                    _showEditSubjectDialog(subject);
-                                  } else if (action == 'delete') {
-                                    _deleteSubject(subject);
-                                  }
-                                },
-                                itemBuilder: (context) => [
-                                  const PopupMenuItem(
-                                    value: 'edit',
-                                    child: Text('Edit'),
-                                  ),
-                                  const PopupMenuItem(
-                                    value: 'delete',
-                                    child: Text('Delete'),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
+                        itemBuilder: (context, index) => _buildSubjectTree(filteredSubjects[index], 0),
                       ),
           ),
         ],

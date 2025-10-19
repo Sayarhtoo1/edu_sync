@@ -18,7 +18,7 @@ class ExamReportService {
 
       final exam = await _supabaseClient
           .from('exams')
-          .select('id, name, exam_date, class_id')
+          .select('id, name, exam_type, examiner_name')
           .eq('id', examId)
           .single();
 

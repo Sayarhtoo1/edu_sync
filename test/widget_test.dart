@@ -5,6 +5,7 @@ import 'package:edu_sync/widgets/language_toggle.dart';
 import 'package:edu_sync/widgets/profile_photo_view.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:edu_sync/screens/splash_screen.dart'; // Import SplashScreen
+import 'package:edu_sync/config/router.dart';
 
 // Mock SupabaseClient for testing
 class MockSupabaseClient extends SupabaseClient {
@@ -44,7 +45,8 @@ void main() {
 
   testWidgets('MyApp builds and shows default home page', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    final router = initializeRouter();
+    await tester.pumpWidget(MyApp(router: router));
 
     // Verify that MyHomePage is shown (or whatever your initial screen is).
     // This test is very basic and assumes MyHomePage is part of your initial UI.

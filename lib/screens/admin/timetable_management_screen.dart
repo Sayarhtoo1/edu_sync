@@ -17,32 +17,37 @@ class TimetableManagementScreen extends StatefulWidget {
 }
 
 class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
-  late final TimetableService _timetableService;
-  late final AuthService _authService;
-  late final ClassService _classService;
+  TimetableService? _timetableService;
+  AuthService? _authService;
+  ClassService? _classService;
 
   List<Timetable> _timetableEntries = [];
   List<app_class.SchoolClass> _availableClasses = [];
   app_class.SchoolClass? _selectedClass;
   bool _isLoading = true;
   int? _currentSchoolId;
+  bool _initialized = false;
 
   @override
-  void initState() {
-    super.initState();
-    _timetableService = TimetableService();
-    _authService = Provider.of<AuthService>(context, listen: false);
-    _classService = ClassService();
-    _fetchInitialData();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _timetableService = Provider.of<TimetableService>(context, listen: false);
+      _authService = Provider.of<AuthService>(context, listen: false);
+      _classService = Provider.of<ClassService>(context, listen: false);
+      _initialized = true;
+      _fetchInitialData();
+    }
   }
 
   Future<void> _fetchInitialData() async {
+    if (_authService == null || _classService == null) return;
     setState(() => _isLoading = true);
-    _currentSchoolId = await _authService.getCurrentUserSchoolId();
+    _currentSchoolId = await _authService!.getCurrentUserSchoolId();
     if (_currentSchoolId != null) {
-      _availableClasses = await _classService.getClasses(_currentSchoolId!);
+      _availableClasses = await _classService!.getClasses(_currentSchoolId!);
       if (_availableClasses.isNotEmpty) {
-        _selectedClass = _availableClasses.first; // Default to first class
+        _selectedClass = _availableClasses.first;
         await _loadTimetableForSelectedClass();
       }
     }
@@ -52,9 +57,9 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
   }
 
   Future<void> _loadTimetableForSelectedClass() async {
-    if (_selectedClass == null || _selectedClass!.id == null) return;
+    if (_selectedClass == null || _selectedClass!.id == null || _timetableService == null) return;
     setState(() => _isLoading = true);
-    _timetableEntries = await _timetableService.getTimetableForClass(_selectedClass!.id!);
+    _timetableEntries = await _timetableService!.getTimetableForClass(_selectedClass!.id!);
     if (mounted) {
       setState(() => _isLoading = false);
     }
@@ -101,6 +106,7 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
   }
 
   Future<void> _deleteEntry(int entryId) async {
+    if (_timetableService == null) return;
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
@@ -120,7 +126,7 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
       ),
     );
     if (confirm == true) {
-      final success = await _timetableService.deleteTimetableEntry(entryId);
+      final success = await _timetableService!.deleteTimetableEntry(entryId);
       if (success) {
         _loadTimetableForSelectedClass();
       } else {

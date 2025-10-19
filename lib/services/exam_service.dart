@@ -1,11 +1,13 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/material.dart';
 import '../models/exam.dart';
+import '../models/exam_class.dart';
 import '../models/subject.dart';
 import '../models/student.dart';
 import '../models/grade.dart';
-import '../models/exam_subject.dart'; // Import ExamSubject model
-// Import SchoolClass model
-import 'package:collection/collection.dart'; // Import for `firstWhereOrNull`
+import '../models/exam_subject.dart';
+import 'package:collection/collection.dart';
+import '../utils/logger.dart';
 
 class ExamService {
   final SupabaseClient _supabaseClient = Supabase.instance.client;
@@ -108,10 +110,8 @@ class ExamService {
     if (response is String) {
       return Exam(
         id: response,
-        classId: classId,
         schoolId: schoolId,
         name: name,
-        examDate: examDate,
         examinerName: examinerName,
         description: description,
         maxMarks: maxMarks,
@@ -127,34 +127,39 @@ class ExamService {
     required int schoolId,
     int? classId,
     String? code,
+    bool isSubSubject = false,
+    int? maxMarks,
+    int? passingMarks,
   }) async {
-    await _supabaseClient.rpc('add_subject', params: {
-      'p_name': name,
-      'p_school_id': schoolId,
-      'p_class_id': classId,
-      'p_code': code,
-    });
+    try {
+      await _supabaseClient.rpc('add_subject', params: {
+        'p_name': name,
+        'p_school_id': schoolId,
+        'p_class_id': classId,
+        'p_code': code,
+        'p_max_marks': maxMarks,
+        'p_passing_marks': passingMarks,
+        'p_is_sub_subject': isSubSubject,
+      });
+    } catch (e) {
+      logger.e('Error adding subject: $e');
+      rethrow;
+    }
   }
 
   Future<void> updateExam({
     required String id,
-    required int classId,
-    required int schoolId,
     required String name,
-    required DateTime examDate,
-    required String examinerName,
+    String? examType,
+    String? examinerName,
     String? description,
-    int? maxMarks,
   }) async {
     await _supabaseClient.rpc('update_exam', params: {
-      'p_exam_id': id,
-      'p_class_id': classId,
-      'p_school_id': schoolId,
+      'p_id': id,
       'p_name': name,
-      'p_exam_date': examDate.toIso8601String(),
+      'p_exam_type': examType,
       'p_examiner_name': examinerName,
       'p_description': description,
-      'p_max_marks': maxMarks,
     });
   }
 
@@ -167,16 +172,16 @@ class ExamService {
   Future<void> updateSubject({
     required String id,
     required String name,
-    required int schoolId,
     int? classId,
-    String? code,
+    int? maxMarks,
+    int? passingMarks,
   }) async {
     await _supabaseClient.rpc('update_subject', params: {
-      'p_subject_id': id,
+      'p_id': id,
       'p_name': name,
-      'p_school_id': schoolId,
       'p_class_id': classId,
-      'p_code': code,
+      'p_max_marks': maxMarks,
+      'p_passing_marks': passingMarks,
     });
   }
 
@@ -272,6 +277,15 @@ class ExamService {
     return (response as List).map((e) => ExamSubject.fromMap(e)).toList();
   }
 
+  Future<void> deleteExamSubject(String id) async {
+    try {
+      await _supabaseClient.from('exam_subjects').delete().eq('id', id);
+    } catch (e) {
+      logger.e('Error deleting exam subject: $e');
+      rethrow;
+    }
+  }
+
   Future<List<Student>> getStudentsByClassId(int classId) async {
     final response = await _supabaseClient
         .from('students')
@@ -313,18 +327,37 @@ class ExamService {
   }
 
   Future<List<Exam>> getExamsBySchoolId(int schoolId) async {
-    final response = await _supabaseClient
-        .from('exams')
-        .select('id, class_id, school_id, name, exam_date, examiner_name, description, max_marks, created_at')
-        .eq('school_id', schoolId)
-        .order('exam_date', ascending: false);
-    return (response as List).map((e) => Exam.fromMap(e)).toList();
+    try {
+      final examsResponse = await _supabaseClient
+          .from('exams')
+          .select()
+          .eq('school_id', schoolId)
+          .order('created_at', ascending: false);
+      
+      final exams = <Exam>[];
+      for (final examData in examsResponse as List) {
+        final examId = examData['id'];
+        final examClassesResponse = await _supabaseClient
+            .from('exam_classes')
+            .select()
+            .eq('exam_id', examId)
+            .order('exam_date', ascending: true);
+        
+        examData['exam_classes'] = examClassesResponse;
+        exams.add(Exam.fromMap(examData));
+      }
+      
+      return exams;
+    } catch (e) {
+      logger.e('Error fetching exams: $e');
+      return [];
+    }
   }
 
   Future<List<Subject>> getSubjectsBySchoolId(int schoolId) async {
     final response = await _supabaseClient
         .from('subjects')
-        .select('id, name, class_id, school_id, created_at')
+        .select()
         .eq('school_id', schoolId)
         .order('name', ascending: true);
     return (response as List).map((e) => Subject.fromMap(e)).toList();
@@ -366,5 +399,237 @@ class ExamService {
       'p_student_id': studentId,
     });
     return response as Map<String, dynamic>?;
+  }
+
+  // ========== PHASE 2: ExamClass CRUD Methods ==========
+
+  Future<List<ExamClass>> getExamClasses(String examId) async {
+    try {
+      final response = await _supabaseClient
+          .from('exam_classes')
+          .select()
+          .eq('exam_id', examId)
+          .order('exam_date', ascending: true);
+      return (response as List).map((e) => ExamClass.fromMap(e)).toList();
+    } catch (e) {
+      logger.e('Error fetching exam classes: $e');
+      return [];
+    }
+  }
+
+  Future<ExamClass> addExamClass({
+    required String examId,
+    required int classId,
+    required DateTime examDate,
+    TimeOfDay? startTime,
+    TimeOfDay? endTime,
+    String? venue,
+    String? instructions,
+  }) async {
+    try {
+      final response = await _supabaseClient
+          .from('exam_classes')
+          .insert({
+            'exam_id': examId,
+            'class_id': classId,
+            'exam_date': examDate.toIso8601String().split('T')[0],
+            'start_time': startTime != null ? '${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}:00' : null,
+            'end_time': endTime != null ? '${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}:00' : null,
+            'venue': venue,
+            'instructions': instructions,
+          })
+          .select()
+          .single();
+      return ExamClass.fromMap(response);
+    } catch (e) {
+      logger.e('Error adding exam class: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> updateExamClass({
+    required String id,
+    required DateTime examDate,
+    TimeOfDay? startTime,
+    TimeOfDay? endTime,
+    String? venue,
+    String? instructions,
+  }) async {
+    try {
+      await _supabaseClient
+          .from('exam_classes')
+          .update({
+            'exam_date': examDate.toIso8601String().split('T')[0],
+            'start_time': startTime != null ? '${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}:00' : null,
+            'end_time': endTime != null ? '${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}:00' : null,
+            'venue': venue,
+            'instructions': instructions,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', id);
+    } catch (e) {
+      logger.e('Error updating exam class: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> deleteExamClass(String id) async {
+    try {
+      await _supabaseClient.from('exam_classes').delete().eq('id', id);
+    } catch (e) {
+      logger.e('Error deleting exam class: $e');
+      rethrow;
+    }
+  }
+
+  // ========== Multi-Class Exam Creation ==========
+
+  Future<Exam> createMultiClassExam({
+    required int schoolId,
+    required String name,
+    required List<int> classIds,
+    required Map<int, DateTime> classDates,
+    String? examType,
+    String? examinerName,
+    String? description,
+  }) async {
+    try {
+      final examResponse = await _supabaseClient
+          .from('exams')
+          .insert({
+            'school_id': schoolId,
+            'name': name,
+            'exam_type': examType,
+            'examiner_name': examinerName ?? 'Not Specified',
+            'description': description,
+          })
+          .select()
+          .single();
+      
+      final examId = examResponse['id'];
+      
+      for (final classId in classIds) {
+        await _supabaseClient.from('exam_classes').insert({
+          'exam_id': examId,
+          'class_id': classId,
+          'exam_date': classDates[classId]!.toIso8601String().split('T')[0],
+        });
+      }
+      
+      return Exam.fromMap(examResponse);
+    } catch (e) {
+      logger.e('Error creating multi-class exam: $e');
+      rethrow;
+    }
+  }
+
+  // ========== Subject with Sub-Subjects ==========
+
+  Future<List<Subject>> getSubjectsWithSubSubjects(int schoolId, {int? classId}) async {
+    try {
+      var query = _supabaseClient.from('subjects').select().eq('school_id', schoolId);
+      
+      if (classId != null) {
+        query = query.eq('class_id', classId);
+      }
+      
+      final response = await query.order('display_order', ascending: true);
+      final allSubjects = (response as List).map((e) => Subject.fromMap(e)).toList();
+      
+      final parentSubjects = allSubjects.where((s) => s.parentSubjectId == null).toList();
+      
+      for (var i = 0; i < parentSubjects.length; i++) {
+        final subs = allSubjects.where((s) => s.parentSubjectId == parentSubjects[i].id).toList();
+        if (subs.isNotEmpty) {
+          parentSubjects[i] = Subject(
+            id: parentSubjects[i].id,
+            name: parentSubjects[i].name,
+            classId: parentSubjects[i].classId,
+            schoolId: parentSubjects[i].schoolId,
+            createdAt: parentSubjects[i].createdAt,
+            code: parentSubjects[i].code,
+            maxMarks: parentSubjects[i].maxMarks,
+            passingMarks: parentSubjects[i].passingMarks,
+            parentSubjectId: parentSubjects[i].parentSubjectId,
+            isSubSubject: parentSubjects[i].isSubSubject,
+            displayOrder: parentSubjects[i].displayOrder,
+            subSubjects: subs,
+          );
+        }
+      }
+      
+      return parentSubjects;
+    } catch (e) {
+      logger.e('Error fetching subjects with sub-subjects: $e');
+      return [];
+    }
+  }
+
+  Future<Subject> addSubSubject({
+    required String parentSubjectId,
+    required String name,
+    required int schoolId,
+    int? maxMarks,
+    int? passingMarks,
+  }) async {
+    try {
+      final parentResponse = await _supabaseClient
+          .from('subjects')
+          .select('class_id')
+          .eq('id', parentSubjectId)
+          .single();
+      
+      final subjectCode = 'SUB${DateTime.now().millisecondsSinceEpoch}';
+      final response = await _supabaseClient
+          .from('subjects')
+          .insert({
+            'name': name,
+            'school_id': schoolId,
+            'class_id': parentResponse['class_id'],
+            'parent_subject_id': parentSubjectId,
+            'is_sub_subject': true,
+            'code': subjectCode,
+            'max_marks': maxMarks,
+            'passing_marks': passingMarks,
+          })
+          .select()
+          .single();
+      return Subject.fromMap(response);
+    } catch (e) {
+      logger.e('Error adding sub-subject: $e');
+      rethrow;
+    }
+  }
+
+  // ========== Enhanced ExamSubject Methods ==========
+
+  Future<void> updateExamSubjectEnhanced({
+    required String id,
+    required String examId,
+    required String subjectId,
+    required int maxMarks,
+    required int passingMarks,
+    int? distinctionMarks,
+    String? examinerId,
+    bool isOptional = false,
+    double weightage = 100.0,
+  }) async {
+    try {
+      await _supabaseClient
+          .from('exam_subjects')
+          .update({
+            'max_marks': maxMarks,
+            'passing_marks': passingMarks,
+            'distinction_marks': distinctionMarks,
+            'examiner_id': examinerId,
+            'is_optional': isOptional,
+            'weightage': weightage,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', id);
+    } catch (e) {
+      logger.e('Error updating exam subject: $e');
+      rethrow;
+    }
   }
 }

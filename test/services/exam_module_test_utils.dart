@@ -36,15 +36,12 @@ class ExamModuleTestUtils {
   static Exam createTestExam({
     String? id,
     String? name,
-    DateTime? examDate,
     String? examinerName,
   }) {
     return Exam(
       id: id ?? testExamId,
-      classId: 1,
       schoolId: 1,
       name: name ?? 'Test Exam',
-      examDate: examDate ?? DateTime.now().add(const Duration(days: 7)),
       examinerName: examinerName ?? 'Test Examiner',
       createdAt: DateTime.now(),
       description: 'Test exam description',
@@ -200,7 +197,6 @@ class ExamModuleTestUtils {
   static bool areExamsEqual(Exam exam1, Exam exam2) {
     return exam1.id == exam2.id &&
            exam1.name == exam2.name &&
-           exam1.classId == exam2.classId &&
            exam1.schoolId == exam2.schoolId &&
            exam1.examinerName == exam2.examinerName;
   }
@@ -218,7 +214,6 @@ class ExamModuleTestUtils {
       return createTestExam(
         id: '${index + 1}',
         name: 'Test Exam ${index + 1}',
-        examDate: DateTime.now().add(Duration(days: index + 1)),
       );
     });
   }

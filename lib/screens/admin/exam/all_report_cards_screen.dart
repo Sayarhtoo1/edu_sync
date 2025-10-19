@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../providers/exam_provider.dart';
+import '../../../providers/class_provider.dart';
+import '../../../models/exam_class.dart';
 
 class AllReportCardsScreen extends StatefulWidget {
   final String examId;
@@ -21,6 +23,8 @@ class _AllReportCardsScreenState extends State<AllReportCardsScreen> {
   List<Map<String, dynamic>> _students = [];
   bool _isLoading = false;
   String _searchQuery = '';
+  List<ExamClass> _examClasses = [];
+  ExamClass? _selectedExamClass;
 
   @override
   void initState() {
@@ -33,11 +37,19 @@ class _AllReportCardsScreenState extends State<AllReportCardsScreen> {
     try {
       final examProvider = Provider.of<ExamProvider>(context, listen: false);
       
-      // Get exam details to find class_id
-      final exam = examProvider.exams.firstWhere((e) => e.id == widget.examId);
+      // Get exam classes to find students
+      await examProvider.fetchExamClasses(widget.examId);
+      _examClasses = examProvider.examClasses;
       
-      // Get all students in the class
-      await examProvider.fetchStudentsByClassId(exam.classId.toString());
+      if (_examClasses.isEmpty) {
+        throw Exception('No classes found for this exam');
+      }
+      
+      // Set first class as default if not selected
+      _selectedExamClass ??= _examClasses.first;
+      
+      // Get students from selected class
+      await examProvider.fetchStudentsByClassId(_selectedExamClass!.classId.toString());
       final students = examProvider.students;
       
       // Get report card data for each student
@@ -103,13 +115,49 @@ class _AllReportCardsScreenState extends State<AllReportCardsScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
-            child: TextField(
-              onChanged: (value) => setState(() => _searchQuery = value),
-              decoration: InputDecoration(
-                hintText: 'Search students...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
+            child: Column(
+              children: [
+                Consumer<ClassProvider>(
+                  builder: (context, classProvider, _) {
+                    return DropdownButtonFormField<int>(
+                      value: _selectedExamClass?.classId,
+                      decoration: InputDecoration(
+                        labelText: 'Filter by Class',
+                        prefixIcon: const Icon(Icons.class_),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      items: _examClasses.map((ec) {
+                        final schoolClass = classProvider.classes
+                            .where((c) => c.id == ec.classId)
+                            .firstOrNull;
+                        final className = schoolClass?.name ?? 'Class ${ec.classId}';
+                        return DropdownMenuItem(
+                          value: ec.classId,
+                          child: Text(className),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          final examClass = _examClasses.where((ec) => ec.classId == value).firstOrNull;
+                          if (examClass != null) {
+                            setState(() => _selectedExamClass = examClass);
+                            _loadStudents();
+                          }
+                        }
+                      },
+                    );
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  onChanged: (value) => setState(() => _searchQuery = value),
+                  decoration: InputDecoration(
+                    hintText: 'Search students...',
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ],
             ),
           ),
           Expanded(

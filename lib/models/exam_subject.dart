@@ -4,6 +4,10 @@ class ExamSubject {
   final String subjectId;
   final int maxMarks;
   final int passingMarks;
+  final int? distinctionMarks;
+  final String? examinerId;
+  final bool isOptional;
+  final double weightage;
   final DateTime createdAt;
 
   ExamSubject({
@@ -12,6 +16,10 @@ class ExamSubject {
     required this.subjectId,
     required this.maxMarks,
     required this.passingMarks,
+    this.distinctionMarks,
+    this.examinerId,
+    this.isOptional = false,
+    this.weightage = 100.0,
     required this.createdAt,
   });
 
@@ -22,6 +30,10 @@ class ExamSubject {
       subjectId: map['subject_id'],
       maxMarks: map['max_marks'],
       passingMarks: map['passing_marks'],
+      distinctionMarks: map['distinction_marks'],
+      examinerId: map['examiner_id'],
+      isOptional: map['is_optional'] ?? false,
+      weightage: map['weightage'] != null ? (map['weightage'] is int ? (map['weightage'] as int).toDouble() : map['weightage']) : 100.0,
       createdAt: DateTime.parse(map['created_at']),
     );
   }
@@ -33,7 +45,13 @@ class ExamSubject {
       'subject_id': subjectId,
       'max_marks': maxMarks,
       'passing_marks': passingMarks,
+      'distinction_marks': distinctionMarks,
+      'examiner_id': examinerId,
+      'is_optional': isOptional,
+      'weightage': weightage,
       'created_at': createdAt.toIso8601String(),
     };
   }
+
+  bool get hasDistinction => distinctionMarks != null;
 }

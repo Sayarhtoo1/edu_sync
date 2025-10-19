@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:edu_sync/models/school.dart';
 import 'package:edu_sync/services/school_service.dart';
-// import 'package:edu_sync/services/auth_service.dart'; // Unused import
-import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Import AppLocalizations
-import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
+import 'package:edu_sync/theme/app_theme.dart';
+import 'package:provider/provider.dart';
 
 class EditSchoolProfileScreen extends StatefulWidget {
   final School school; // School to edit
@@ -19,7 +19,7 @@ class EditSchoolProfileScreen extends StatefulWidget {
 
 class _EditSchoolProfileScreenState extends State<EditSchoolProfileScreen> {
   final _formKey = GlobalKey<FormState>();
-  final SchoolService _schoolService = SchoolService();
+  late final SchoolService _schoolService;
   final ImagePicker _picker = ImagePicker();
 
   late TextEditingController _nameController;
@@ -39,6 +39,12 @@ class _EditSchoolProfileScreenState extends State<EditSchoolProfileScreen> {
     _themeController = TextEditingController(text: widget.school.theme);
     _contactInfoController = TextEditingController(text: widget.school.contact);
     _currentLogoUrl = widget.school.logoUrl;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _schoolService = Provider.of<SchoolService>(context, listen: false);
   }
 
   Future<void> _pickSchoolLogo() async {

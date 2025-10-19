@@ -2,19 +2,35 @@ import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/attendance_report.dart';
 import '../models/attendance.dart' as app_attendance;
+import '../utils/logger.dart';
+import 'cache_service.dart';
 
 class AttendanceService {
   final SupabaseClient _supabase = Supabase.instance.client;
+  final CacheService _cache;
+
+  AttendanceService(this._cache);
 
   Future<List<app_attendance.Attendance>> getAttendanceForClassByDate(int classId, DateTime date) async {
-    final response = await _supabase
-        .from('attendance')
-        .select('id, class_id, student_id, date, status, marked_by_teacher_id, updated_at')
-        .eq('class_id', classId)
-        .eq('date', DateFormat('yyyy-MM-dd').format(date));
+    try {
+      final response = await _supabase
+          .from('attendance')
+          .select('id, class_id, student_id, date, status, marked_by_teacher_id, updated_at')
+          .eq('class_id', classId)
+          .eq('date', DateFormat('yyyy-MM-dd').format(date));
 
-    final List<dynamic> data = response;
-    return data.map((item) => app_attendance.Attendance.fromMap(item)).toList();
+      final List<dynamic> data = response;
+      final attendance = data.map((item) => app_attendance.Attendance.fromMap(item)).toList();
+      
+      // Cache the result
+      await _cache.cacheAttendance(attendance);
+      
+      return attendance;
+    } catch (e) {
+      logger.w('Supabase failed, using cache: $e');
+      // Fallback to cache
+      return await _cache.getCachedAttendance(classId, date);
+    }
   }
 
   Future<bool> saveAttendanceBatch(List<app_attendance.Attendance> attendanceBatch) async {
@@ -43,99 +59,122 @@ class AttendanceService {
   }
 
   Future<List<app_attendance.Attendance>> getAttendanceForStudent(int studentId) async {
-    final response = await _supabase
-        .from('attendance')
-        .select()
-        .eq('student_id', studentId)
-        .order('date', ascending: false);
+    try {
+      final response = await _supabase
+          .from('attendance')
+          .select()
+          .eq('student_id', studentId)
+          .order('date', ascending: false);
 
-    final List<dynamic> data = response;
-    return data.map((item) => app_attendance.Attendance.fromMap(item)).toList();
+      final List<dynamic> data = response;
+      final attendance = data.map((item) => app_attendance.Attendance.fromMap(item)).toList();
+      
+      await _cache.cacheAttendance(attendance);
+      return attendance;
+    } catch (e) {
+      logger.w('Supabase failed, using cache: $e');
+      return await _cache.getCachedAttendanceForStudent(studentId);
+    }
   }
 
   /// Fetches attendance data for all students in a school for a given date range.
   ///
   /// This method is intended for Admin users.
   Future<List<AttendanceReport>> getAttendanceForAdmin(int schoolId, DateTime startDate, DateTime endDate, {int? classId, List<int>? studentIds}) async {
-    var query = _supabase
-        .from('attendance')
-        .select('date, status, students!inner(full_name, class_id, school_id, classes!inner(name))')
-        .eq('students.school_id', schoolId)
-        .gte('date', startDate.toIso8601String())
-        .lte('date', endDate.toIso8601String());
+    try {
+      var query = _supabase
+          .from('attendance')
+          .select('date, status, students!inner(full_name, class_id, school_id, classes!inner(name))')
+          .eq('students.school_id', schoolId)
+          .gte('date', startDate.toIso8601String())
+          .lte('date', endDate.toIso8601String());
 
-    if (classId != null) {
-      query = query.eq('students.class_id', classId);
+      if (classId != null) {
+        query = query.eq('students.class_id', classId);
+      }
+      if (studentIds != null && studentIds.isNotEmpty) {
+        query = query.filter('student_id', 'in', '(${studentIds.join(',')})');
+      }
+
+      final response = await query.order('date', ascending: false);
+
+      final List<dynamic> data = response;
+      return data.map((item) {
+        return AttendanceReport(
+          studentName: item['students']['full_name'] ?? 'N/A',
+          date: DateTime.parse(item['date']),
+          status: item['status'] ?? 'N/A',
+          className: item['students']['classes']['name'] ?? 'N/A',
+        );
+      }).toList();
+    } catch (e) {
+      logger.w('Supabase failed for admin attendance: $e');
+      return [];
     }
-    if (studentIds != null && studentIds.isNotEmpty) {
-      query = query.filter('student_id', 'in', '(${studentIds.join(',')})');
-    }
-
-    final response = await query.order('date', ascending: false);
-
-    final List<dynamic> data = response;
-    return data.map((item) {
-      return AttendanceReport(
-        studentName: item['students']['full_name'] ?? 'N/A',
-        date: DateTime.parse(item['date']),
-        status: item['status'] ?? 'N/A',
-        className: item['students']['classes']['name'] ?? 'N/A',
-      );
-    }).toList();
   }
 
   /// Fetches attendance data for all students in a teacher's classes for a given date range.
   ///
   /// This method is intended for Teacher users.
   Future<List<AttendanceReport>> getAttendanceForTeacher(String teacherId, DateTime startDate, DateTime endDate, {int? classId, List<int>? studentIds}) async {
-    var query = _supabase
-        .from('attendance')
-        .select('date, status, students!inner(full_name, classes!inner(name, teacher_id))')
-        .eq('students.classes.teacher_id', teacherId)
-        .gte('date', startDate.toIso8601String())
-        .lte('date', endDate.toIso8601String());
+    try {
+      var query = _supabase
+          .from('attendance')
+          .select('date, status, students!inner(full_name, classes!inner(name, teacher_id))')
+          .eq('students.classes.teacher_id', teacherId)
+          .gte('date', startDate.toIso8601String())
+          .lte('date', endDate.toIso8601String());
 
-    if (classId != null) {
-      query = query.eq('students.class_id', classId);
+      if (classId != null) {
+        query = query.eq('students.class_id', classId);
+      }
+      if (studentIds != null && studentIds.isNotEmpty) {
+        query = query.filter('student_id', 'in', '(${studentIds.join(',')})');
+      }
+
+      final response = await query.order('date', ascending: false);
+
+      final List<dynamic> data = response;
+      return data.map((item) {
+        return AttendanceReport(
+          studentName: item['students']['full_name'] ?? 'N/A',
+          date: DateTime.parse(item['date']),
+          status: item['status'] ?? 'N/A',
+          className: item['students']['classes']['name'] ?? 'N/A',
+        );
+      }).toList();
+    } catch (e) {
+      logger.w('Supabase failed for teacher attendance: $e');
+      return [];
     }
-    if (studentIds != null && studentIds.isNotEmpty) {
-      query = query.filter('student_id', 'in', '(${studentIds.join(',')})');
-    }
-
-    final response = await query.order('date', ascending: false);
-
-    final List<dynamic> data = response;
-    return data.map((item) {
-      return AttendanceReport(
-        studentName: item['students']['full_name'] ?? 'N/A',
-        date: DateTime.parse(item['date']),
-        status: item['status'] ?? 'N/A',
-        className: item['students']['classes']['name'] ?? 'N/A',
-      );
-    }).toList();
   }
 
   /// Fetches attendance data for a parent's children for a given date range.
   ///
   /// This method is intended for Parent users.
   Future<List<AttendanceReport>> getAttendanceForParent(String parentId, DateTime startDate, DateTime endDate) async {
-    final response = await _supabase
-        .from('attendance')
-        .select('date, status, students!inner(full_name, classes!inner(name), parent_student_relations!inner(parent_id))')
-        .eq('students.parent_student_relations.parent_id', parentId)
-        .gte('date', startDate.toIso8601String())
-        .lte('date', endDate.toIso8601String())
-        .order('date', ascending: false);
+    try {
+      final response = await _supabase
+          .from('attendance')
+          .select('date, status, students!inner(full_name, classes!inner(name), parent_student_relations!inner(parent_id))')
+          .eq('students.parent_student_relations.parent_id', parentId)
+          .gte('date', startDate.toIso8601String())
+          .lte('date', endDate.toIso8601String())
+          .order('date', ascending: false);
 
-    final List<dynamic> data = response;
-    return data.map((item) {
-      return AttendanceReport(
-        studentName: item['students']['full_name'] ?? 'N/A',
-        date: DateTime.parse(item['date']),
-        status: item['status'] ?? 'N/A',
-        className: item['students']['classes']['name'] ?? 'N/A',
-      );
-    }).toList();
+      final List<dynamic> data = response;
+      return data.map((item) {
+        return AttendanceReport(
+          studentName: item['students']['full_name'] ?? 'N/A',
+          date: DateTime.parse(item['date']),
+          status: item['status'] ?? 'N/A',
+          className: item['students']['classes']['name'] ?? 'N/A',
+        );
+      }).toList();
+    } catch (e) {
+      logger.w('Supabase failed for parent attendance: $e');
+      return [];
+    }
   }
 
   /// Fetches staff attendance summary for a school within a date range
@@ -147,11 +186,11 @@ class AttendanceService {
     try {
       final response = await _supabase
           .from('staff_attendance')
-          .select('staff_id, clock_in_time, clock_out_time, date, staff!inner(full_name, role, school_id)')
-          .eq('staff.school_id', schoolId)
-          .gte('date', DateFormat('yyyy-MM-dd').format(startDate))
-          .lte('date', DateFormat('yyyy-MM-dd').format(endDate))
-          .order('date', ascending: false);
+          .select('staff_id, check_in_timestamp, check_out_timestamp, status, users!staff_id(full_name, role)')
+          .eq('school_id', schoolId)
+          .gte('check_in_timestamp', startDate.toIso8601String())
+          .lte('check_in_timestamp', endDate.toIso8601String())
+          .order('check_in_timestamp', ascending: false);
 
       final List<dynamic> data = response;
       
@@ -163,21 +202,19 @@ class AttendanceService {
         if (!staffMap.containsKey(staffId)) {
           staffMap[staffId] = {
             'staff_id': staffId,
-            'full_name': record['staff']?['full_name'] ?? 'Unknown',
-            'role': record['staff']?['role'] ?? 'Staff',
+            'full_name': record['users']?['full_name'] ?? 'Unknown',
+            'role': record['users']?['role'] ?? 'Staff',
             'present_days': 0,
             'absent_days': 0,
             'late_days': 0,
           };
         }
         
-        if (record['clock_in_time'] != null) {
+        if (record['check_in_timestamp'] != null) {
           staffMap[staffId]!['present_days'] = (staffMap[staffId]!['present_days'] as int) + 1;
           
-          // Check if late (after 9 AM)
-          final clockIn = DateTime.parse(record['clock_in_time']);
-          final lateTime = DateTime(clockIn.year, clockIn.month, clockIn.day, 9, 0);
-          if (clockIn.isAfter(lateTime)) {
+          // Check if late based on status
+          if (record['status'] == 'Late') {
             staffMap[staffId]!['late_days'] = (staffMap[staffId]!['late_days'] as int) + 1;
           }
         }
@@ -185,7 +222,7 @@ class AttendanceService {
       
       return staffMap.values.toList();
     } catch (e) {
-      // If the query fails, return empty list
+      logger.w('Supabase failed for staff attendance: $e');
       return [];
     }
   }

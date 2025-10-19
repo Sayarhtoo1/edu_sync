@@ -5,11 +5,10 @@ import 'package:edu_sync/utils/logger.dart';
 import '../models/custom_form.dart';
 import '../models/form_field_item.dart';
 import 'package:intl/intl.dart'; // Import DateFormat
-import 'cache_service.dart';
 
 class CustomFormService {
   final SupabaseClient _supabaseClient = Supabase.instance.client;
-  final CacheService _cacheService = CacheService();
+  // final CacheService _cacheService = CacheService(); // TODO: Phase 2
 
   // Create a new custom form and its fields in a transaction
   Future<CustomForm?> createCustomForm(CustomForm form, List<FormFieldItem> fields) async {
@@ -79,7 +78,7 @@ class CustomFormService {
   Future<List<CustomForm>> getCustomFormsForSchool(int schoolId) async {
     final connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
-      return await _cacheService.getCustomFormsForSchool(schoolId);
+      return []; // await _cacheService.getCustomFormsForSchool(schoolId);
     } else {
       try {
         final response = await _supabaseClient
@@ -88,11 +87,11 @@ class CustomFormService {
             .eq('school_id', schoolId)
             .order('title', ascending: true);
         final forms = response.map((data) => CustomForm.fromMap(data)).toList();
-        await _cacheService.saveCustomFormsForSchool(schoolId, forms);
+        // await _cacheService.saveCustomFormsForSchool(schoolId, forms);
         return forms;
       } catch (e) {
         logger.e('Error fetching custom forms for school $schoolId: $e');
-        return await _cacheService.getCustomFormsForSchool(schoolId);
+        return []; // await _cacheService.getCustomFormsForSchool(schoolId);
       }
     }
   }
@@ -121,7 +120,7 @@ class CustomFormService {
   Future<List<FormFieldItem>> getFormFields(String formId) async {
     final connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
-      return await _cacheService.getFormFields(formId);
+      return []; // await _cacheService.getFormFields(formId);
     } else {
       try {
         final response = await _supabaseClient
@@ -130,11 +129,11 @@ class CustomFormService {
             .eq('form_id', formId)
             .order('id'); // Or some other order if needed (e.g., a sequence/order column)
         final fields = response.map((data) => FormFieldItem.fromMap(data)).toList();
-        await _cacheService.saveFormFields(formId, fields);
+        // await _cacheService.saveFormFields(formId, fields);
         return fields;
       } catch (e) {
         logger.e('Error fetching form fields for form $formId: $e');
-        return await _cacheService.getFormFields(formId);
+        return []; // await _cacheService.getFormFields(formId);
       }
     }
   }

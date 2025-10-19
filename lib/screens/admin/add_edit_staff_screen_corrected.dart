@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:edu_sync/models/staff.dart';
 import 'package:edu_sync/services/auth_service.dart';
 import 'package:provider/provider.dart';
-import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Import AppLocalizations
+// Import AppLocalizations
 import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
 import 'package:edu_sync/utils/logger.dart';
 import 'package:image_picker/image_picker.dart';

@@ -1,425 +1,560 @@
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:edu_sync/utils/logger.dart';
-import '../models/announcement.dart';
-import '../models/school_class.dart';
-import '../models/student.dart';
-import '../models/attendance.dart';
-import '../models/custom_form.dart';
-import '../models/form_field_item.dart';
-import '../models/income.dart';
-import '../models/expense.dart';
-import '../models/form_response.dart';
-import '../models/form_response_answer.dart';
-import '../models/lesson_plan.dart';
-import '../models/school.dart';
-import '../models/timetable.dart';
-import '../models/grade.dart';
-import '../models/subject.dart';
+import 'package:drift/drift.dart';
+import '../database/app_database.dart';
+import '../models/student.dart' as model;
+import '../models/user.dart' as model;
+import '../models/attendance.dart' as model;
+import '../models/school_class.dart' as model;
+import '../models/school.dart' as model;
+import '../models/timetable.dart' as model;
+import '../models/announcement.dart' as model;
+import '../models/donation.dart' as model;
+import '../utils/logger.dart';
 
 class CacheService {
-  static const String _announcementsKeyPrefix = 'cached_announcements_for_school_';
-  static const String _classesKeyPrefix = 'cached_classes_for_school_';
-  static const String _studentsKeyPrefix = 'cached_students_for_class_';
-  static const String _attendanceKeyPrefix = 'cached_attendance_for_class_';
-  static const String _customFormsKeyPrefix = 'cached_custom_forms_for_school_';
-  static const String _formFieldsKeyPrefix = 'cached_form_fields_for_form_';
-  static const String _incomeKeyPrefix = 'cached_income_for_school_';
-  static const String _expenseKeyPrefix = 'cached_expense_for_school_';
-  static const String _formResponsesKeyPrefix = 'cached_form_responses_for_form_';
-  static const String _formResponseAnswersKeyPrefix = 'cached_form_response_answers_for_response_';
-  static const String _lessonPlansKeyPrefix = 'cached_lesson_plans_for_class_';
-  static const String _schoolKeyPrefix = 'cached_school_';
-  static const String _timetableForClassKeyPrefix = 'cached_timetable_for_class_';
-  static const String _timetableForTeacherKeyPrefix = 'cached_timetable_for_teacher_';
-  static const String _studentIdsForParentKeyPrefix = 'cached_student_ids_for_parent_';
-  static const String _studentsForParentKeyPrefix = 'cached_students_for_parent_';
-  static const String _parentIdsForStudentKeyPrefix = 'cached_parent_ids_for_student_';
-  static const String _studentByIdKeyPrefix = 'cached_student_by_id_';
-  static const String _gradesKeyPrefix = 'cached_grades_for_school_';
-  static const String _subjectsKeyPrefix = 'cached_subjects_for_school_';
-
-  static String get schoolKeyPrefix => _schoolKeyPrefix;
-  static String get studentsKeyPrefix => _studentsKeyPrefix;
-  static String get studentByIdKeyPrefix => _studentByIdKeyPrefix;
-  static String get gradesKeyPrefix => _gradesKeyPrefix;
-  static String get subjectsKeyPrefix => _subjectsKeyPrefix;
-  static String get studentsForParentKeyPrefix => _studentsForParentKeyPrefix;
-
-  Future<SharedPreferences> get _prefs async => await SharedPreferences.getInstance();
-
-  // --- Announcements ---
-
-  Future<void> saveAnnouncements(int schoolId, List<Announcement> announcements) async {
-    final prefs = await _prefs;
-    final announcementsJson = announcements.map((a) => a.toMap()).toList();
-    await prefs.setString('$_announcementsKeyPrefix$schoolId', json.encode(announcementsJson));
-    logger.d('Announcements saved for offline use.');
-  }
-
-  Future<List<Announcement>> getAnnouncements(int schoolId) async {
-    final prefs = await _prefs;
-    final announcementsString = prefs.getString('$_announcementsKeyPrefix$schoolId');
-    if (announcementsString != null) {
-      final List<dynamic> announcementsJson = json.decode(announcementsString);
-      return announcementsJson.map((json) => Announcement.fromMap(json)).toList();
+  final AppDatabase _db;
+  
+  CacheService(this._db);
+  
+  // Students
+  Future<void> cacheStudents(List<model.Student> students) async {
+    try {
+      await _db.batch((batch) {
+        batch.insertAllOnConflictUpdate(
+          _db.students,
+          students.map((s) => StudentsCompanion.insert(
+            id: Value(s.id),
+            schoolId: s.schoolId,
+            classId: Value(s.classId),
+            fullName: s.fullName,
+            dateOfBirth: Value(s.dateOfBirth),
+            gender: Value(s.gender),
+            profilePhotoUrl: Value(s.profilePhotoUrl),
+            phoneNumber1: Value(s.phoneNumber1),
+            phoneNumber2: Value(s.phoneNumber2),
+          )),
+        );
+      });
+    } catch (e) {
+      logger.e('Error caching students: $e');
     }
-    return [];
   }
-
-  // --- School Classes ---
-
-  Future<void> saveClasses(int schoolId, List<SchoolClass> classes) async {
-    final prefs = await _prefs;
-    final classesJson = classes.map((c) => c.toMap()).toList();
-    await prefs.setString('$_classesKeyPrefix$schoolId', json.encode(classesJson));
-    logger.d('Classes saved for offline use.');
-  }
-
-  Future<List<SchoolClass>> getClasses(int schoolId) async {
-    final prefs = await _prefs;
-    final classesString = prefs.getString('$_classesKeyPrefix$schoolId');
-    if (classesString != null) {
-      final List<dynamic> classesJson = json.decode(classesString);
-      return classesJson.map((json) => SchoolClass.fromMap(json)).toList();
+  
+  Future<List<model.Student>> getCachedStudents(int schoolId) async {
+    try {
+      final rows = await (_db.select(_db.students)
+        ..where((s) => s.schoolId.equals(schoolId))).get();
+      
+      return rows.map((row) => model.Student(
+        id: row.id,
+        schoolId: row.schoolId,
+        classId: row.classId,
+        fullName: row.fullName,
+        dateOfBirth: row.dateOfBirth,
+        gender: row.gender,
+        profilePhotoUrl: row.profilePhotoUrl,
+        phoneNumber1: row.phoneNumber1,
+        phoneNumber2: row.phoneNumber2,
+      )).toList();
+    } catch (e) {
+      logger.e('Error getting cached students: $e');
+      return [];
     }
-    return [];
   }
-
-  // --- Students ---
-
-  Future<void> saveStudentsForClass(int classId, List<Student> students) async {
-    final prefs = await _prefs;
-    final studentsJson = students.map((s) => s.toMap()).toList();
-    await prefs.setString('$_studentsKeyPrefix$classId', json.encode(studentsJson));
-    logger.d('Students for class $classId saved for offline use.');
-  }
-
-  Future<List<Student>> getStudentsForClass(int classId) async {
-    final prefs = await _prefs;
-    final studentsString = prefs.getString('$_studentsKeyPrefix$classId');
-    if (studentsString != null) {
-      final List<dynamic> studentsJson = json.decode(studentsString);
-      return studentsJson.map((json) => Student.fromMap(json)).toList();
+  
+  Future<List<model.Student>> getCachedStudentsByClass(int classId) async {
+    try {
+      final rows = await (_db.select(_db.students)
+        ..where((s) => s.classId.equals(classId))).get();
+      
+      return rows.map((row) => model.Student(
+        id: row.id,
+        schoolId: row.schoolId,
+        classId: row.classId,
+        fullName: row.fullName,
+        dateOfBirth: row.dateOfBirth,
+        gender: row.gender,
+        profilePhotoUrl: row.profilePhotoUrl,
+        phoneNumber1: row.phoneNumber1,
+        phoneNumber2: row.phoneNumber2,
+      )).toList();
+    } catch (e) {
+      logger.e('Error getting cached students by class: $e');
+      return [];
     }
-    return [];
   }
-
-  // --- Attendance ---
-
-  Future<void> saveAttendanceForClass(int classId, DateTime date, List<Attendance> attendance) async {
-    final prefs = await _prefs;
-    final dateString = date.toIso8601String().substring(0, 10); // YYYY-MM-DD
-    final attendanceJson = attendance.map((a) => a.toMap()).toList();
-    await prefs.setString('$_attendanceKeyPrefix${classId}_$dateString', json.encode(attendanceJson));
-    logger.d('Attendance for class $classId on $dateString saved for offline use.');
-  }
-
-  Future<List<Attendance>> getAttendanceForClass(int classId, DateTime date) async {
-    final prefs = await _prefs;
-    final dateString = date.toIso8601String().substring(0, 10); // YYYY-MM-DD
-    final attendanceString = prefs.getString('$_attendanceKeyPrefix${classId}_$dateString');
-    if (attendanceString != null) {
-      final List<dynamic> attendanceJson = json.decode(attendanceString);
-      return attendanceJson.map((json) => Attendance.fromMap(json)).toList();
+  
+  // Users
+  Future<void> cacheUsers(List<model.User> users) async {
+    try {
+      await _db.batch((batch) {
+        batch.insertAllOnConflictUpdate(
+          _db.users,
+          users.map((u) => UsersCompanion.insert(
+            id: u.id,
+            fullName: Value(u.fullName),
+            role: u.role,
+            schoolId: Value(u.schoolId),
+            email: Value(u.email),
+            profilePhotoUrl: Value(u.profilePhotoUrl),
+            phoneNumber1: Value(u.phoneNumber1),
+            phoneNumber2: Value(u.phoneNumber2),
+            salary: Value(u.salary),
+          )),
+        );
+      });
+    } catch (e) {
+      logger.e('Error caching users: $e');
     }
-    return [];
   }
-
-  // --- Custom Forms ---
-
-  Future<void> saveCustomFormsForSchool(int schoolId, List<CustomForm> forms) async {
-    final prefs = await _prefs;
-    final formsJson = forms.map((f) => f.toMap()).toList();
-    await prefs.setString('$_customFormsKeyPrefix$schoolId', json.encode(formsJson));
-  }
-
-  Future<List<CustomForm>> getCustomFormsForSchool(int schoolId) async {
-    final prefs = await _prefs;
-    final formsString = prefs.getString('$_customFormsKeyPrefix$schoolId');
-    if (formsString != null) {
-      final List<dynamic> formsJson = json.decode(formsString);
-      return formsJson.map((json) => CustomForm.fromMap(json)).toList();
+  
+  Future<List<model.User>> getCachedUsers(int schoolId) async {
+    try {
+      final rows = await (_db.select(_db.users)
+        ..where((u) => u.schoolId.equals(schoolId))).get();
+      
+      return rows.map((row) => model.User(
+        id: row.id,
+        fullName: row.fullName,
+        role: row.role,
+        schoolId: row.schoolId,
+        email: row.email,
+        profilePhotoUrl: row.profilePhotoUrl,
+        phoneNumber1: row.phoneNumber1,
+        phoneNumber2: row.phoneNumber2,
+        salary: row.salary,
+      )).toList();
+    } catch (e) {
+      logger.e('Error getting cached users: $e');
+      return [];
     }
-    return [];
   }
-
-  // --- Form Fields ---
-
-  Future<void> saveFormFields(String formId, List<FormFieldItem> fields) async {
-    final prefs = await _prefs;
-    final fieldsJson = fields.map((f) => f.toMap()).toList();
-    await prefs.setString('$_formFieldsKeyPrefix$formId', json.encode(fieldsJson));
-  }
-
-  Future<List<FormFieldItem>> getFormFields(String formId) async {
-    final prefs = await _prefs;
-    final fieldsString = prefs.getString('$_formFieldsKeyPrefix$formId');
-    if (fieldsString != null) {
-      final List<dynamic> fieldsJson = json.decode(fieldsString);
-      return fieldsJson.map((json) => FormFieldItem.fromMap(json)).toList();
+  
+  Future<List<model.User>> getCachedUsersByRole(String role) async {
+    try {
+      final rows = await (_db.select(_db.users)
+        ..where((u) => u.role.equals(role))).get();
+      
+      return rows.map((row) => model.User(
+        id: row.id,
+        fullName: row.fullName,
+        role: row.role,
+        schoolId: row.schoolId,
+        email: row.email,
+        profilePhotoUrl: row.profilePhotoUrl,
+        phoneNumber1: row.phoneNumber1,
+        phoneNumber2: row.phoneNumber2,
+        salary: row.salary,
+      )).toList();
+    } catch (e) {
+      logger.e('Error getting cached users by role: $e');
+      return [];
     }
-    return [];
   }
-
-  // --- Income ---
-
-  Future<void> saveIncomeRecords(int schoolId, List<Income> incomes) async {
-    final prefs = await _prefs;
-    final incomesJson = incomes.map((i) => i.toMap()).toList();
-    await prefs.setString('$_incomeKeyPrefix$schoolId', json.encode(incomesJson));
-  }
-
-  Future<List<Income>> getIncomeRecords(int schoolId) async {
-    final prefs = await _prefs;
-    final incomesString = prefs.getString('$_incomeKeyPrefix$schoolId');
-    if (incomesString != null) {
-      final List<dynamic> incomesJson = json.decode(incomesString);
-      return incomesJson.map((json) => Income.fromMap(json)).toList();
+  
+  // Attendance
+  Future<void> cacheAttendance(List<model.Attendance> records) async{
+    try {
+      await _db.batch((batch) {
+        batch.insertAllOnConflictUpdate(
+          _db.attendance,
+          records.map((a) => AttendanceCompanion.insert(
+            id: a.id != null ? Value(a.id!) : const Value.absent(),
+            studentId: a.studentId,
+            classId: a.classId,
+            date: a.date,
+            status: a.status,
+            markedByTeacherId: Value(a.markedByTeacherId),
+          )),
+        );
+      });
+    } catch (e) {
+      logger.e('Error caching attendance: $e');
     }
-    return [];
   }
-
-  // --- Expenses ---
-
-  Future<void> saveExpenseRecords(int schoolId, List<Expense> expenses) async {
-    final prefs = await _prefs;
-    final expensesJson = expenses.map((e) => e.toMap()).toList();
-    await prefs.setString('$_expenseKeyPrefix$schoolId', json.encode(expensesJson));
-  }
-
-  Future<List<Expense>> getExpenseRecords(int schoolId) async {
-    final prefs = await _prefs;
-    final expensesString = prefs.getString('$_expenseKeyPrefix$schoolId');
-    if (expensesString != null) {
-      final List<dynamic> expensesJson = json.decode(expensesString);
-      return expensesJson.map((json) => Expense.fromMap(json)).toList();
+  
+  Future<List<model.Attendance>> getCachedAttendance(int classId, DateTime date) async {
+    try {
+      final startOfDay = DateTime(date.year, date.month, date.day);
+      final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
+      
+      final rows = await (_db.select(_db.attendance)
+        ..where((a) => 
+          a.classId.equals(classId) & 
+          a.date.isBiggerOrEqualValue(startOfDay) &
+          a.date.isSmallerOrEqualValue(endOfDay)
+        )).get();
+      
+      return rows.map((row) => model.Attendance(
+        id: row.id,
+        studentId: row.studentId,
+        classId: row.classId,
+        date: row.date,
+        status: row.status,
+        markedByTeacherId: row.markedByTeacherId,
+      )).toList();
+    } catch (e) {
+      logger.e('Error getting cached attendance: $e');
+      return [];
     }
-    return [];
   }
-
-  // --- Form Responses ---
-
-  Future<void> saveFormResponses(String formId, List<FormResponse> responses) async {
-    final prefs = await _prefs;
-    final responsesJson = responses.map((r) => r.toMap()).toList();
-    await prefs.setString('$_formResponsesKeyPrefix$formId', json.encode(responsesJson));
-  }
-
-  Future<List<FormResponse>> getFormResponses(String formId) async {
-    final prefs = await _prefs;
-    final responsesString = prefs.getString('$_formResponsesKeyPrefix$formId');
-    if (responsesString != null) {
-      final List<dynamic> responsesJson = json.decode(responsesString);
-      return responsesJson.map((json) => FormResponse.fromMap(json)).toList();
+  
+  Future<List<model.Attendance>> getCachedAttendanceForStudent(int studentId) async {
+    try {
+      final rows = await (_db.select(_db.attendance)
+        ..where((a) => a.studentId.equals(studentId))
+        ..orderBy([(a) => OrderingTerm.desc(a.date)])).get();
+      
+      return rows.map((row) => model.Attendance(
+        id: row.id,
+        studentId: row.studentId,
+        classId: row.classId,
+        date: row.date,
+        status: row.status,
+        markedByTeacherId: row.markedByTeacherId,
+      )).toList();
+    } catch (e) {
+      logger.e('Error getting cached attendance for student: $e');
+      return [];
     }
-    return [];
   }
-
-  // --- Form Response Answers ---
-
-  Future<void> saveFormResponseAnswers(String responseId, List<FormResponseAnswer> answers) async {
-    final prefs = await _prefs;
-    final answersJson = answers.map((a) => a.toMap()).toList();
-    await prefs.setString('$_formResponseAnswersKeyPrefix$responseId', json.encode(answersJson));
-  }
-
-  Future<List<FormResponseAnswer>> getFormResponseAnswers(String responseId) async {
-    final prefs = await _prefs;
-    final answersString = prefs.getString('$_formResponseAnswersKeyPrefix$responseId');
-    if (answersString != null) {
-      final List<dynamic> answersJson = json.decode(answersString);
-      return answersJson.map((json) => FormResponseAnswer.fromMap(json)).toList();
+  
+  // Clear cache
+  Future<void> clearStudentsCache() async {
+    try {
+      await _db.delete(_db.students).go();
+    } catch (e) {
+      logger.e('Error clearing students cache: $e');
     }
-    return [];
   }
-
-  // --- Lesson Plans ---
-
-  Future<void> saveLessonPlans(int classId, List<LessonPlan> lessonPlans) async {
-    final prefs = await _prefs;
-    final lessonPlansJson = lessonPlans.map((l) => l.toMap()).toList();
-    await prefs.setString('$_lessonPlansKeyPrefix$classId', json.encode(lessonPlansJson));
-  }
-
-  Future<List<LessonPlan>> getLessonPlans(int classId) async {
-    final prefs = await _prefs;
-    final lessonPlansString = prefs.getString('$_lessonPlansKeyPrefix$classId');
-    if (lessonPlansString != null) {
-      final List<dynamic> lessonPlansJson = json.decode(lessonPlansString);
-      return lessonPlansJson.map((json) => LessonPlan.fromMap(json)).toList();
+  
+  Future<void> clearUsersCache() async {
+    try {
+      await _db.delete(_db.users).go();
+    } catch (e) {
+      logger.e('Error clearing users cache: $e');
     }
-    return [];
   }
-
-  // --- School ---
-
-  Future<void> saveSchool(School school) async {
-    final prefs = await _prefs;
-    await prefs.setString('$_schoolKeyPrefix${school.id}', json.encode(school.toJson()));
-  }
-
-  Future<School?> getSchool(int schoolId) async {
-    final prefs = await _prefs;
-    final schoolString = prefs.getString('$_schoolKeyPrefix$schoolId');
-    if (schoolString != null) {
-      return School.fromJson(json.decode(schoolString));
+  
+  Future<void> clearAttendanceCache() async {
+    try {
+      await _db.delete(_db.attendance).go();
+    } catch (e) {
+      logger.e('Error clearing attendance cache: $e');
     }
-    return null;
   }
-
-  // --- Timetable ---
-
-  Future<void> saveTimetableForClass(int classId, List<Timetable> timetable) async {
-    final prefs = await _prefs;
-    final timetableJson = timetable.map((t) => t.toMap()).toList();
-    await prefs.setString('$_timetableForClassKeyPrefix$classId', json.encode(timetableJson));
+  
+  Future<void> clearAllCache() async {
+    await clearStudentsCache();
+    await clearUsersCache();
+    await clearAttendanceCache();
   }
-
-  Future<List<Timetable>> getTimetableForClass(int classId) async {
-    final prefs = await _prefs;
-    final timetableString = prefs.getString('$_timetableForClassKeyPrefix$classId');
-    if (timetableString != null) {
-      final List<dynamic> timetableJson = json.decode(timetableString);
-      return timetableJson.map((json) => Timetable.fromMap(json)).toList();
+  
+  // Finance Entries
+  Future<void> cacheFinanceEntries(List<Map<String, dynamic>> entries) async {
+    try {
+      await _db.batch((batch) {
+        batch.insertAllOnConflictUpdate(
+          _db.financeEntries,
+          entries.map((e) => FinanceEntriesCompanion.insert(
+            id: Value(e['id'] as int),
+            schoolId: e['school_id'] as int,
+            entryType: e['entry_type'] as String,
+            amount: (e['amount'] as num).toDouble(),
+            description: e['description'] as String,
+            category: Value(e['category'] as String?),
+            date: DateTime.parse(e['date'] as String),
+            createdAt: Value(e['created_at'] != null ? DateTime.parse(e['created_at'] as String) : null),
+          )),
+        );
+      });
+    } catch (e) {
+      logger.e('Error caching finance entries: $e');
     }
-    return [];
   }
-
-  Future<void> saveTimetableForTeacher(String teacherId, List<Timetable> timetable) async {
-    final prefs = await _prefs;
-    final timetableJson = timetable.map((t) => t.toMap()).toList();
-    await prefs.setString('$_timetableForTeacherKeyPrefix$teacherId', json.encode(timetableJson));
-  }
-
-  Future<List<Timetable>> getTimetableForTeacher(String teacherId) async {
-    final prefs = await _prefs;
-    final timetableString = prefs.getString('$_timetableForTeacherKeyPrefix$teacherId');
-    if (timetableString != null) {
-      final List<dynamic> timetableJson = json.decode(timetableString);
-      return timetableJson.map((json) => Timetable.fromMap(json)).toList();
+  
+  Future<List<Map<String, dynamic>>> getCachedFinanceEntries(int schoolId, String entryType) async {
+    try {
+      final rows = await (_db.select(_db.financeEntries)
+        ..where((f) => f.schoolId.equals(schoolId) & f.entryType.equals(entryType))
+        ..orderBy([(f) => OrderingTerm.desc(f.createdAt)])).get();
+      
+      return rows.map((row) => {
+        'id': row.id,
+        'school_id': row.schoolId,
+        'entry_type': row.entryType,
+        'amount': row.amount,
+        'description': row.description,
+        'category': row.category,
+        'date': row.date.toIso8601String(),
+        'created_at': row.createdAt?.toIso8601String(),
+      }).toList();
+    } catch (e) {
+      logger.e('Error getting cached finance entries: $e');
+      return [];
     }
-    return [];
   }
+  
 
-  // --- All Timetables ---
-
-  static const String _allTimetablesKeyPrefix = 'cached_all_timetables_for_school_';
-
-  Future<void> saveAllTimetables(int schoolId, List<Timetable> timetables) async {
-    final prefs = await _prefs;
-    final timetablesJson = timetables.map((t) => t.toMap()).toList();
-    await prefs.setString('$_allTimetablesKeyPrefix$schoolId', json.encode(timetablesJson));
-  }
-
-  Future<List<Timetable>> getAllTimetables(int schoolId) async {
-    final prefs = await _prefs;
-    final timetablesString = prefs.getString('$_allTimetablesKeyPrefix$schoolId');
-    if (timetablesString != null) {
-      final List<dynamic> timetablesJson = json.decode(timetablesString);
-      return timetablesJson.map((json) => Timetable.fromMap(json)).toList();
+  
+  // Classes
+  Future<void> cacheClasses(List<model.SchoolClass> classes) async {
+    try {
+      await _db.batch((batch) {
+        batch.insertAllOnConflictUpdate(
+          _db.classes,
+          classes.map((c) => ClassesCompanion.insert(
+            id: Value(c.id ?? 0),
+            schoolId: c.schoolId,
+            name: c.name,
+            teacherId: Value(c.teacherId),
+            section: Value(c.section),
+          )),
+        );
+      });
+    } catch (e) {
+      logger.e('Error caching classes: $e');
     }
-    return [];
   }
-
-  // --- Student IDs for Parent ---
-
-  Future<void> saveStudentIdsForParent(String parentId, List<int> studentIds) async {
-    final prefs = await _prefs;
-    await prefs.setStringList('$_studentIdsForParentKeyPrefix$parentId', studentIds.map((id) => id.toString()).toList());
-  }
-
-  Future<List<int>> getStudentIdsForParent(String parentId) async {
-    final prefs = await _prefs;
-    final studentIdsString = prefs.getStringList('$_studentIdsForParentKeyPrefix$parentId');
-    if (studentIdsString != null) {
-      return studentIdsString.map((id) => int.parse(id)).toList();
+  
+  Future<List<model.SchoolClass>> getCachedClasses(int schoolId) async {
+    try {
+      final rows = await (_db.select(_db.classes)
+        ..where((c) => c.schoolId.equals(schoolId))).get();
+      
+      return rows.map((row) => model.SchoolClass(
+        id: row.id,
+        schoolId: row.schoolId,
+        name: row.name,
+        teacherId: row.teacherId,
+        section: row.section,
+      )).toList();
+    } catch (e) {
+      logger.e('Error getting cached classes: $e');
+      return [];
     }
-    return [];
   }
-
-  // --- Students for Parent ---
-
-  Future<void> saveStudentsForParent(String parentId, List<Student> students) async {
-    final prefs = await _prefs;
-    final studentsJson = students.map((s) => s.toMap()).toList();
-    await prefs.setString('$_studentsForParentKeyPrefix$parentId', json.encode(studentsJson));
-  }
-
-  Future<List<Student>> getStudentsForParent(String parentId) async {
-    final prefs = await _prefs;
-    final studentsString = prefs.getString('$_studentsForParentKeyPrefix$parentId');
-    if (studentsString != null) {
-      final List<dynamic> studentsJson = json.decode(studentsString);
-      return studentsJson.map((json) => Student.fromMap(json)).toList();
+  
+  Future<model.SchoolClass?> getCachedClassById(int id) async {
+    try {
+      final row = await (_db.select(_db.classes)
+        ..where((c) => c.id.equals(id))).getSingleOrNull();
+      
+      if (row == null) return null;
+      
+      return model.SchoolClass(
+        id: row.id,
+        schoolId: row.schoolId,
+        name: row.name,
+        teacherId: row.teacherId,
+        section: row.section,
+      );
+    } catch (e) {
+      logger.e('Error getting cached class by id: $e');
+      return null;
     }
-    return [];
   }
-
-  // --- Parent IDs for Student ---
-
-  Future<void> saveParentIdsForStudent(int studentId, List<String> parentIds) async {
-    final prefs = await _prefs;
-    await prefs.setStringList('$_parentIdsForStudentKeyPrefix$studentId', parentIds);
-  }
-
-  Future<List<String>> getParentIdsForStudent(int studentId) async {
-    final prefs = await _prefs;
-    final parentIds = prefs.getStringList('$_parentIdsForStudentKeyPrefix$studentId');
-    return parentIds ?? [];
-  }
-
-  // --- Student by ID ---
-
-  Future<void> saveStudentById(Student student) async {
-    final prefs = await _prefs;
-    await prefs.setString('$_studentByIdKeyPrefix${student.id}', json.encode(student.toMap()));
-  }
-
-  Future<Student?> getStudentById(int studentId) async {
-    final prefs = await _prefs;
-    final studentString = prefs.getString('$_studentByIdKeyPrefix$studentId');
-    if (studentString != null) {
-      return Student.fromMap(json.decode(studentString));
+  
+  // Schools
+  Future<void> cacheSchool(model.School school) async {
+    try {
+      await _db.into(_db.schools).insertOnConflictUpdate(
+        SchoolsCompanion.insert(
+          id: Value(school.id),
+          name: school.name,
+          logoUrl: Value(school.logoUrl),
+          academicYear: Value(school.academicYear),
+          theme: Value(school.theme),
+          contactInfo: Value(school.contact),
+          hijriDayAdjustment: Value(school.hijriDayAdjustment ?? 0),
+        ),
+      );
+    } catch (e) {
+      logger.e('Error caching school: $e');
     }
-    return null;
   }
-
-  // --- Grades ---
-
-  Future<void> saveGrades(int schoolId, List<Grade> grades) async {
-    final prefs = await _prefs;
-    final gradesJson = grades.map((g) => g.toMap()).toList();
-    await prefs.setString('$_gradesKeyPrefix$schoolId', json.encode(gradesJson));
-    logger.d('Grades for school $schoolId saved for offline use.');
-  }
-
-  Future<List<Grade>> getGrades(int schoolId) async {
-    final prefs = await _prefs;
-    final gradesString = prefs.getString('$_gradesKeyPrefix$schoolId');
-    if (gradesString != null) {
-      final List<dynamic> gradesJson = json.decode(gradesString);
-      return gradesJson.map((json) => Grade.fromMap(json)).toList();
+  
+  Future<model.School?> getCachedSchool(int schoolId) async {
+    try {
+      final row = await (_db.select(_db.schools)
+        ..where((s) => s.id.equals(schoolId))).getSingleOrNull();
+      
+      if (row == null) return null;
+      
+      return model.School(
+        id: row.id,
+        name: row.name,
+        logoUrl: row.logoUrl ?? '',
+        academicYear: row.academicYear ?? '',
+        theme: row.theme ?? '',
+        contact: row.contactInfo ?? '',
+        hijriDayAdjustment: row.hijriDayAdjustment ?? 0,
+      );
+    } catch (e) {
+      logger.e('Error getting cached school: $e');
+      return null;
     }
-    return [];
   }
-
-  // --- Subjects ---
-
-  Future<void> saveSubjects(int schoolId, List<Subject> subjects) async {
-    final prefs = await _prefs;
-    final subjectsJson = subjects.map((s) => s.toMap()).toList();
-    await prefs.setString('$_subjectsKeyPrefix$schoolId', json.encode(subjectsJson));
-    logger.d('Subjects for school $schoolId saved for offline use.');
-  }
-
-  Future<List<Subject>> getSubjects(int schoolId) async {
-    final prefs = await _prefs;
-    final subjectsString = prefs.getString('$_subjectsKeyPrefix$schoolId');
-    if (subjectsString != null) {
-      final List<dynamic> subjectsJson = json.decode(subjectsString);
-      return subjectsJson.map((json) => Subject.fromMap(json)).toList();
+  
+  // Timetables
+  Future<void> cacheTimetables(List<model.Timetable> timetables) async {
+    try {
+      await _db.batch((batch) {
+        batch.insertAllOnConflictUpdate(
+          _db.timetables,
+          timetables.map((t) => TimetablesCompanion.insert(
+            id: Value(t.id),
+            classId: t.classId,
+            dayOfWeek: t.dayOfWeek,
+            startTime: t.startTimeString,
+            endTime: t.endTimeString,
+            subjectName: t.subjectName,
+            teacherId: Value(t.teacherId),
+          )),
+        );
+      });
+    } catch (e) {
+      logger.e('Error caching timetables: $e');
     }
-    return [];
+  }
+  
+  Future<List<model.Timetable>> getCachedTimetables(int classId) async {
+    try {
+      final rows = await (_db.select(_db.timetables)
+        ..where((t) => t.classId.equals(classId))).get();
+      
+      return rows.map((row) => model.Timetable.fromMap({
+        'id': row.id,
+        'class_id': row.classId,
+        'class_name': '',
+        'day_of_week': row.dayOfWeek,
+        'start_time': row.startTime,
+        'end_time': row.endTime,
+        'subject_name': row.subjectName,
+        'teacher_id': row.teacherId,
+      })).toList();
+    } catch (e) {
+      logger.e('Error getting cached timetables: $e');
+      return [];
+    }
+  }
+  
+  Future<List<model.Timetable>> getCachedTimetablesByTeacher(String teacherId) async {
+    try {
+      final rows = await (_db.select(_db.timetables)
+        ..where((t) => t.teacherId.equals(teacherId))).get();
+      
+      return rows.map((row) => model.Timetable.fromMap({
+        'id': row.id,
+        'class_id': row.classId,
+        'class_name': '',
+        'day_of_week': row.dayOfWeek,
+        'start_time': row.startTime,
+        'end_time': row.endTime,
+        'subject_name': row.subjectName,
+        'teacher_id': row.teacherId,
+      })).toList();
+    } catch (e) {
+      logger.e('Error getting cached timetables by teacher: $e');
+      return [];
+    }
+  }
+  
+  // Announcements
+  Future<void> cacheAnnouncements(List<model.Announcement> announcements) async {
+    try {
+      await _db.batch((batch) {
+        batch.insertAllOnConflictUpdate(
+          _db.announcements,
+          announcements.map((a) => AnnouncementsCompanion.insert(
+            id: Value(a.id),
+            schoolId: a.schoolId,
+            title: a.title,
+            content: a.content,
+            createdByUserId: Value(a.createdByUserId),
+            createdAt: Value(a.createdAt),
+            updatedAt: Value(a.updatedAt),
+            targetRole: Value(a.targetRole),
+            targetClassId: Value(a.targetClassId),
+          )),
+        );
+      });
+    } catch (e) {
+      logger.e('Error caching announcements: $e');
+    }
+  }
+  
+  Future<List<model.Announcement>> getCachedAnnouncements(int schoolId) async {
+    try {
+      final rows = await (_db.select(_db.announcements)
+        ..where((a) => a.schoolId.equals(schoolId))
+        ..orderBy([(a) => OrderingTerm.desc(a.createdAt)])).get();
+      
+      return rows.map((row) => model.Announcement(
+        id: row.id,
+        schoolId: row.schoolId,
+        title: row.title,
+        content: row.content,
+        createdByUserId: row.createdByUserId,
+        targetRole: row.targetRole,
+        targetClassId: row.targetClassId,
+        createdAt: row.createdAt ?? DateTime.now(),
+        updatedAt: row.updatedAt ?? DateTime.now(),
+      )).toList();
+    } catch (e) {
+      logger.e('Error getting cached announcements: $e');
+      return [];
+    }
+  }
+  
+  // Donations
+  Future<void> cacheDonations(List<model.Donation> donations) async {
+    try {
+      await _db.batch((batch) {
+        batch.insertAllOnConflictUpdate(
+          _db.donations,
+          donations.map((d) => DonationsCompanion.insert(
+            id: d.id,
+            schoolId: d.schoolId,
+            donatorName: d.donatorName,
+            donatorEmail: Value(d.donatorEmail),
+            donatorPhone: Value(d.donatorPhone),
+            amount: d.amount,
+            donationDate: d.donationDate,
+            paymentMethod: d.paymentMethod,
+            purpose: Value(d.purpose),
+            status: d.status,
+            createdAt: Value(d.createdAt),
+          )),
+        );
+      });
+    } catch (e) {
+      logger.e('Error caching donations: $e');
+    }
+  }
+  
+  Future<List<model.Donation>> getCachedDonations(int schoolId) async {
+    try {
+      final rows = await (_db.select(_db.donations)
+        ..where((d) => d.schoolId.equals(schoolId))
+        ..orderBy([(d) => OrderingTerm.desc(d.donationDate)])).get();
+      
+      return rows.map((row) => model.Donation(
+        id: row.id,
+        schoolId: row.schoolId,
+        donatorName: row.donatorName,
+        donatorEmail: row.donatorEmail,
+        donatorPhone: row.donatorPhone,
+        amount: row.amount,
+        donationDate: row.donationDate,
+        paymentMethod: row.paymentMethod,
+        purpose: row.purpose,
+        status: row.status,
+        createdAt: row.createdAt ?? DateTime.now(),
+        updatedAt: row.createdAt ?? DateTime.now(),
+      )).toList();
+    } catch (e) {
+      logger.e('Error getting cached donations: $e');
+      return [];
+    }
   }
 }

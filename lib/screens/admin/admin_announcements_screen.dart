@@ -148,6 +148,12 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
         iconTheme: const IconThemeData(color: Color(0xFF2C2C2C)),
       ),
 
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _navigateToAddEditScreen(),
+        backgroundColor: const Color(0xFF2196F3),
+        icon: const Icon(Icons.add),
+        label: Text(l10n.addButton ?? 'Add'),
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
@@ -160,6 +166,17 @@ class _AdminAnnouncementsScreenState extends State<AdminAnnouncementsScreen> {
                           Icon(Icons.campaign_outlined, size: 64, color: Colors.grey[400]),
                           const SizedBox(height: 16),
                           Text(l10n.noAnnouncementsFound ?? 'No announcements found', style: const TextStyle(fontSize: 18, color: Colors.grey)),
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            onPressed: () => _navigateToAddEditScreen(),
+                            icon: const Icon(Icons.add),
+                            label: Text(l10n.addAnnouncementTitle ?? 'Add Announcement'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF2196F3),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            ),
+                          ),
                         ],
                       ),
                     )

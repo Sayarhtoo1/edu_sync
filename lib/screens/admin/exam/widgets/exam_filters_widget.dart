@@ -4,8 +4,8 @@ import '../../../../theme/app_theme.dart';
 
 class ExamFiltersWidget extends StatelessWidget {
   final TextEditingController searchController;
-  final ExamStatus selectedStatus;
-  final Function(ExamStatus) onStatusChanged;
+  final ExamStatus? selectedStatus;
+  final Function(ExamStatus?) onStatusChanged;
   final VoidCallback onClearFilters;
 
   const ExamFiltersWidget({
@@ -73,26 +73,45 @@ class ExamFiltersWidget extends StatelessWidget {
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
-                    children: ExamStatus.values.map((status) {
-                      final isSelected = selectedStatus == status;
-                      return Padding(
+                    children: [
+                      Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: FilterChip(
-                          label: Text(_getStatusText(status)),
-                          selected: isSelected,
+                          label: const Text('All'),
+                          selected: selectedStatus == null,
                           onSelected: (selected) {
-                            if (selected) onStatusChanged(status);
+                            if (selected) onStatusChanged(null);
                           },
-                          backgroundColor: _getStatusColor(status).withOpacity(0.1),
-                          selectedColor: _getStatusColor(status).withOpacity(0.2),
-                          checkmarkColor: _getStatusColor(status),
+                          backgroundColor: Colors.grey.withOpacity(0.1),
+                          selectedColor: accentColor.withOpacity(0.2),
+                          checkmarkColor: accentColor,
                           labelStyle: TextStyle(
-                            color: isSelected ? _getStatusColor(status) : theme.textTheme.bodyMedium?.color,
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                            color: selectedStatus == null ? accentColor : theme.textTheme.bodyMedium?.color,
+                            fontWeight: selectedStatus == null ? FontWeight.w600 : FontWeight.normal,
                           ),
                         ),
-                      );
-                    }).toList(),
+                      ),
+                      ...ExamStatus.values.map((status) {
+                        final isSelected = selectedStatus == status;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: FilterChip(
+                            label: Text(_getStatusText(status)),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              if (selected) onStatusChanged(status);
+                            },
+                            backgroundColor: _getStatusColor(status).withOpacity(0.1),
+                            selectedColor: _getStatusColor(status).withOpacity(0.2),
+                            checkmarkColor: _getStatusColor(status),
+                            labelStyle: TextStyle(
+                              color: isSelected ? _getStatusColor(status) : theme.textTheme.bodyMedium?.color,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                            ),
+                          ),
+                        );
+                      }),
+                    ],
                   ),
                 ),
               ),

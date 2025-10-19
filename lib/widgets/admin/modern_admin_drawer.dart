@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:edu_sync/services/auth_service.dart';
 import 'package:edu_sync/providers/school_provider.dart';
-import 'package:edu_sync/screens/admin/admin_settings_screen.dart';
 
 class ModernAdminDrawer extends StatefulWidget {
   const ModernAdminDrawer({super.key});
@@ -123,7 +123,7 @@ class _ModernAdminDrawerState extends State<ModernAdminDrawer> {
       ),
       child: Column(
         children: [
-          Container(
+          SizedBox(
             width: 72,
             height: 72,
             child: (schoolLogo != null && schoolLogo.isNotEmpty)
@@ -132,9 +132,11 @@ class _ModernAdminDrawerState extends State<ModernAdminDrawer> {
                       Colors.white,
                       BlendMode.srcIn,
                     ),
-                    child: Image.network(
-                      schoolLogo,
+                    child: CachedNetworkImage(
+                      imageUrl: schoolLogo,
                       fit: BoxFit.contain,
+                      placeholder: (context, url) => const Icon(Icons.school_rounded, size: 48, color: Colors.white),
+                      errorWidget: (context, url, error) => const Icon(Icons.school_rounded, size: 48, color: Colors.white),
                     ),
                   )
                 : const Icon(Icons.school_rounded, size: 48, color: Colors.white),

@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:edu_sync/models/school_class.dart' as app_class;
 import 'package:edu_sync/services/class_service.dart';
 import 'package:edu_sync/services/auth_service.dart';
+import 'package:edu_sync/models/user.dart' as app_user;
 import 'add_edit_class_screen.dart';
+import 'class_profile_screen.dart';
 import 'package:provider/provider.dart';
-import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Import AppLocalizations
-// Import AppTheme
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
 
 class ClassManagementScreen extends StatefulWidget {
   const ClassManagementScreen({super.key});
@@ -18,6 +19,7 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
   late final ClassService _classService;
   late final AuthService _authService;
   List<app_class.SchoolClass> _classes = [];
+  Map<String, app_user.User> _teachers = {};
   bool _isLoading = true;
   int? _currentSchoolId;
 
@@ -44,6 +46,17 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
     if (_currentSchoolId == null) return;
     setState(() => _isLoading = true);
     _classes = await _classService.getClasses(_currentSchoolId!);
+    
+    // Load teacher names
+    for (var classItem in _classes) {
+      if (classItem.teacherId != null && !_teachers.containsKey(classItem.teacherId)) {
+        final teacher = await _authService.getUserById(classItem.teacherId!);
+        if (teacher != null) {
+          _teachers[classItem.teacherId!] = teacher;
+        }
+      }
+    }
+    
     if (mounted) {
       setState(() => _isLoading = false);
     }
@@ -144,39 +157,77 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
                       itemCount: _classes.length,
                       itemBuilder: (context, index) {
                         final classItem = _classes[index];
-                        String teacherDisplay = classItem.teacherId != null ? 'Teacher ID: ${classItem.teacherId}' : 'No Teacher Assigned';
+                        final teacher = classItem.teacherId != null ? _teachers[classItem.teacherId] : null;
+                        String teacherDisplay = teacher?.fullName ?? 'No Teacher Assigned';
 
                         return Container(
                           margin: const EdgeInsets.only(bottom: 12),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))],
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 8, offset: const Offset(0, 2))],
                           ),
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.all(16),
-                            leading: Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF9C27B0).withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(Icons.class_rounded, color: Color(0xFF9C27B0)),
+                          child: InkWell(
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => ClassProfileScreen(schoolClass: classItem)),
                             ),
-                            title: Text(classItem.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                            subtitle: Text(teacherDisplay, style: TextStyle(color: Colors.grey[600])),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: Icon(Icons.edit_outlined, color: Colors.grey[700]),
-                                  onPressed: () => _navigateToAddEditClassScreen(classDetails: classItem),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.delete_outline, color: Colors.red),
-                                  onPressed: () => classItem.id != null ? _deleteClass(classItem.id!) : null,
-                                ),
-                              ],
+                            borderRadius: BorderRadius.circular(16),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(14),
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [Color(0xFF9C27B0), Color(0xFFBA68C8)],
+                                      ),
+                                      borderRadius: BorderRadius.circular(12),
+                                      boxShadow: [BoxShadow(color: const Color(0xFF9C27B0).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 2))],
+                                    ),
+                                    child: const Icon(Icons.class_rounded, color: Colors.white, size: 28),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(classItem.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            Icon(Icons.person_outline, size: 16, color: Colors.grey[600]),
+                                            const SizedBox(width: 4),
+                                            Expanded(
+                                              child: Text(
+                                                teacherDisplay,
+                                                style: TextStyle(color: teacher != null ? Colors.green : Colors.orange, fontSize: 13, fontWeight: FontWeight.w500),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  PopupMenuButton<String>(
+                                    icon: Icon(Icons.more_vert, color: Colors.grey[600]),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    onSelected: (value) {
+                                      if (value == 'edit') {
+                                        _navigateToAddEditClassScreen(classDetails: classItem);
+                                      } else if (value == 'delete' && classItem.id != null) {
+                                        _deleteClass(classItem.id!);
+                                      }
+                                    },
+                                    itemBuilder: (context) => [
+                                      const PopupMenuItem(value: 'edit', child: Row(children: [Icon(Icons.edit, size: 20), SizedBox(width: 8), Text('Edit')])),
+                                      const PopupMenuItem(value: 'delete', child: Row(children: [Icon(Icons.delete, size: 20, color: Colors.red), SizedBox(width: 8), Text('Delete', style: TextStyle(color: Colors.red))])),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         );

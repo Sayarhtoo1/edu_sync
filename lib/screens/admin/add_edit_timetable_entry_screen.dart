@@ -29,9 +29,10 @@ class AddEditTimetableEntryScreen extends StatefulWidget {
 
 class _AddEditTimetableEntryScreenState extends State<AddEditTimetableEntryScreen> {
   final _formKey = GlobalKey<FormState>();
-  late final TimetableService _timetableService;
-  late final ClassService _classService;
-  late final AuthService _authService;
+  TimetableService? _timetableService;
+  ClassService? _classService;
+  AuthService? _authService;
+  bool _servicesInitialized = false;
 
   late TextEditingController _subjectNameController;
   
@@ -53,10 +54,6 @@ class _AddEditTimetableEntryScreenState extends State<AddEditTimetableEntryScree
   @override
   void initState() {
     super.initState();
-    debugPrint('AddEditTimetableEntryScreen: initState called'); // Added debug print
-    _timetableService = Provider.of<TimetableService>(context, listen: false);
-    _classService = Provider.of<ClassService>(context, listen: false);
-    _authService = Provider.of<AuthService>(context, listen: false);
     _subjectNameController = TextEditingController(text: widget.timetableEntry?.subjectName ?? '');
     if (_isEditing && widget.timetableEntry != null) {
       _selectedStartTime = widget.timetableEntry!.startTimeOfDay;
@@ -65,20 +62,31 @@ class _AddEditTimetableEntryScreenState extends State<AddEditTimetableEntryScree
       _selectedClassId = widget.timetableEntry!.classId;
       _selectedTeacherId = widget.timetableEntry!.teacherId;
     } else if (widget.classIdForNewEntry != null) {
-      _selectedClassId = widget.classIdForNewEntry; // classIdForNewEntry is int?
+      _selectedClassId = widget.classIdForNewEntry;
     }
-    _loadInitialData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_servicesInitialized) {
+      _timetableService = Provider.of<TimetableService>(context, listen: false);
+      _classService = Provider.of<ClassService>(context, listen: false);
+      _authService = Provider.of<AuthService>(context, listen: false);
+      _servicesInitialized = true;
+      _loadInitialData();
+    }
   }
 
   Future<void> _loadInitialData() async {
-    debugPrint('AddEditTimetableEntryScreen: _loadInitialData started'); // Added debug print
+    if (_classService == null || _authService == null) return;
     setState(() => _isLoading = true);
     try {
-      _availableClasses = await _classService.getClasses(widget.schoolId);
-      _availableTeachers = await _authService.getUsersByRole(UserRole.Teacher, widget.schoolId);
+      _availableClasses = await _classService!.getClasses(widget.schoolId);
+      _availableTeachers = await _authService!.getUsersByRole(UserRole.Teacher, widget.schoolId);
       
       if (_availableClasses.length == 1 && _selectedClassId == null && widget.classIdForNewEntry == null && !_isEditing) {
-        _selectedClassId = _availableClasses.first.id; // Class.id is int?
+        _selectedClassId = _availableClasses.first.id;
       }
     } catch (e) {
       logger.e("Error loading initial data for timetable entry: $e");
@@ -87,7 +95,6 @@ class _AddEditTimetableEntryScreenState extends State<AddEditTimetableEntryScree
       }
     }
     if(mounted) setState(() => _isLoading = false);
-    debugPrint('AddEditTimetableEntryScreen: _loadInitialData finished'); // Added debug print
   }
 
   Future<void> _selectTime(BuildContext context, bool isStartTime) async {
@@ -135,6 +142,7 @@ class _AddEditTimetableEntryScreenState extends State<AddEditTimetableEntryScree
   }
 
   Future<void> _saveTimetableEntry() async {
+    if (_timetableService == null) return;
     final l10n = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) return;
     if (_selectedStartTime == null || _selectedEndTime == null || _selectedDaysOfWeek.isEmpty || _selectedClassId == null) {
@@ -162,7 +170,7 @@ class _AddEditTimetableEntryScreenState extends State<AddEditTimetableEntryScree
           subjectName: _subjectNameController.text,
           teacherId: _selectedTeacherId,
         );
-        final success = await _timetableService.updateTimetableEntry(entry);
+        final success = await _timetableService!.updateTimetableEntry(entry);
         if (!success) throw Exception('Failed to update');
       } else {
         for (final day in _selectedDaysOfWeek) {
@@ -176,7 +184,7 @@ class _AddEditTimetableEntryScreenState extends State<AddEditTimetableEntryScree
             subjectName: _subjectNameController.text,
             teacherId: _selectedTeacherId,
           );
-          final newEntry = await _timetableService.createTimetableEntry(entry);
+          final newEntry = await _timetableService!.createTimetableEntry(entry);
           if (newEntry == null) throw Exception('Failed to create entry for $day');
         }
       }

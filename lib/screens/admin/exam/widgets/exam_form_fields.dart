@@ -163,7 +163,10 @@ class ExamFormFields {
     required List<Subject> selectedSubjects,
     required List<Subject> availableSubjects,
     required Function(List<Subject>) onSubjectsChanged,
+    VoidCallback? onManageSubjects,
   }) {
+    final parentSubjects = availableSubjects.where((s) => s.parentSubjectId == null).toList();
+    
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -179,7 +182,7 @@ class ExamFormFields {
           ),
           const SizedBox(height: 8),
           Text(
-            'Select and arrange the subjects for this exam',
+            'Select subjects for this exam. Parent subjects will include all sub-subjects.',
             style: TextStyle(
               fontSize: 16,
               color: Colors.grey[600],
@@ -188,40 +191,105 @@ class ExamFormFields {
           const SizedBox(height: 24),
 
           // Available Subjects
-          Text(
-            'Available Subjects',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.getAccentColorForContext('form'),
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Available Subjects',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.getAccentColorForContext('form'),
+                ),
+              ),
+              if (onManageSubjects != null)
+                OutlinedButton.icon(
+                  onPressed: onManageSubjects,
+                  icon: const Icon(Icons.settings, size: 18),
+                  label: const Text('Manage'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: availableSubjects.map((subject) {
-              final isSelected = selectedSubjects.contains(subject);
-              return FilterChip(
-                label: Text(subject.name),
-                selected: isSelected,
-                onSelected: (selected) {
-                  final updatedSubjects = List<Subject>.from(selectedSubjects);
-                  if (selected) {
-                    updatedSubjects.add(subject);
-                  } else {
-                    updatedSubjects.remove(subject);
-                  }
-                  onSubjectsChanged(updatedSubjects);
-                },
-                backgroundColor: isSelected
-                    ? AppTheme.getAccentColorForContext('form').withOpacity(0.1)
-                    : Colors.grey.withOpacity(0.1),
-                selectedColor: AppTheme.getAccentColorForContext('form').withOpacity(0.2),
-                checkmarkColor: AppTheme.getAccentColorForContext('form'),
-              );
-            }).toList(),
-          ),
+          ...parentSubjects.map((subject) {
+            final subSubjects = availableSubjects.where((s) => s.parentSubjectId == subject.id).toList();
+            final hasSubSubjects = subSubjects.isNotEmpty;
+            final isSelected = selectedSubjects.any((s) => s.id == subject.id);
+            
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+                  CheckboxListTile(
+                    value: isSelected,
+                    onChanged: (selected) {
+                      final updatedSubjects = List<Subject>.from(selectedSubjects);
+                      if (selected!) {
+                        updatedSubjects.add(subject);
+                        if (hasSubSubjects) {
+                          for (var sub in subSubjects) {
+                            if (!updatedSubjects.any((s) => s.id == sub.id)) {
+                              updatedSubjects.add(sub);
+                            }
+                          }
+                        }
+                      } else {
+                        updatedSubjects.removeWhere((s) => s.id == subject.id);
+                        if (hasSubSubjects) {
+                          updatedSubjects.removeWhere((s) => subSubjects.any((sub) => sub.id == s.id));
+                        }
+                      }
+                      onSubjectsChanged(updatedSubjects);
+                    },
+                    title: Row(
+                      children: [
+                        if (hasSubSubjects)
+                          Icon(Icons.folder, color: AppTheme.getAccentColorForContext('form'), size: 20),
+                        if (!hasSubSubjects)
+                          Icon(Icons.subject, color: Colors.grey, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          subject.name,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                    subtitle: hasSubSubjects ? Text('${subSubjects.length} sub-subjects') : null,
+                  ),
+                  if (hasSubSubjects && isSelected)
+                    Container(
+                      padding: const EdgeInsets.only(left: 40, right: 16, bottom: 12),
+                      child: Column(
+                        children: subSubjects.map((sub) {
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 4),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: AppTheme.getAccentColorForContext('form').withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.subdirectory_arrow_right, size: 16, color: Colors.grey),
+                                const SizedBox(width: 8),
+                                Text(sub.name, style: const TextStyle(fontSize: 14)),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                ],
+              ),
+            );
+          }),
 
           const SizedBox(height: 24),
 

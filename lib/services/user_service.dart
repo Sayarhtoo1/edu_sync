@@ -1,22 +1,33 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/user.dart' as app_user; // Alias to avoid conflict
+import '../models/user.dart' as app_user;
+import 'cache_service.dart';
+import '../utils/logger.dart';
 
 class UserService {
   final SupabaseClient _supabaseClient;
+  final CacheService _cache;
 
-  UserService(this._supabaseClient);
+  UserService(this._supabaseClient, this._cache);
 
   Future<List<app_user.User>> getTeachers() async {
     try {
       final List<Map<String, dynamic>> response = await _supabaseClient
-          .from('users') // Assuming 'users' is your table name
+          .from('users')
           .select()
-          .eq('role', 'teacher') // Assuming 'role' column and 'teacher' role
-          .order('full_name', ascending: true); // Order by full_name
+          .eq('role', 'teacher')
+          .order('full_name', ascending: true);
 
-      return response.map((json) => app_user.User.fromJson(json)).toList();
+      final teachers = response.map((json) => app_user.User.fromJson(json)).toList();
+      
+      // Cache teachers
+      await _cache.cacheUsers(teachers);
+      
+      return teachers;
     } catch (e) {
-      throw Exception('Error fetching teachers: $e');
+      logger.w('Error fetching teachers, using cache: $e');
+      // Return cached teachers filtered by role
+      final allCached = await _cache.getCachedUsersByRole('teacher');
+      return allCached;
     }
   }
 }

@@ -80,7 +80,7 @@ mixin AdminPanelStateMixin<T extends StatefulWidget> on State<T> {
     _formResponseService = Provider.of<FormResponseService>(context, listen: false);
     _financeService = Provider.of<FinanceService>(context, listen: false);
     _scheduleSummaryService = Provider.of<ScheduleSummaryService>(context, listen: false);
-    _timetableService = TimetableService();
+    _timetableService = Provider.of<TimetableService>(context, listen: false);
   }
 
   void startScheduleTimer() {

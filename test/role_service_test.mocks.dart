@@ -3,13 +3,14 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i3;
+import 'dart:async' as _i4;
 
-import 'package:edu_sync/models/user.dart' as _i5;
-import 'package:edu_sync/models/user_role.dart' as _i6;
+import 'package:edu_sync/models/user.dart' as _i6;
+import 'package:edu_sync/models/user_role.dart' as _i7;
 import 'package:edu_sync/services/auth_service.dart' as _i2;
+import 'package:edu_sync/services/cache_service.dart' as _i3;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:supabase_flutter/supabase_flutter.dart' as _i4;
+import 'package:supabase_flutter/supabase_flutter.dart' as _i5;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -35,13 +36,19 @@ class MockAuthService extends _i1.Mock implements _i2.AuthService {
   }
 
   @override
+  void setCacheService(_i3.CacheService? cache) => super.noSuchMethod(
+    Invocation.method(#setCacheService, [cache]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
   void listenToAuthChanges() => super.noSuchMethod(
     Invocation.method(#listenToAuthChanges, []),
     returnValueForMissingStub: null,
   );
 
   @override
-  _i3.Future<_i4.User?> signUp(
+  _i4.Future<_i5.User?> signUp(
     String? email,
     String? password,
     String? role, {
@@ -59,65 +66,65 @@ class MockAuthService extends _i1.Mock implements _i2.AuthService {
                 #profilePhotoUrl: profilePhotoUrl,
               },
             ),
-            returnValue: _i3.Future<_i4.User?>.value(),
+            returnValue: _i4.Future<_i5.User?>.value(),
           )
-          as _i3.Future<_i4.User?>);
+          as _i4.Future<_i5.User?>);
 
   @override
-  _i3.Future<_i4.User?> signIn(String? email, String? password) =>
+  _i4.Future<_i5.User?> signIn(String? email, String? password) =>
       (super.noSuchMethod(
             Invocation.method(#signIn, [email, password]),
-            returnValue: _i3.Future<_i4.User?>.value(),
+            returnValue: _i4.Future<_i5.User?>.value(),
           )
-          as _i3.Future<_i4.User?>);
+          as _i4.Future<_i5.User?>);
 
   @override
-  _i3.Future<void> signOut() =>
+  _i4.Future<void> signOut() =>
       (super.noSuchMethod(
             Invocation.method(#signOut, []),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
           )
-          as _i3.Future<void>);
+          as _i4.Future<void>);
 
   @override
-  _i3.Future<void> resetPassword(String? email) =>
+  _i4.Future<void> resetPassword(String? email) =>
       (super.noSuchMethod(
             Invocation.method(#resetPassword, [email]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
           )
-          as _i3.Future<void>);
+          as _i4.Future<void>);
 
   @override
-  _i3.Future<String?> getUserRole() =>
+  _i4.Future<String?> getUserRole() =>
       (super.noSuchMethod(
             Invocation.method(#getUserRole, []),
-            returnValue: _i3.Future<String?>.value(),
+            returnValue: _i4.Future<String?>.value(),
           )
-          as _i3.Future<String?>);
+          as _i4.Future<String?>);
 
   @override
-  _i3.Future<_i5.User?> getUserById(String? userId) =>
+  _i4.Future<_i6.User?> getUserById(String? userId) =>
       (super.noSuchMethod(
             Invocation.method(#getUserById, [userId]),
-            returnValue: _i3.Future<_i5.User?>.value(),
+            returnValue: _i4.Future<_i6.User?>.value(),
           )
-          as _i3.Future<_i5.User?>);
+          as _i4.Future<_i6.User?>);
 
   @override
-  _i3.Future<int?> getCurrentUserSchoolId() =>
+  _i4.Future<int?> getCurrentUserSchoolId() =>
       (super.noSuchMethod(
             Invocation.method(#getCurrentUserSchoolId, []),
-            returnValue: _i3.Future<int?>.value(),
+            returnValue: _i4.Future<int?>.value(),
           )
-          as _i3.Future<int?>);
+          as _i4.Future<int?>);
 
   @override
-  _i3.Future<List<_i5.User>> getUsersByRole(
-    _i6.UserRole role,
-    int schoolId, {
-    bool forceRefresh = false,
+  _i4.Future<List<_i6.User>> getUsersByRole(
+    _i7.UserRole? role,
+    int? schoolId, {
+    bool? forceRefresh = false,
   }) =>
       (super.noSuchMethod(
             Invocation.method(
@@ -125,12 +132,41 @@ class MockAuthService extends _i1.Mock implements _i2.AuthService {
               [role, schoolId],
               {#forceRefresh: forceRefresh},
             ),
-            returnValue: _i3.Future<List<_i5.User>>.value(<_i5.User>[]),
+            returnValue: _i4.Future<List<_i6.User>>.value(<_i6.User>[]),
           )
-          as _i3.Future<List<_i5.User>>);
+          as _i4.Future<List<_i6.User>>);
 
   @override
-  _i3.Future<_i5.User?> createUserViaEdgeFunction({
+  _i4.Future<List<_i6.User>> getStaffBySchool(int? schoolId) =>
+      (super.noSuchMethod(
+            Invocation.method(#getStaffBySchool, [schoolId]),
+            returnValue: _i4.Future<List<_i6.User>>.value(<_i6.User>[]),
+          )
+          as _i4.Future<List<_i6.User>>);
+
+  @override
+  _i4.Future<void> registerSchoolAndAdmin({
+    required String? email,
+    required String? password,
+    required String? fullName,
+    required String? schoolName,
+    String? schoolLogoUrl,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#registerSchoolAndAdmin, [], {
+              #email: email,
+              #password: password,
+              #fullName: fullName,
+              #schoolName: schoolName,
+              #schoolLogoUrl: schoolLogoUrl,
+            }),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  _i4.Future<_i6.User?> createUserViaEdgeFunction({
     required String? email,
     required String? password,
     required String? role,
@@ -149,28 +185,54 @@ class MockAuthService extends _i1.Mock implements _i2.AuthService {
               #fullName: fullName,
               #profilePhotoUrl: profilePhotoUrl,
             }),
-            returnValue: _i3.Future<_i5.User?>.value(),
+            returnValue: _i4.Future<_i6.User?>.value(),
           )
-          as _i3.Future<_i5.User?>);
+          as _i4.Future<_i6.User?>);
 
   @override
-  _i3.Future<bool> updateUser(_i5.User? user) =>
+  _i4.Future<_i6.User?> createStaffByAdmin({
+    required String? email,
+    required String? password,
+    required String? role,
+    required int? schoolId,
+    String? fullName,
+    String? profilePhotoUrl,
+    String? phoneNumber,
+    double? salary,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#createStaffByAdmin, [], {
+              #email: email,
+              #password: password,
+              #role: role,
+              #schoolId: schoolId,
+              #fullName: fullName,
+              #profilePhotoUrl: profilePhotoUrl,
+              #phoneNumber: phoneNumber,
+              #salary: salary,
+            }),
+            returnValue: _i4.Future<_i6.User?>.value(),
+          )
+          as _i4.Future<_i6.User?>);
+
+  @override
+  _i4.Future<bool> updateUser(_i6.User? user) =>
       (super.noSuchMethod(
             Invocation.method(#updateUser, [user]),
-            returnValue: _i3.Future<bool>.value(false),
+            returnValue: _i4.Future<bool>.value(false),
           )
-          as _i3.Future<bool>);
+          as _i4.Future<bool>);
 
   @override
-  _i3.Future<bool> deleteUser(String? userId) =>
+  _i4.Future<bool> deleteUser(String? userId) =>
       (super.noSuchMethod(
             Invocation.method(#deleteUser, [userId]),
-            returnValue: _i3.Future<bool>.value(false),
+            returnValue: _i4.Future<bool>.value(false),
           )
-          as _i3.Future<bool>);
+          as _i4.Future<bool>);
 
   @override
-  _i3.Future<String?> uploadProfilePhoto(
+  _i4.Future<String?> uploadProfilePhoto(
     String? userId,
     String? filePath,
     String? fileName,
@@ -181,7 +243,7 @@ class MockAuthService extends _i1.Mock implements _i2.AuthService {
               filePath,
               fileName,
             ]),
-            returnValue: _i3.Future<String?>.value(),
+            returnValue: _i4.Future<String?>.value(),
           )
-          as _i3.Future<String?>);
+          as _i4.Future<String?>);
 }

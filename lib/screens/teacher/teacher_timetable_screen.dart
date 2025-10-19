@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart'; // Import for date formatting
+import 'package:intl/intl.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/timezone.dart' as tz;
 
-import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Corrected import
-import '../../models/timetable.dart' as timetable_model; // Aliasing to avoid conflict if any
-import '../../models/school_class.dart' as app_class; // Import SchoolClass
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
+import '../../models/timetable.dart' as timetable_model;
+import '../../models/school_class.dart' as app_class;
 import '../../services/timetable_service.dart';
-import '../../services/class_service.dart'; // Import ClassService
+import '../../services/class_service.dart';
 import '../../providers/school_provider.dart';
 import '../../services/auth_service.dart';
-import '../../theme/app_theme.dart'; // Import AppTheme
+import '../../theme/app_theme.dart';
 
 class TeacherTimetableScreen extends StatefulWidget {
   const TeacherTimetableScreen({super.key});
@@ -18,31 +20,61 @@ class TeacherTimetableScreen extends StatefulWidget {
   State<TeacherTimetableScreen> createState() => _TeacherTimetableScreenState();
 }
 
-class _TeacherTimetableScreenState extends State<TeacherTimetableScreen> {
+class _TeacherTimetableScreenState extends State<TeacherTimetableScreen> with SingleTickerProviderStateMixin {
   late final TimetableService _timetableService;
-  late final ClassService _classService; // Initialize ClassService
+  late final ClassService _classService;
   late final AuthService _authService;
   late final String _currentUserId;
-  int? _currentSchoolId; // School ID is int as per School model
+  int? _currentSchoolId;
+  final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
 
   bool _isLoading = true;
   String? _errorMessage;
   List<timetable_model.Timetable> _timetableEntries = [];
-  Map<int, app_class.SchoolClass> _classMap = {}; // Map to store classes for quick lookup
-  DateTime _selectedDate = DateTime.now(); // Default to present day
+  Map<int, app_class.SchoolClass> _classMap = {};
+  DateTime _selectedDate = DateTime.now();
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
+    _animationController = AnimationController(duration: const Duration(milliseconds: 600), vsync: this);
+    _fadeAnimation = CurvedAnimation(parent: _animationController, curve: Curves.easeIn);
+    
     _timetableService = Provider.of<TimetableService>(context, listen: false);
-    _classService = Provider.of<ClassService>(context, listen: false); // Initialize ClassService
+    _classService = Provider.of<ClassService>(context, listen: false);
     _authService = Provider.of<AuthService>(context, listen: false);
     _currentUserId = _authService.getCurrentUser()?.id ?? '';
-
-    // It's better to fetch schoolId once SchoolProvider is initialized
+    
+    _initializeNotifications();
+    
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadSchoolIdAndFetchTimetable();
+      _animationController.forward();
     });
+  }
+  
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+  
+  Future<void> _initializeNotifications() async {
+    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const iosSettings = DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+    );
+    const settings = InitializationSettings(android: androidSettings, iOS: iosSettings);
+    await _notificationsPlugin.initialize(settings);
+    
+    // Request exact alarm permission for Android 12+
+    await _notificationsPlugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.requestExactAlarmsPermission();
   }
 
   Future<void> _loadSchoolIdAndFetchTimetable() async {
@@ -99,6 +131,14 @@ class _TeacherTimetableScreenState extends State<TeacherTimetableScreen> {
 
       // Sort entries by start time
       entriesForSelectedDay.sort((a, b) => a.startTimeString.compareTo(b.startTimeString));
+      
+      // Schedule notifications only for today's future classes
+      final today = DateTime.now();
+      if (_selectedDate.year == today.year && 
+          _selectedDate.month == today.month && 
+          _selectedDate.day == today.day) {
+        _scheduleNotifications(entriesForSelectedDay);
+      }
 
       setState(() {
         _timetableEntries = entriesForSelectedDay;
@@ -117,6 +157,49 @@ class _TeacherTimetableScreenState extends State<TeacherTimetableScreen> {
       _selectedDate = newDate;
     });
     _fetchTimetable();
+  }
+  
+  Future<void> _scheduleNotifications(List<timetable_model.Timetable> entries) async {
+    await _notificationsPlugin.cancelAll();
+    
+    for (var i = 0; i < entries.length; i++) {
+      final entry = entries[i];
+      final startTime = _parseTime(entry.startTimeString);
+      final now = DateTime.now();
+      final scheduledTime = DateTime(now.year, now.month, now.day, startTime.hour, startTime.minute).subtract(const Duration(minutes: 10));
+      
+      if (scheduledTime.isAfter(now)) {
+        final className = _classMap[entry.classId]?.name ?? 'Class';
+        await _notificationsPlugin.zonedSchedule(
+          i,
+          'Upcoming Class: ${entry.subjectName}',
+          '$className starts in 10 minutes at ${entry.startTimeString}',
+          tz.TZDateTime.from(scheduledTime, tz.local),
+          NotificationDetails(
+            android: AndroidNotificationDetails(
+              'timetable_channel',
+              'Timetable Notifications',
+              channelDescription: 'Notifications for upcoming classes',
+              importance: Importance.max,
+              priority: Priority.high,
+              showWhen: true,
+              enableVibration: true,
+              playSound: true,
+              fullScreenIntent: true,
+              visibility: NotificationVisibility.public,
+              channelShowBadge: true,
+              autoCancel: false,
+            ),
+            iOS: const DarwinNotificationDetails(
+              presentAlert: true,
+              presentBadge: true,
+              presentSound: true,
+            ),
+          ),
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        );
+      }
+    }
   }
 
 
@@ -253,96 +336,227 @@ class _TeacherTimetableScreenState extends State<TeacherTimetableScreen> {
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      itemCount: _timetableEntries.length,
-      itemBuilder: (context, index) {
-        final entry = _timetableEntries[index];
-        return _buildEnhancedTimetableCard(entry, accentColor, theme, index);
-      },
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: ListView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        itemCount: _timetableEntries.length,
+        itemBuilder: (context, index) {
+          final entry = _timetableEntries[index];
+          return TweenAnimationBuilder<double>(
+            duration: Duration(milliseconds: 300 + (index * 100)),
+            tween: Tween(begin: 0.0, end: 1.0),
+            builder: (context, value, child) {
+              return Transform.translate(
+                offset: Offset(0, 20 * (1 - value)),
+                child: Opacity(opacity: value, child: child),
+              );
+            },
+            child: _buildEnhancedTimetableCard(entry, accentColor, theme, index),
+          );
+        },
+      ),
     );
   }
 
   Widget _buildEnhancedTimetableCard(timetable_model.Timetable entry, Color accentColor, ThemeData theme, int index) {
     final className = _classMap[entry.classId]?.name ?? 'Unknown Class';
+    final today = DateTime.now();
+    final isToday = _selectedDate.year == today.year && 
+                    _selectedDate.month == today.month && 
+                    _selectedDate.day == today.day;
+    
+    String status;
+    Color statusColor;
+    IconData statusIcon;
+    Gradient? gradient;
+    
+    if (isToday) {
+      final now = TimeOfDay.now();
+      final start = _parseTime(entry.startTimeString);
+      final end = _parseTime(entry.endTimeString);
+      
+      if (_isAfter(now, end)) {
+        status = 'Done';
+        statusColor = const Color(0xFF4CAF50);
+        statusIcon = Icons.check_circle_rounded;
+        gradient = LinearGradient(colors: [statusColor.withOpacity(0.1), statusColor.withOpacity(0.05)]);
+      } else if (_isBetween(now, start, end)) {
+        status = 'In Progress';
+        statusColor = const Color(0xFFFF9800);
+        statusIcon = Icons.play_circle_rounded;
+        gradient = LinearGradient(colors: [statusColor.withOpacity(0.15), statusColor.withOpacity(0.05)]);
+      } else {
+        status = 'Coming';
+        statusColor = const Color(0xFF2196F3);
+        statusIcon = Icons.schedule_rounded;
+        gradient = LinearGradient(colors: [statusColor.withOpacity(0.1), statusColor.withOpacity(0.05)]);
+      }
+    } else if (_selectedDate.isBefore(DateTime(today.year, today.month, today.day))) {
+      status = 'Past';
+      statusColor = Colors.grey;
+      statusIcon = Icons.history_rounded;
+      gradient = LinearGradient(colors: [statusColor.withOpacity(0.08), statusColor.withOpacity(0.03)]);
+    } else {
+      status = 'Scheduled';
+      statusColor = const Color(0xFF9C27B0);
+      statusIcon = Icons.event_rounded;
+      gradient = LinearGradient(colors: [statusColor.withOpacity(0.1), statusColor.withOpacity(0.05)]);
+    }
     
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: cardBackgroundColor,
-        borderRadius: BorderRadius.circular(16),
+        gradient: gradient,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: statusColor.withOpacity(0.2), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withAlpha(20),
-            spreadRadius: 1,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: statusColor.withOpacity(0.15),
+            spreadRadius: 0,
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
           children: [
-            Container(
-              width: 4,
-              height: 80,
-              decoration: BoxDecoration(
-                color: accentColor,
-                borderRadius: BorderRadius.circular(2),
+            Positioned(
+              right: -20,
+              top: -20,
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: statusColor.withOpacity(0.05),
+                ),
               ),
             ),
-            const SizedBox(width: 16),
-            Expanded(
+            Padding(
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: accentColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(6),
+                          color: statusColor,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: statusColor.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
-                        child: Text(
-                          '${entry.startTimeString} - ${entry.endTimeString}',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: accentColor),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(statusIcon, size: 16, color: Colors.white),
+                            const SizedBox(width: 6),
+                            Text(
+                              status,
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: statusColor.withOpacity(0.2)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.access_time_rounded, size: 14, color: statusColor),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${entry.startTimeString} - ${entry.endTimeString}',
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: statusColor),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    entry.subjectName,
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 16),
                   Row(
                     children: [
-                      Icon(Icons.class_, size: 16, color: textDarkGrey.withOpacity(0.6)),
-                      const SizedBox(width: 4),
-                      Text(
-                        className,
-                        style: theme.textTheme.bodySmall?.copyWith(color: textDarkGrey.withOpacity(0.6)),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: statusColor.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Icon(Icons.book_rounded, color: statusColor, size: 28),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              entry.subjectName,
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF2C2C2C),
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                Icon(Icons.class_rounded, size: 18, color: Colors.grey[600]),
+                                const SizedBox(width: 6),
+                                Text(
+                                  className,
+                                  style: TextStyle(fontSize: 14, color: Colors.grey[700], fontWeight: FontWeight.w500),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
                 ],
               ),
             ),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: accentColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(Icons.book, color: accentColor, size: 24),
-            ),
           ],
         ),
       ),
     );
+  }
+  
+  TimeOfDay _parseTime(String timeString) {
+    final parts = timeString.split(':');
+    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+  }
+  
+  bool _isAfter(TimeOfDay time, TimeOfDay other) {
+    return time.hour > other.hour || (time.hour == other.hour && time.minute > other.minute);
+  }
+  
+  bool _isBetween(TimeOfDay time, TimeOfDay start, TimeOfDay end) {
+    final timeMinutes = time.hour * 60 + time.minute;
+    final startMinutes = start.hour * 60 + start.minute;
+    final endMinutes = end.hour * 60 + end.minute;
+    return timeMinutes >= startMinutes && timeMinutes <= endMinutes;
   }
 
 

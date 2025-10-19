@@ -4,14 +4,15 @@ import 'package:edu_sync/models/student.dart';
 import 'package:edu_sync/utils/logger.dart';
 import 'package:edu_sync/database/app_database.dart' as db; // Alias AppDatabase
 import 'api_service.dart';
+import 'cache_service.dart';
 
 class StudentService {
   final SupabaseClient _supabaseClient = Supabase.instance.client;
   final db.AppDatabase _appDatabase; // Add AppDatabase instance
+  final CacheService _cache;
   final ApiService _apiService = ApiService();
-  // final ClassService _classService; // ClassService now requires AppDatabase - Removed as it's unused
 
-  StudentService(this._appDatabase); // Initialize AppDatabase
+  StudentService(this._appDatabase, this._cache);
 
   // Fetch all students for a school using the new view
   Future<List<Student>> getStudentsBySchool(int schoolId, {int? classId}) async {
@@ -27,32 +28,33 @@ class StudentService {
 
       final response = await query.order('full_name', ascending: true);
       final students = response.map((data) => Student.fromMap(data)).toList();
+      
+      // Cache the result
+      await _cache.cacheStudents(students);
+      
       return students;
     } catch (e) {
-      logger.e('Error fetching students by school: $e');
-      return [];
+      logger.w('Supabase failed, using cache: $e');
+      // Fallback to cache
+      return await _cache.getCachedStudents(schoolId);
     }
   }
 
   // Fetch students for a specific class
-  Future<List<Student>> getStudentsByClass(int classId) async { // Corrected to int
-    // TODO: Implement drift caching for students
-    return await _apiService.fetchData<List<Student>>(
-      onlineRequest: () async {
-        final response = await _supabaseClient
-            .from('students')
-            .select()
-            .eq('class_id', classId);
-        return response.map((data) => Student.fromMap(data)).toList();
-      },
-      offlineRequest: () async {
-        // For now, no offline support for students by class in drift
-        return [];
-      },
-      cacheData: (data) async {
-        // For now, no caching for students by class in drift
-      },
-    );
+  Future<List<Student>> getStudentsByClass(int classId) async {
+    try {
+      final response = await _supabaseClient
+          .from('students')
+          .select()
+          .eq('class_id', classId);
+      final students = response.map((data) => Student.fromMap(data)).toList();
+      
+      await _cache.cacheStudents(students);
+      return students;
+    } catch (e) {
+      logger.w('Supabase failed, using cache: $e');
+      return await _cache.getCachedStudentsByClass(classId);
+    }
   }
   
   // Creates a student without linking a parent.

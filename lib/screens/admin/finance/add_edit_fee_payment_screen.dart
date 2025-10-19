@@ -92,7 +92,7 @@ class _AddEditFeePaymentScreenState extends State<AddEditFeePaymentScreen> {
 
     final payment = FeePayment(
       id: widget.payment?.id ?? const Uuid().v4(),
-      studentId: _selectedStudent!.id!,
+      studentId: _selectedStudent!.id,
       feeStructureId: widget.payment?.feeStructureId,
       amountPaid: double.parse(_amountController.text),
       paymentDate: _paymentDate,

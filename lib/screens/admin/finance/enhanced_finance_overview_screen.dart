@@ -82,6 +82,11 @@ class _EnhancedFinanceOverviewScreenState extends State<EnhancedFinanceOverviewS
         iconTheme: const IconThemeData(color: Color(0xFF2C2C2C)),
         actions: [
           IconButton(
+            icon: const Icon(Icons.assessment),
+            onPressed: () => context.pushNamed('financial-reports'),
+            tooltip: 'Financial Reports',
+          ),
+          IconButton(
             icon: const Icon(Icons.date_range),
             onPressed: _selectDateRange,
           ),
@@ -179,7 +184,7 @@ class _EnhancedFinanceOverviewScreenState extends State<EnhancedFinanceOverviewS
                 ],
               ),
             );
-          }).toList(),
+          }),
         ],
       ),
     );

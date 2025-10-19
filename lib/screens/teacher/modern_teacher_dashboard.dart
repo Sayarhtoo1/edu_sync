@@ -1,18 +1,24 @@
 import 'dart:async';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import 'package:edu_sync/services/auth_service.dart';
 import 'package:edu_sync/services/schedule_summary_service.dart';
+import 'package:edu_sync/services/notification_service.dart';
 import 'package:edu_sync/models/schedule_summary.dart';
 import 'package:edu_sync/providers/school_provider.dart';
-// import 'package:edu_sync/widgets/admin/animated_metric_card.dart';
 import 'package:edu_sync/widgets/teacher/teacher_drawer.dart';
+import 'package:edu_sync/widgets/announcement_popup_dialog.dart';
 import 'package:edu_sync/screens/teacher/attendance_marking_screen.dart';
-import 'package:edu_sync/screens/teacher/exam/input_marks_screen.dart';
 import 'package:edu_sync/screens/teacher/teacher_timetable_screen.dart';
 import 'package:edu_sync/screens/common/attendance_report_screen.dart';
 import 'package:edu_sync/screens/teacher/teacher_student_management_screen.dart';
 import 'package:edu_sync/screens/staff/staff_attendance_screen.dart';
+import 'package:edu_sync/services/class_service.dart';
+import 'package:edu_sync/models/school_class.dart';
+import 'package:edu_sync/screens/admin/class_profile_screen.dart';
+import 'package:edu_sync/widgets/common/notification_bell_icon.dart';
 
 class ModernTeacherDashboard extends StatefulWidget {
   const ModernTeacherDashboard({super.key});
@@ -27,13 +33,29 @@ class _ModernTeacherDashboardState extends State<ModernTeacherDashboard> with Ti
   ScheduleSummary? _scheduleSummary;
   Timer? _timer;
   String? _teacherName;
+  String? _teacherId;
+  SchoolClass? _teacherClass;
   bool _isLoading = true;
+  StreamSubscription? _announcementSubscription;
 
   @override
   void initState() {
     super.initState();
     _fadeController = AnimationController(duration: const Duration(milliseconds: 800), vsync: this);
     _fadeAnimation = CurvedAnimation(parent: _fadeController, curve: Curves.easeIn);
+    
+    final notificationService = Provider.of<NotificationService>(context, listen: false);
+    _announcementSubscription = notificationService.inAppAnnouncements.listen((announcement) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AnnouncementPopupDialog(
+            announcement: announcement,
+            onDismiss: () => Navigator.of(context).pop(),
+          ),
+        );
+      }
+    });
     
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadData();
@@ -44,13 +66,24 @@ class _ModernTeacherDashboardState extends State<ModernTeacherDashboard> with Ti
   Future<void> _loadData() async {
     final authService = context.read<AuthService>();
     final scheduleSummaryService = context.read<ScheduleSummaryService>();
+    final classService = context.read<ClassService>();
+    final schoolProvider = context.read<SchoolProvider>();
     final user = authService.getCurrentUser();
     
     if (user != null) {
       final userDetails = await authService.getUserById(user.id);
       final summary = await scheduleSummaryService.getDailyScheduleSummary(user.id, DateTime.now());
+      
+      // Get teacher's class
+      final schoolId = schoolProvider.currentSchool?.id;
+      if (schoolId != null) {
+        final classes = await classService.getClasses(schoolId);
+        _teacherClass = classes.where((c) => c.teacherId == user.id).firstOrNull;
+      }
+      
       setState(() {
         _teacherName = userDetails?.fullName ?? user.email?.split('@')[0];
+        _teacherId = user.id;
         _scheduleSummary = summary;
         _isLoading = false;
       });
@@ -66,6 +99,7 @@ class _ModernTeacherDashboardState extends State<ModernTeacherDashboard> with Ti
   void dispose() {
     _fadeController.dispose();
     _timer?.cancel();
+    _announcementSubscription?.cancel();
     super.dispose();
   }
 
@@ -114,7 +148,7 @@ class _ModernTeacherDashboardState extends State<ModernTeacherDashboard> with Ti
         ),
         iconTheme: const IconThemeData(color: Color(0xFF2C2C2C)),
         actions: [
-          IconButton(icon: const Icon(Icons.notifications_outlined), onPressed: () {}),
+          const NotificationBellIcon(),
           const SizedBox(width: 8),
         ],
       ),
@@ -132,6 +166,8 @@ class _ModernTeacherDashboardState extends State<ModernTeacherDashboard> with Ti
                     children: [
                       _buildWelcomeCard(),
                       const SizedBox(height: 24),
+                      if (_teacherClass != null) _buildMyClassCard(),
+                      if (_teacherClass != null) const SizedBox(height: 24),
                       _buildScheduleCard(),
                       const SizedBox(height: 24),
                       _buildQuickActions(),
@@ -247,12 +283,74 @@ class _ModernTeacherDashboardState extends State<ModernTeacherDashboard> with Ti
     );
   }
 
+  Widget _buildMyClassCard() {
+    return InkWell(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => ClassProfileScreen(schoolClass: _teacherClass!)),
+      ),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF9C27B0), Color(0xFFBA68C8)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [BoxShadow(color: const Color(0xFF9C27B0).withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 6))],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.class_rounded, color: Colors.white, size: 40),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('My Class', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                  const SizedBox(height: 4),
+                  Text(_teacherClass!.name, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.touch_app, color: Colors.white, size: 14),
+                        SizedBox(width: 4),
+                        Text('Tap to view details', style: TextStyle(color: Colors.white, fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildQuickActions() {
     final actions = [
       {'title': 'My Students', 'icon': Icons.school_outlined, 'color': const Color(0xFF2196F3), 'screen': const TeacherStudentManagementScreen()},
       {'title': 'Clock In/Out', 'icon': Icons.access_time_outlined, 'color': const Color(0xFF00BCD4), 'screen': const StaffAttendanceScreen()},
       {'title': 'Mark Attendance', 'icon': Icons.how_to_reg_outlined, 'color': const Color(0xFF4CAF50), 'screen': const AttendanceMarkingScreen()},
-      {'title': 'Input Marks', 'icon': Icons.edit_note_outlined, 'color': const Color(0xFF673AB7), 'screen': const InputMarksScreen(examId: 'placeholder')},
+      {'title': 'Input Marks', 'icon': Icons.edit_note_outlined, 'color': const Color(0xFF673AB7), 'route': 'teacher-marks-entry-selection'},
       {'title': 'Timetable', 'icon': Icons.schedule_outlined, 'color': const Color(0xFF9C27B0), 'screen': const TeacherTimetableScreen()},
       {'title': 'Reports', 'icon': Icons.assessment_outlined, 'color': const Color(0xFFFF9800), 'screen': const AttendanceReportScreen()},
     ];
@@ -274,7 +372,13 @@ class _ModernTeacherDashboardState extends State<ModernTeacherDashboard> with Ti
               borderRadius: BorderRadius.circular(12),
               child: InkWell(
                 borderRadius: BorderRadius.circular(12),
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => action['screen'] as Widget)),
+                onTap: () {
+                  if (action.containsKey('route')) {
+                    context.pushNamed(action['route'] as String);
+                  } else {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => action['screen'] as Widget));
+                  }
+                },
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(

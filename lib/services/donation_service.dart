@@ -1,11 +1,13 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/donation.dart';
 import '../utils/logger.dart';
+import 'cache_service.dart';
 
 class DonationService {
   final SupabaseClient _supabase;
+  final CacheService _cacheService;
 
-  DonationService(this._supabase);
+  DonationService(this._supabase, this._cacheService);
 
   Future<List<Donation>> getDonationsBySchool(int schoolId) async {
     try {
@@ -14,10 +16,12 @@ class DonationService {
           .select()
           .eq('school_id', schoolId)
           .order('donation_date', ascending: false);
-      return (response as List).map((e) => Donation.fromJson(e)).toList();
+      final donations = (response as List).map((e) => Donation.fromJson(e)).toList();
+      await _cacheService.cacheDonations(donations);
+      return donations;
     } catch (e) {
-      logger.e('Error fetching donations: $e');
-      return [];
+      logger.w('Supabase failed, using cache: $e');
+      return await _cacheService.getCachedDonations(schoolId);
     }
   }
 

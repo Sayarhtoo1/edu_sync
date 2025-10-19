@@ -6,7 +6,9 @@ import 'cache_service.dart';
 
 class FinanceService {
   final SupabaseClient _supabaseClient = Supabase.instance.client;
-  final CacheService _cacheService = CacheService();
+  final CacheService _cache;
+  
+  FinanceService(this._cache);
 
   // === Income Methods ===
 
@@ -19,20 +21,22 @@ class FinanceService {
           .eq('entry_type', 'Income')
           .order('created_at', ascending: false);
 
+      await _cache.cacheFinanceEntries(response);
+      
       final incomes = response.map((record) {
         record['amount'] = (record['amount'] as num).toDouble();
         return Income.fromMap(record);
       }).toList();
       
-      // Add donations as income
       final donations = await _getDonationIncomes(schoolId);
       incomes.addAll(donations);
       incomes.sort((a, b) => b.date.compareTo(a.date));
           
       return incomes;
     } catch (e) {
-      logger.e('Error fetching income records: $e');
-      return [];
+      logger.w('Supabase failed, using cache: $e');
+      final cached = await _cache.getCachedFinanceEntries(schoolId, 'Income');
+      return cached.map((e) => Income.fromMap(e)).toList();
     }
   }
 
@@ -125,20 +129,22 @@ class FinanceService {
           .eq('entry_type', 'Expense')
           .order('created_at', ascending: false);
 
+      await _cache.cacheFinanceEntries(response);
+      
       final expenses = response.map((record) {
         record['amount'] = (record['amount'] as num).toDouble();
         return Expense.fromMap(record);
       }).toList();
       
-      // Add salary payments as expenses
       final salaries = await _getSalaryExpensesAsList(schoolId);
       expenses.addAll(salaries);
       expenses.sort((a, b) => b.date.compareTo(a.date));
           
       return expenses;
     } catch (e) {
-      logger.e('Error fetching expense records: $e');
-      return [];
+      logger.w('Supabase failed, using cache: $e');
+      final cached = await _cache.getCachedFinanceEntries(schoolId, 'Expense');
+      return cached.map((e) => Expense.fromMap(e)).toList();
     }
   }
 

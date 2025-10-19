@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as provider;
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../models/student.dart';
 import '../../models/school_class.dart';
 import '../../models/attendance.dart' as app_attendance;
@@ -30,7 +30,7 @@ class _StudentProfileData {
   });
 }
 
-class StudentProfileScreen extends ConsumerStatefulWidget {
+class StudentProfileScreen extends StatefulWidget {
   final Student student;
 
   const StudentProfileScreen({super.key, required this.student});
@@ -41,7 +41,7 @@ class StudentProfileScreen extends ConsumerStatefulWidget {
   }
 }
 
-class _StudentProfileScreenState extends ConsumerState<StudentProfileScreen> {
+class _StudentProfileScreenState extends State<StudentProfileScreen> {
   late Future<_StudentProfileData> _profileDataFuture;
 
   @override
@@ -52,9 +52,9 @@ class _StudentProfileScreenState extends ConsumerState<StudentProfileScreen> {
 
   Future<_StudentProfileData> _fetchProfileData() async {
     final studentService = provider.Provider.of<StudentService>(context, listen: false);
-    final classService = ref.read(classServiceProvider);
-    final attendanceService = ref.read(attendanceServiceProvider);
-    final examService = ref.read(examServiceProvider);
+    final classService = provider.Provider.of<ClassService>(context, listen: false);
+    final attendanceService = provider.Provider.of<AttendanceService>(context, listen: false);
+    final examService = ExamService();
 
     // Fetch fresh student data from backend
     final freshStudent = await studentService.getStudentById(widget.student.id, widget.student.schoolId) ?? widget.student;
@@ -153,9 +153,17 @@ class _StudentProfileScreenState extends ConsumerState<StudentProfileScreen> {
                 flexibleSpace: FlexibleSpaceBar(
                   title: Text(student.fullName),
                   background: student.profilePhotoUrl != null
-                      ? Image.network(
-                          student.profilePhotoUrl!,
+                      ? CachedNetworkImage(
+                          imageUrl: student.profilePhotoUrl!,
                           fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            color: Colors.grey[200],
+                            child: const Center(child: CircularProgressIndicator()),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            color: Colors.grey[200],
+                            child: const Icon(Icons.person, size: 100, color: Colors.grey),
+                          ),
                         )
                       : Container(
                           color: Colors.grey[200],
@@ -639,19 +647,3 @@ class _StudentProfileScreenState extends ConsumerState<StudentProfileScreen> {
 
 
 }
-
-final classServiceProvider = Provider<ClassService>((ref) {
-  return ClassService();
-});
-
-final attendanceServiceProvider = Provider<AttendanceService>((ref) {
-  return AttendanceService();
-});
-
-final examServiceProvider = Provider<ExamService>((ref) {
-  return ExamService();
-});
-
-final studentServiceProvider = Provider<StudentService>((ref) {
-  throw UnimplementedError('Use Provider.of<StudentService>(context) instead');
-});

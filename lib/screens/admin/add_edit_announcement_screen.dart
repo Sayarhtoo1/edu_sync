@@ -4,10 +4,9 @@ import 'package:edu_sync/models/school_class.dart' as app_class;
 import 'package:edu_sync/services/announcement_service.dart';
 import 'package:edu_sync/models/user_role.dart';
 import 'package:edu_sync/services/class_service.dart';
-import 'package:edu_sync/l10n/gen/app_localizations.dart'; // For localization
-import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
-// Import AppDatabase
-// import 'package:provider/provider.dart'; // Removed unused import
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
+import 'package:edu_sync/theme/app_theme.dart';
+import 'package:provider/provider.dart';
 // import 'package:edu_sync/database/app_database.dart'; // Removed unused import
 
 class AddEditAnnouncementScreen extends StatefulWidget {
@@ -28,7 +27,7 @@ class AddEditAnnouncementScreen extends StatefulWidget {
 
 class _AddEditAnnouncementScreenState extends State<AddEditAnnouncementScreen> {
   final _formKey = GlobalKey<FormState>();
-  final AnnouncementService _announcementService = AnnouncementService();
+  late final AnnouncementService _announcementService;
   late final ClassService _classService;
 
   late TextEditingController _titleController;
@@ -53,12 +52,16 @@ class _AddEditAnnouncementScreenState extends State<AddEditAnnouncementScreen> {
     _titleController = TextEditingController(text: widget.announcement?.title ?? '');
     _contentController = TextEditingController(text: widget.announcement?.content ?? '');
     _selectedTargetRole = widget.announcement?.targetRole ?? 'All'; 
-    _selectedTargetClassId = widget.announcement?.targetClassId; // Announcement.targetClassId is int?
-    _classService = ClassService(); // Initialize _classService
+    _selectedTargetClassId = widget.announcement?.targetClassId;
+  }
 
- // schoolId should always be provided
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _announcementService = Provider.of<AnnouncementService>(context, listen: false);
+    _classService = Provider.of<ClassService>(context, listen: false);
     _loadClasses();
-    }
+  }
 
   Future<void> _loadClasses() async {
     setState(() => _isLoadingClasses = true);

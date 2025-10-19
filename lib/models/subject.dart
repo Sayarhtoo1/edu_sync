@@ -8,6 +8,10 @@ class Subject {
   final String? code;
   final int? maxMarks;
   final int? passingMarks;
+  final String? parentSubjectId;
+  final bool isSubSubject;
+  final int displayOrder;
+  final List<Subject>? subSubjects;
 
   Subject({
     required this.id,
@@ -18,6 +22,10 @@ class Subject {
     this.code,
     this.maxMarks,
     this.passingMarks,
+    this.parentSubjectId,
+    this.isSubSubject = false,
+    this.displayOrder = 0,
+    this.subSubjects,
   });
 
   factory Subject.fromMap(Map<String, dynamic> map) {
@@ -30,6 +38,10 @@ class Subject {
       code: map['code'],
       maxMarks: map['max_marks'],
       passingMarks: map['passing_marks'],
+      parentSubjectId: map['parent_subject_id'],
+      isSubSubject: map['is_sub_subject'] ?? false,
+      displayOrder: map['display_order'] ?? 0,
+      subSubjects: map['sub_subjects'] != null ? (map['sub_subjects'] as List).map((e) => Subject.fromMap(e)).toList() : null,
     );
   }
 
@@ -43,6 +55,9 @@ class Subject {
       'code': code,
       'max_marks': maxMarks,
       'passing_marks': passingMarks,
+      'parent_subject_id': parentSubjectId,
+      'is_sub_subject': isSubSubject,
+      'display_order': displayOrder,
     };
   }
 
@@ -57,6 +72,15 @@ class Subject {
       'max_marks': maxMarks,
       'passing_marks': passingMarks,
     };
+  }
+
+  bool get hasSubSubjects => subSubjects != null && subSubjects!.isNotEmpty;
+
+  int get totalMaxMarks {
+    if (hasSubSubjects) {
+      return subSubjects!.fold(0, (sum, sub) => sum + (sub.maxMarks ?? 0));
+    }
+    return maxMarks ?? 0;
   }
 
   double get passingPercentage {

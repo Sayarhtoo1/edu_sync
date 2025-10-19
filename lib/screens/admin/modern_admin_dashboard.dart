@@ -12,9 +12,12 @@ import 'package:edu_sync/screens/admin/fee/fee_structure_management_screen.dart'
 import 'package:edu_sync/screens/admin/finance/finance_overview_screen.dart';
 import 'package:edu_sync/widgets/admin/modern_admin_drawer.dart';
 import 'package:edu_sync/screens/admin/admin_panel_state.dart';
-import 'package:edu_sync/screens/admin/admin_panel_components/admin_panel_models.dart';
 import 'package:edu_sync/providers/school_provider.dart';
 import 'package:edu_sync/screens/staff/staff_attendance_screen.dart';
+import 'package:edu_sync/services/notification_service.dart';
+import 'package:edu_sync/widgets/announcement_popup_dialog.dart';
+import 'package:edu_sync/widgets/common/notification_bell_icon.dart';
+import 'package:edu_sync/utils/responsive.dart';
 import 'dart:async';
 
 class ModernAdminDashboard extends StatefulWidget {
@@ -33,6 +36,7 @@ class _ModernAdminDashboardState extends State<ModernAdminDashboard>
   String? _adminName;
   String? _schoolName;
   final Map<String, int> _summaryMetrics = {};
+  late NotificationService _notificationService;
 
   @override
   void initState() {
@@ -45,6 +49,21 @@ class _ModernAdminDashboardState extends State<ModernAdminDashboard>
     _fadeAnimation = CurvedAnimation(parent: _fadeController, curve: Curves.easeIn);
     
     initializeServices(context);
+    _notificationService = Provider.of<NotificationService>(context, listen: false);
+    
+    // Listen for new announcements
+    _announcementSubscription = _notificationService.inAppAnnouncements.listen((announcement) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AnnouncementPopupDialog(
+            announcement: announcement,
+            onDismiss: () => Navigator.of(context).pop(),
+          ),
+        );
+      }
+    });
+    
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadData();
       startScheduleTimer();
@@ -148,26 +167,7 @@ class _ModernAdminDashboardState extends State<ModernAdminDashboard>
             icon: const Icon(Icons.search),
             onPressed: () {},
           ),
-          Stack(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.notifications_outlined),
-                onPressed: () {},
-              ),
-              Positioned(
-                right: 8,
-                top: 8,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-            ],
-          ),
+          const NotificationBellIcon(),
           const SizedBox(width: 8),
         ],
       ),
@@ -179,25 +179,49 @@ class _ModernAdminDashboardState extends State<ModernAdminDashboard>
                 await loadDashboardData(context);
                 _loadData();
               },
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: Column(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final isDesktop = Responsive.isDesktop(context);
+                  return Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      HeroWelcomeCard(
-                        adminName: _adminName ?? 'Admin',
-                        schoolName: _schoolName,
+                      Expanded(
+                        flex: isDesktop ? 7 : 1,
+                        child: SingleChildScrollView(
+                          padding: Responsive.padding(context),
+                          child: FadeTransition(
+                            opacity: _fadeAnimation,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                HeroWelcomeCard(
+                                  adminName: _adminName ?? 'Admin',
+                                  schoolName: _schoolName,
+                                ),
+                                const SizedBox(height: 24),
+                                _buildMetricsSection(),
+                                const SizedBox(height: 24),
+                                if (!isDesktop) _buildQuickActionsSection(),
+                                const SizedBox(height: 24),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 24),
-                      _buildMetricsSection(),
-                      const SizedBox(height: 24),
-                      _buildQuickActionsSection(),
-                      const SizedBox(height: 24),
+                      if (isDesktop)
+                        Expanded(
+                          flex: 3,
+                          child: Container(
+                            color: Colors.white,
+                            child: SingleChildScrollView(
+                              padding: const EdgeInsets.all(24),
+                              child: _buildQuickActionsSection(),
+                            ),
+                          ),
+                        ),
                     ],
-                  ),
-                ),
+                  );
+                },
               ),
             ),
       floatingActionButton: FloatingActionButton(
@@ -215,17 +239,8 @@ class _ModernAdminDashboardState extends State<ModernAdminDashboard>
   }
 
   Widget _buildMetricsSection() {
-    // Get counts directly from summaryData
-    int studentCount = 0;
-    int teacherCount = 0;
-    
-    for (var item in summaryData) {
-      if (item.title.toLowerCase().contains('student')) {
-        studentCount = int.tryParse(item.count) ?? 0;
-      } else if (item.title.toLowerCase().contains('teacher')) {
-        teacherCount = int.tryParse(item.count) ?? 0;
-      }
-    }
+    int studentCount = summaryData.isNotEmpty ? (int.tryParse(summaryData[0].count) ?? 0) : 0;
+    int teacherCount = summaryData.length > 1 ? (int.tryParse(summaryData[1].count) ?? 0) : 0;
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -239,50 +254,55 @@ class _ModernAdminDashboardState extends State<ModernAdminDashboard>
           ),
         ),
         const SizedBox(height: 16),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          childAspectRatio: 1.30,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          children: [
-            AnimatedMetricCard(
-              title: 'Total Students',
-              value: studentCount,
-              icon: Icons.school_outlined,
-              color: const Color(0xFF2196F3),
-              percentageChange: 5.2,
-              onTap: () => context.push('/admin/student-management'),
-            ),
-            AnimatedMetricCard(
-              title: 'Total Teachers',
-              value: teacherCount,
-              icon: Icons.people_outline,
-              color: const Color(0xFF4CAF50),
-              percentageChange: 2.1,
-              onTap: () => context.push('/admin/staff-management'),
-            ),
-            AnimatedMetricCard(
-              title: 'Total Classes',
-              value: studentCountsByClass.length,
-              icon: Icons.class_outlined,
-              color: const Color(0xFF9C27B0),
-              onTap: () => context.push('/admin/class-management'),
-            ),
-            AnimatedMetricCard(
-              title: 'Net Balance',
-              value: netBalance.round(),
-              icon: Icons.account_balance_wallet_outlined,
-              color: const Color(0xFFFF9800),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const FinanceOverviewScreen()),
-                );
-              },
-            ),
-          ],
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final columns = Responsive.gridColumns(context);
+            return GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: columns,
+              childAspectRatio: Responsive.isDesktop(context) ? 1.5 : 1.30,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              children: [
+                AnimatedMetricCard(
+                  title: 'Total Students',
+                  value: studentCount,
+                  icon: Icons.school_outlined,
+                  color: const Color(0xFF2196F3),
+                  percentageChange: 5.2,
+                  onTap: () => context.push('/admin/student-management'),
+                ),
+                AnimatedMetricCard(
+                  title: 'Total Teachers',
+                  value: teacherCount,
+                  icon: Icons.people_outline,
+                  color: const Color(0xFF4CAF50),
+                  percentageChange: 2.1,
+                  onTap: () => context.push('/admin/staff-management'),
+                ),
+                AnimatedMetricCard(
+                  title: 'Total Classes',
+                  value: studentCountsByClass.length,
+                  icon: Icons.class_outlined,
+                  color: const Color(0xFF9C27B0),
+                  onTap: () => context.push('/admin/class-management'),
+                ),
+                AnimatedMetricCard(
+                  title: 'Net Balance',
+                  value: netBalance.round(),
+                  icon: Icons.account_balance_wallet_outlined,
+                  color: const Color(0xFFFF9800),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const FinanceOverviewScreen()),
+                    );
+                  },
+                ),
+              ],
+            );
+          },
         ),
       ],
     );
@@ -334,7 +354,7 @@ class _ModernAdminDashboardState extends State<ModernAdminDashboard>
               title: 'Exam Management',
               subtitle: 'Manage exams',
               icon: Icons.assignment_outlined,
-              onTap: () => context.push('/admin/exam-overview'),
+              onTap: () => context.pushNamed('exam-overview'),
             ),
           ],
         ),

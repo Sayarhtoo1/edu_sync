@@ -1,17 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-
 import '../../../providers/exam_provider.dart';
 import '../../../providers/school_provider.dart';
 import '../../../theme/app_theme.dart';
-import '../../common/loading_skeleton.dart';
-import '../../common/error_display.dart';
-import '../../common/empty_state.dart';
-import 'widgets/statistics_cards_widget.dart';
-import 'widgets/recent_activity_widget.dart';
-import 'widgets/performance_overview_widget.dart';
-import 'widgets/quick_actions_widget.dart';
 
 class ExamOverviewScreen extends StatefulWidget {
   const ExamOverviewScreen({super.key});
@@ -22,7 +14,6 @@ class ExamOverviewScreen extends StatefulWidget {
 
 class _ExamOverviewScreenState extends State<ExamOverviewScreen> {
   bool _isLoading = false;
-  String? _error;
 
   @override
   void initState() {
@@ -32,11 +23,7 @@ class _ExamOverviewScreenState extends State<ExamOverviewScreen> {
 
   Future<void> _loadData() async {
     if (!mounted) return;
-
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
+    setState(() => _isLoading = true);
 
     try {
       final examProvider = Provider.of<ExamProvider>(context, listen: false);
@@ -44,181 +31,229 @@ class _ExamOverviewScreenState extends State<ExamOverviewScreen> {
 
       if (schoolProvider.currentSchool != null) {
         await examProvider.fetchExams(schoolProvider.currentSchool!.id.toString());
-        await examProvider.fetchSubjects(schoolProvider.currentSchool!.id.toString());
         await examProvider.fetchGrades(schoolProvider.currentSchool!.id.toString());
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _error = e.toString();
-        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
       }
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_error != null) {
-      return Scaffold(
-        appBar: _buildAppBar(),
-        body: ErrorDisplay(
-          message: 'Failed to load exam data',
-          description: _error!,
-          onRetry: _loadData,
-        ),
-      );
-    }
-
     return Scaffold(
-      appBar: _buildAppBar(),
-      body: RefreshIndicator(
-        onRefresh: _loadData,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(),
-              const SizedBox(height: 24),
-              _isLoading ? _buildLoadingView() : _buildDashboardContent(),
-            ],
-          ),
-        ),
+      appBar: AppBar(
+        title: const Text('Exam Management'),
       ),
-      floatingActionButton: _buildFloatingActionButton(),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Consumer<ExamProvider>(
+              builder: (context, examProvider, _) {
+                final exams = examProvider.exams;
+                final upcomingCount = exams.where((e) => e.examDate.isAfter(DateTime.now())).length;
+                final completedCount = exams.where((e) => e.examDate.isBefore(DateTime.now())).length;
+
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Quick Stats
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildStatCard(
+                              'Total Exams',
+                              exams.length.toString(),
+                              Icons.assignment,
+                              Colors.blue,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildStatCard(
+                              'Upcoming',
+                              upcomingCount.toString(),
+                              Icons.schedule,
+                              Colors.orange,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildStatCard(
+                              'Completed',
+                              completedCount.toString(),
+                              Icons.check_circle,
+                              Colors.green,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildStatCard(
+                              'Grades',
+                              examProvider.grades.length.toString(),
+                              Icons.grade,
+                              Colors.purple,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      // Main Actions
+                      const Text(
+                        'Quick Actions',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 16),
+
+                      _buildActionCard(
+                        title: 'Manage Exams',
+                        subtitle: 'View, create, and edit exams',
+                        icon: Icons.list_alt,
+                        color: Colors.blue,
+                        onTap: () => context.push('/admin/exam-management'),
+                      ),
+                      const SizedBox(height: 12),
+
+                      _buildActionCard(
+                        title: 'Create New Exam',
+                        subtitle: 'Set up a new exam',
+                        icon: Icons.add_circle,
+                        color: Colors.green,
+                        onTap: () => context.push('/admin/exam-form'),
+                      ),
+                      const SizedBox(height: 12),
+
+                      _buildActionCard(
+                        title: 'Manage Subjects',
+                        subtitle: 'Add or edit subjects',
+                        icon: Icons.subject,
+                        color: Colors.orange,
+                        onTap: () => context.push('/admin/subject-management'),
+                      ),
+                      const SizedBox(height: 12),
+
+                      _buildActionCard(
+                        title: 'Manage Grades',
+                        subtitle: 'Configure grading system',
+                        icon: Icons.grade,
+                        color: Colors.purple,
+                        onTap: () => context.push('/admin/grade-management'),
+                      ),
+                      const SizedBox(height: 12),
+
+                      _buildActionCard(
+                        title: 'Exam Calendar',
+                        subtitle: 'View exam schedule',
+                        icon: Icons.calendar_month,
+                        color: Colors.teal,
+                        onTap: () => context.push('/admin/exam-calendar'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
     );
   }
 
-  AppBar _buildAppBar() {
-    return AppBar(
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back),
-        onPressed: () => Navigator.of(context).pop(),
-      ),
-      title: const Text('Exam Overview'),
-      backgroundColor: appBackgroundColor,
-      elevation: 0,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.list_alt),
-          onPressed: () => context.push('/admin/exam-management'),
-          tooltip: 'Exam List',
-        ),
-        IconButton(
-          icon: const Icon(Icons.settings_outlined),
-          onPressed: () => context.push('/admin/settings'),
-          tooltip: 'Settings',
-        ),
-      ],
-    );
-  }
-
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            defaultAccentColor.withOpacity(0.8),
-            defaultAccentColor.withOpacity(0.6),
+  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 32),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+              ),
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
-        borderRadius: BorderRadius.circular(16),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    );
+  }
+
+  Widget _buildActionCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Card(
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
             children: [
-              Icon(
-                Icons.assignment_outlined,
-                size: 32,
-                color: Colors.white,
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 28),
               ),
               const SizedBox(width: 16),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Exam Management System',
-                      style: TextStyle(
-                        fontSize: 20,
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
                       ),
                     ),
+                    const SizedBox(height: 4),
                     Text(
-                      'Comprehensive exam tracking and analysis',
+                      subtitle,
                       style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white70,
+                        fontSize: 13,
+                        color: Colors.grey[600],
                       ),
                     ),
                   ],
                 ),
               ),
+              Icon(Icons.chevron_right, color: Colors.grey[400]),
             ],
           ),
-        ],
+        ),
       ),
-    );
-  }
-
-  Widget _buildLoadingView() {
-    return Column(
-      children: [
-        LoadingSkeleton(height: 120),
-        const SizedBox(height: 24),
-        LoadingSkeleton(height: 200),
-        const SizedBox(height: 24),
-        LoadingSkeleton(height: 150),
-        const SizedBox(height: 24),
-        LoadingSkeleton(height: 120),
-      ],
-    );
-  }
-
-  Widget _buildDashboardContent() {
-    final schoolProvider = Provider.of<SchoolProvider>(context);
-    if (schoolProvider.currentSchool == null) {
-      return const EmptyState(
-        icon: Icons.school_outlined,
-        message: 'No school selected',
-        description: 'Please select a school to view exam data',
-      );
-    }
-
-    return Consumer<ExamProvider>(
-      builder: (context, examProvider, child) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            StatisticsCardsWidget(examProvider: examProvider),
-            const SizedBox(height: 32),
-            QuickActionsWidget(),
-            const SizedBox(height: 32),
-            RecentActivityWidget(examProvider: examProvider),
-            const SizedBox(height: 32),
-            PerformanceOverviewWidget(examProvider: examProvider),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildFloatingActionButton() {
-    return FloatingActionButton.extended(
-      onPressed: () => context.push('/admin/exam-form'),
-      icon: const Icon(Icons.add),
-      label: const Text('Create Exam'),
-      backgroundColor: defaultAccentColor,
     );
   }
 }

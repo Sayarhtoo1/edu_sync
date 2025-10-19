@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../../models/exam.dart';
 import '../../../models/school_class.dart';
 import '../../../providers/exam_provider.dart';
 import '../../../providers/class_provider.dart';
 import '../../../providers/school_provider.dart';
 import '../../../theme/app_theme.dart';
-import '../../../l10n/gen/app_localizations.dart';
-import '../exam/widgets/exam_filters_widget.dart';
-import '../../common/error_display.dart';
 import '../../../models/exam_status.dart';
+import 'edit_exam_basic_screen.dart';
+import 'edit_exam_classes_screen.dart';
+import 'edit_exam_subjects_screen.dart';
 
-enum SortColumn { name, className, date, status, examiner }
-enum SortOrder { ascending, descending }
 
 class ExamListScreen extends StatefulWidget {
   const ExamListScreen({super.key});
@@ -23,17 +22,8 @@ class ExamListScreen extends StatefulWidget {
 
 class _ExamListScreenState extends State<ExamListScreen> {
   final TextEditingController _searchController = TextEditingController();
-  final Set<String> _selectedExams = {};
-  final ScrollController _scrollController = ScrollController();
-
-  ExamStatus _selectedStatus = ExamStatus.upcoming;
-  SortColumn _sortColumn = SortColumn.date;
-  SortOrder _sortOrder = SortOrder.descending;
+  ExamStatus? _selectedStatus;
   bool _isLoading = false;
-  String? _errorMessage;
-  int _currentPage = 1;
-  final int _itemsPerPage = 10;
-
   List<Exam> _filteredExams = [];
   List<SchoolClass> _classes = [];
 
@@ -47,34 +37,31 @@ class _ExamListScreenState extends State<ExamListScreen> {
   @override
   void dispose() {
     _searchController.dispose();
-    _scrollController.dispose();
     super.dispose();
   }
 
   Future<void> _loadData() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
+    setState(() => _isLoading = true);
     try {
       final schoolProvider = Provider.of<SchoolProvider>(context, listen: false);
       final schoolId = schoolProvider.currentSchool?.id.toString();
 
       if (schoolId != null) {
-        // Load exams and classes
         await Future.wait([
           Provider.of<ExamProvider>(context, listen: false).fetchExams(schoolId),
           Provider.of<ClassProvider>(context, listen: false).fetchClasses(schoolId),
         ]);
-
         _classes = Provider.of<ClassProvider>(context, listen: false).classes;
         _filterExams();
       }
     } catch (e) {
-      setState(() => _errorMessage = e.toString());
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -82,115 +69,417 @@ class _ExamListScreenState extends State<ExamListScreen> {
     final exams = Provider.of<ExamProvider>(context, listen: false).exams;
     final query = _searchController.text.toLowerCase();
 
-    final filtered = exams.where((exam) {
-      // Status filter
-      final status = _getExamStatus(exam);
-      if (_selectedStatus != status) return false;
-
-      // Search filter
-      if (query.isEmpty) return true;
-
-      final className = _getClassName(exam.classId);
-      return exam.name.toLowerCase().contains(query) ||
-             className.toLowerCase().contains(query) ||
-             exam.examinerName.toLowerCase().contains(query);
-    }).toList();
-
-    // Sort exams
-    _filteredExams = _sortExams(filtered);
-    _currentPage = 1; // Reset to first page when filtering
-  }
-
-  void _sortExamsBy(SortColumn column) {
-    if (_sortColumn == column) {
-      _sortOrder = _sortOrder == SortOrder.ascending
-          ? SortOrder.descending
-          : SortOrder.ascending;
-    } else {
-      _sortColumn = column;
-      _sortOrder = SortOrder.ascending;
-    }
-    _filterExams();
-  }
-
-  List<Exam> _sortExams(List<Exam> exams) {
-    exams.sort((a, b) {
-      int comparison = 0;
-
-      switch (_sortColumn) {
-        case SortColumn.name:
-          comparison = a.name.compareTo(b.name);
-          break;
-        case SortColumn.className:
-          comparison = _getClassName(a.classId).compareTo(_getClassName(b.classId));
-          break;
-        case SortColumn.date:
-          comparison = a.examDate.compareTo(b.examDate);
-          break;
-        case SortColumn.status:
-          comparison = _getExamStatus(a).index.compareTo(_getExamStatus(b).index);
-          break;
-        case SortColumn.examiner:
-          comparison = a.examinerName.compareTo(b.examinerName);
-          break;
-      }
-
-      return _sortOrder == SortOrder.ascending ? comparison : -comparison;
+    setState(() {
+      _filteredExams = exams.where((exam) {
+        if (_selectedStatus != null && _getExamStatus(exam) != _selectedStatus) {
+          return false;
+        }
+        if (query.isEmpty) return true;
+        return exam.name.toLowerCase().contains(query) ||
+               exam.examinerName.toLowerCase().contains(query);
+      }).toList()
+        ..sort((a, b) => b.examDate.compareTo(a.examDate));
     });
-
-    return exams;
   }
 
   ExamStatus _getExamStatus(Exam exam) {
     final now = DateTime.now();
-    final examDate = exam.examDate;
-
-    if (examDate.isAfter(now.add(const Duration(days: 1)))) {
+    if (exam.examDate.isAfter(now.add(const Duration(days: 1)))) {
       return ExamStatus.upcoming;
-    } else if (examDate.isBefore(now.subtract(const Duration(days: 1)))) {
+    } else if (exam.examDate.isBefore(now.subtract(const Duration(days: 1)))) {
       return ExamStatus.completed;
-    } else {
-      return ExamStatus.ongoing;
     }
+    return ExamStatus.ongoing;
   }
 
-  String _getClassName(int classId) {
-    final schoolClass = _classes.where((c) => c.id == classId).firstOrNull;
-    return schoolClass?.name ?? 'Class $classId';
+  String _getClassInfo(Exam exam) {
+    if (exam.examClasses != null && exam.examClasses!.isNotEmpty) {
+      if (exam.examClasses!.length == 1) {
+        final schoolClass = _classes.where((c) => c.id == exam.examClasses!.first.classId).firstOrNull;
+        return schoolClass?.name ?? 'Class ${exam.examClasses!.first.classId}';
+      }
+      return '${exam.examClasses!.length} Classes';
+    }
+    final schoolClass = _classes.where((c) => c.id == exam.classId).firstOrNull;
+    return schoolClass?.name ?? 'Class ${exam.classId}';
   }
 
-  Widget _buildSortButton(String label, SortColumn column) {
-    final isActive = _sortColumn == column;
-    final icon = isActive
-        ? (_sortOrder == SortOrder.ascending ? Icons.arrow_upward : Icons.arrow_downward)
-        : Icons.sort;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Exams'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadData,
+            tooltip: 'Refresh',
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // Search & Filter Bar
+          Container(
+            padding: const EdgeInsets.all(16),
+            color: defaultAccentColor.withOpacity(0.05),
+            child: Column(
+              children: [
+                TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search exams...',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              _searchController.clear();
+                              _filterExams();
+                            },
+                          )
+                        : null,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    filled: true,
+                    fillColor: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildFilterChip('All', null),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('Upcoming', ExamStatus.upcoming),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('Ongoing', ExamStatus.ongoing),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('Completed', ExamStatus.completed),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
 
-    return TextButton.icon(
-      onPressed: () => _sortExamsBy(column),
-      icon: Icon(icon, size: 16),
+          // Results Count
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Text(
+                  '${_filteredExams.length} ${_filteredExams.length == 1 ? 'exam' : 'exams'}',
+                  style: const TextStyle(fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
+          ),
+
+          // Exam List
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _filteredExams.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.assignment_outlined, size: 80, color: Colors.grey[400]),
+                            const SizedBox(height: 16),
+                            Text(
+                              _searchController.text.isNotEmpty || _selectedStatus != null
+                                  ? 'No exams found'
+                                  : 'No exams yet',
+                              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                            ),
+                            if (_searchController.text.isEmpty && _selectedStatus == null) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                'Create your first exam',
+                                style: TextStyle(color: Colors.grey[500]),
+                              ),
+                            ],
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: _filteredExams.length,
+                        itemBuilder: (context, index) => _buildExamCard(_filteredExams[index]),
+                      ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => Navigator.of(context).pushNamed('/admin/exams/create').then((_) => _loadData()),
+        icon: const Icon(Icons.add),
+        label: const Text('Create Exam'),
+        backgroundColor: defaultAccentColor,
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String label, ExamStatus? status) {
+    final isSelected = _selectedStatus == status;
+    return FilterChip(
       label: Text(label),
-      style: TextButton.styleFrom(
-        foregroundColor: isActive ? AppTheme.getAccentColorForContext('form') : null,
+      selected: isSelected,
+      onSelected: (selected) {
+        setState(() => _selectedStatus = selected ? status : null);
+        _filterExams();
+      },
+      selectedColor: defaultAccentColor.withOpacity(0.2),
+      checkmarkColor: defaultAccentColor,
+    );
+  }
+
+  Widget _buildExamCard(Exam exam) {
+    final status = _getExamStatus(exam);
+    final statusColor = _getStatusColor(status);
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        children: [
+          // Header with status
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: statusColor.withOpacity(0.1),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.assignment, color: statusColor, size: 24),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        exam.name,
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        _getStatusText(status),
+                        style: TextStyle(color: statusColor, fontSize: 12, fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Details
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.class_, size: 18, color: Colors.grey[600]),
+                    const SizedBox(width: 8),
+                    Text(_getClassInfo(exam)),
+                    const Spacer(),
+                    Icon(Icons.calendar_today, size: 18, color: Colors.grey[600]),
+                    const SizedBox(width: 8),
+                    Text('${exam.examDate.day}/${exam.examDate.month}/${exam.examDate.year}'),
+                  ],
+                ),
+                if (exam.description != null && exam.description!.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    exam.description!,
+                    style: TextStyle(color: Colors.grey[700], fontSize: 13),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          // Action Buttons
+          const Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildActionButton(
+                  icon: Icons.edit_note,
+                  label: 'Marks',
+                  color: Colors.blue,
+                  onTap: () => context.pushNamed('marks-entry', pathParameters: {'examId': exam.id}),
+                ),
+                _buildActionButton(
+                  icon: Icons.assessment,
+                  label: 'Reports',
+                  color: Colors.green,
+                  onTap: () => context.pushNamed('all-report-cards', pathParameters: {'examId': exam.id}),
+                ),
+                _buildActionButton(
+                  icon: Icons.edit,
+                  label: 'Edit',
+                  color: Colors.orange,
+                  onTap: () => _showEditOptions(exam),
+                ),
+                _buildActionButton(
+                  icon: Icons.delete,
+                  label: 'Delete',
+                  color: Colors.red,
+                  onTap: () => _deleteExam(exam),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildStatusBadge(Exam exam) {
-    final status = _getExamStatus(exam);
-    final color = _getStatusColor(status);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Text(
-        _getStatusText(status),
-        style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w500),
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: color, size: 24),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
       ),
     );
+  }
+
+  void _showEditOptions(Exam exam) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Edit ${exam.name}',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.info, color: Colors.blue),
+              title: const Text('Basic Information'),
+              subtitle: const Text('Name, date, examiner'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => EditExamBasicScreen(exam: exam),
+                  ),
+                ).then((_) => _loadData());
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.class_, color: Colors.orange),
+              title: const Text('Classes'),
+              subtitle: const Text('Manage exam classes'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => EditExamClassesScreen(exam: exam),
+                  ),
+                ).then((_) => _loadData());
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.subject, color: Colors.green),
+              title: const Text('Subjects'),
+              subtitle: const Text('Manage exam subjects'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => EditExamSubjectsScreen(exam: exam),
+                  ),
+                ).then((_) => _loadData());
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _deleteExam(Exam exam) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Exam'),
+        content: Text('Are you sure you want to delete "${exam.name}"? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        final examProvider = Provider.of<ExamProvider>(context, listen: false);
+        final schoolProvider = Provider.of<SchoolProvider>(context, listen: false);
+        final schoolId = schoolProvider.currentSchool?.id.toString();
+
+        if (schoolId != null) {
+          await examProvider.deleteExam(exam.id, schoolId);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Exam deleted successfully')),
+            );
+          }
+          _loadData();
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e')),
+          );
+        }
+      }
+    }
   }
 
   Color _getStatusColor(ExamStatus status) {
@@ -218,351 +507,5 @@ class _ExamListScreenState extends State<ExamListScreen> {
         return 'Unknown';
     }
   }
-
-  List<Exam> _getCurrentPageExams() {
-    final startIndex = (_currentPage - 1) * _itemsPerPage;
-    final endIndex = (startIndex + _itemsPerPage).clamp(0, _filteredExams.length);
-    return _filteredExams.sublist(startIndex, endIndex);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final accentColor = AppTheme.getAccentColorForContext('form');
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Exam Management'),
-        actions: [
-          if (_selectedExams.isNotEmpty)
-            TextButton.icon(
-              onPressed: _deleteSelectedExams,
-              icon: const Icon(Icons.delete),
-              label: Text('Delete (${_selectedExams.length})'),
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
-            ),
-          IconButton(
-            onPressed: _loadData,
-            icon: const Icon(Icons.refresh),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Search and Filters
-          ExamFiltersWidget(
-            searchController: _searchController,
-            selectedStatus: _selectedStatus,
-            onStatusChanged: (status) {
-              setState(() => _selectedStatus = status);
-              _filterExams();
-            },
-            onClearFilters: () {
-              _searchController.clear();
-              setState(() => _selectedStatus = ExamStatus.upcoming);
-              _filterExams();
-            },
-          ),
-
-          // Results Summary
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Text(
-                  'Showing ${_filteredExams.length} exams',
-                  style: theme.textTheme.bodyMedium,
-                ),
-                const Spacer(),
-                if (_selectedExams.isNotEmpty)
-                  Text(
-                    '${_selectedExams.length} selected',
-                    style: TextStyle(color: accentColor),
-                  ),
-              ],
-            ),
-          ),
-
-          // Loading/Error States
-          if (_isLoading)
-            const Expanded(
-              child: Center(child: CircularProgressIndicator()),
-            )
-          else if (_errorMessage != null)
-            Expanded(
-              child: ErrorDisplay(
-                message: _errorMessage!,
-                onRetry: _loadData,
-              ),
-            )
-          else
-            // Data Table
-            Expanded(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: SingleChildScrollView(
-                  controller: _scrollController,
-                  child: DataTable(
-                    columns: [
-                      DataColumn(
-                        label: Checkbox(
-                          value: _selectedExams.length == _filteredExams.length &&
-                                 _filteredExams.isNotEmpty,
-                          onChanged: (value) => _toggleSelectAll(value ?? false),
-                        ),
-                      ),
-                      DataColumn(
-                        label: _buildSortButton('Name', SortColumn.name),
-                      ),
-                      DataColumn(
-                        label: _buildSortButton('Class', SortColumn.className),
-                      ),
-                      DataColumn(
-                        label: _buildSortButton('Date', SortColumn.date),
-                      ),
-                      DataColumn(
-                        label: _buildSortButton('Status', SortColumn.status),
-                      ),
-                      DataColumn(
-                        label: _buildSortButton('Examiner', SortColumn.examiner),
-                      ),
-                      const DataColumn(label: Text('Actions')),
-                    ],
-                    rows: _getCurrentPageExams().map((exam) {
-                      return DataRow(
-                        selected: _selectedExams.contains(exam.id),
-                        cells: [
-                          DataCell(
-                            Checkbox(
-                              value: _selectedExams.contains(exam.id),
-                              onChanged: (value) => _toggleExamSelection(exam.id, value ?? false),
-                            ),
-                          ),
-                          DataCell(Text(exam.name)),
-                          DataCell(Text(_getClassName(exam.classId))),
-                          DataCell(Text(
-                            '${exam.examDate.day}/${exam.examDate.month}/${exam.examDate.year}',
-                          )),
-                          DataCell(_buildStatusBadge(exam)),
-                          DataCell(Text(exam.examinerName)),
-                          DataCell(
-                            PopupMenuButton<String>(
-                              onSelected: (action) => _handleExamAction(action, exam),
-                              itemBuilder: (context) => [
-                                const PopupMenuItem(
-                                  value: 'edit',
-                                  child: Text('Edit'),
-                                ),
-                                const PopupMenuItem(
-                                  value: 'subjects',
-                                  child: Text('Manage Subjects'),
-                                ),
-                                const PopupMenuItem(
-                                  value: 'view',
-                                  child: Text('View Details'),
-                                ),
-                                const PopupMenuItem(
-                                  value: 'delete',
-                                  child: Text('Delete'),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ),
-            ),
-
-          // Pagination
-          if (_filteredExams.length > _itemsPerPage)
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    onPressed: _currentPage > 1
-                        ? () => setState(() => _currentPage--)
-                        : null,
-                    icon: const Icon(Icons.chevron_left),
-                  ),
-                  Text(
-                    'Page $_currentPage of ${(_filteredExams.length / _itemsPerPage).ceil()}',
-                  ),
-                  IconButton(
-                    onPressed: _currentPage < (_filteredExams.length / _itemsPerPage).ceil()
-                        ? () => setState(() => _currentPage++)
-                        : null,
-                    icon: const Icon(Icons.chevron_right),
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _navigateToCreateExam,
-        backgroundColor: accentColor,
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
-
-  void _toggleSelectAll(bool selected) {
-    setState(() {
-      if (selected) {
-        _selectedExams.addAll(_filteredExams.map((e) => e.id));
-      } else {
-        _selectedExams.clear();
-      }
-    });
-  }
-
-  void _toggleExamSelection(String examId, bool selected) {
-    setState(() {
-      if (selected) {
-        _selectedExams.add(examId);
-      } else {
-        _selectedExams.remove(examId);
-      }
-    });
-  }
-
-  void _handleExamAction(String action, Exam exam) {
-    switch (action) {
-      case 'edit':
-        _navigateToEditExam(exam);
-        break;
-      case 'subjects':
-        _navigateToManageSubjects(exam);
-        break;
-      case 'view':
-        _showExamDetails(exam);
-        break;
-      case 'delete':
-        _deleteExam(exam);
-        break;
-    }
-  }
-
-  void _navigateToManageSubjects(Exam exam) {
-    Navigator.of(context).pushNamed('/admin/exam-subject-management', arguments: exam);
-  }
-
-  Future<void> _deleteSelectedExams() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Exams'),
-        content: Text('Are you sure you want to delete ${_selectedExams.length} exams?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      try {
-        final examProvider = Provider.of<ExamProvider>(context, listen: false);
-        final schoolProvider = Provider.of<SchoolProvider>(context, listen: false);
-        final schoolId = schoolProvider.currentSchool?.id.toString();
-
-        if (schoolId != null) {
-          for (final examId in _selectedExams) {
-            await examProvider.deleteExam(examId, schoolId);
-          }
-          _selectedExams.clear();
-          _loadData();
-        }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error deleting exams: $e')),
-        );
-      }
-    }
-  }
-
-  void _navigateToCreateExam() {
-    Navigator.of(context).pushNamed('/admin/exams/create');
-  }
-
-  void _navigateToEditExam(Exam exam) {
-    Navigator.of(context).pushNamed('/admin/exams/edit', arguments: exam);
-  }
-
-  void _showExamDetails(Exam exam) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(exam.name),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Class: ${_getClassName(exam.classId)}'),
-            Text('Date: ${exam.examDate.day}/${exam.examDate.month}/${exam.examDate.year}'),
-            Text('Examiner: ${exam.examinerName}'),
-            if (exam.description != null) Text('Description: ${exam.description}'),
-            if (exam.maxMarks != null) Text('Max Marks: ${exam.maxMarks}'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _deleteExam(Exam exam) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Exam'),
-        content: Text('Are you sure you want to delete "${exam.name}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      try {
-        final examProvider = Provider.of<ExamProvider>(context, listen: false);
-        final schoolProvider = Provider.of<SchoolProvider>(context, listen: false);
-        final schoolId = schoolProvider.currentSchool?.id.toString();
-
-        if (schoolId != null) {
-          await examProvider.deleteExam(exam.id, schoolId);
-          _loadData();
-        }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error deleting exam: $e')),
-        );
-      }
-    }
-  }
 }
+

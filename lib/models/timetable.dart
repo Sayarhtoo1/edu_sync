@@ -57,6 +57,7 @@ class Timetable {
 
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'class_id': classId,
       'start_time': startTimeString, 
       'end_time': endTimeString,     

@@ -5,14 +5,12 @@ import 'package:edu_sync/models/custom_form.dart';
 import 'package:edu_sync/models/form_field_item.dart';
 import 'package:edu_sync/models/form_field_type.dart';
 import 'package:edu_sync/services/custom_form_service.dart';
-import 'package:edu_sync/services/class_service.dart'; // For fetching classes
-// For fetching students
+import 'package:edu_sync/services/class_service.dart';
 import 'package:edu_sync/models/school_class.dart' as app_class;
-import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Import AppLocalizations
-import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
-import 'package:collection/collection.dart'; // Import collection package
-// Import provider
-// Import AppDatabase
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
+import 'package:edu_sync/theme/app_theme.dart';
+import 'package:collection/collection.dart';
+import 'package:provider/provider.dart';
 
 class AddEditCustomFormScreen extends StatefulWidget {
   final int schoolId;
@@ -72,11 +70,16 @@ class _AddEditCustomFormScreenState extends State<AddEditCustomFormScreen> {
     _assignToWholeSchool = widget.form?.assignToWholeSchool ?? false;
 
     if (_isEditing && widget.form != null) {
-      _selectedClassIds = List<int>.from(widget.form!.assignedClassIds); // CustomForm.assignedClassIds is List<int>
+      _selectedClassIds = List<int>.from(widget.form!.assignedClassIds);
       _selectedStudentIds = List<int>.from(widget.form!.assignedStudentIds);
       _loadFieldsForEditing();
     }
-    _classService = ClassService();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _classService = Provider.of<ClassService>(context, listen: false);
     _loadAssignableEntities();
   }
 

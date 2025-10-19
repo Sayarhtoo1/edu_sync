@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import '../../../providers/exam_provider.dart';
-import '../../../theme/app_theme.dart';
-import 'widgets/exam_trends_chart.dart';
-import 'widgets/subject_comparison_chart.dart';
 import 'widgets/top_performers_widget.dart';
 
 class ExamAnalyticsScreen extends StatefulWidget {

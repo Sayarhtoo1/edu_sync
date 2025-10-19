@@ -1,6 +1,7 @@
 import 'dart:async'; // Required for StreamController
 import 'package:flutter/material.dart'; // Import material for ChangeNotifier
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'dart:io' show Platform;
 import 'package:go_router/go_router.dart'; // Import go_router for navigation
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:edu_sync/models/user_role.dart';
@@ -45,10 +46,20 @@ class NotificationService extends ChangeNotifier {
       requestSoundPermission: true,
     );
 
+    // Windows/Linux initialization settings
+    const LinuxInitializationSettings initializationSettingsLinux =
+        LinuxInitializationSettings(defaultActionName: 'Open notification');
+
     final InitializationSettings initializationSettings =
         InitializationSettings(
       android: initializationSettingsAndroid,
       iOS: initializationSettingsDarwin,
+      linux: initializationSettingsLinux,
+      windows: const WindowsInitializationSettings(
+        appName: 'EduSync',
+        appUserModelId: 'com.edusync.app',
+        guid: 'a7f8c3d2-1e4b-5a6c-9d8e-2f3a4b5c6d7e',
+      ),
     );
 
     await _flutterLocalNotificationsPlugin.initialize(
@@ -141,15 +152,23 @@ class NotificationService extends ChangeNotifier {
               final newAnnouncementMap = payload.newRecord;
               final newAnnouncement = Announcement.fromMap(newAnnouncementMap);
               
+              logger.i('Announcement details - ID: ${newAnnouncement.id}, Title: ${newAnnouncement.title}, TargetRole: ${newAnnouncement.targetRole}');
+              logger.i('Current user role: $currentUserRole');
+              
               // Basic RLS check simulation (actual RLS is on DB)
               // This client-side check is just to avoid unnecessary notifications if possible
               bool isTargeted = false;
               if (currentUserRole == UserRole.Admin.name) { // Admins are targeted for all announcements in their school
                 isTargeted = true;
+                logger.i('User is Admin - announcement targeted');
               } else if (newAnnouncement.targetRole == 'All') {
                 isTargeted = true;
+                logger.i('Announcement target is All - announcement targeted');
               } else if (newAnnouncement.targetRole == currentUserRole) { // e.g., targetRole 'Teacher' and currentUserRole is 'Teacher'
                 isTargeted = true;
+                logger.i('Announcement target matches user role - announcement targeted');
+              } else {
+                logger.i('Announcement not targeted to this user');
               }
               // Note: 'SpecificClass' targeting for notifications would require more complex client-side data
               // (e.g. knowing the parent's children's classes, or teacher's classes).

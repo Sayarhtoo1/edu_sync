@@ -18,6 +18,8 @@ import 'package:edu_sync/screens/splash_screen.dart';
 import 'package:edu_sync/screens/auth/login_screen.dart';
 import 'package:edu_sync/screens/auth/reset_password_screen.dart';
 import 'package:edu_sync/screens/admin/modern_admin_dashboard.dart';
+import 'package:edu_sync/screens/desktop/admin/desktop_admin_dashboard.dart';
+import 'package:edu_sync/widgets/common/platform_adaptive_screen.dart';
 import 'package:edu_sync/screens/teacher/modern_teacher_dashboard.dart';
 import 'package:edu_sync/screens/teacher/teacher_student_management_screen.dart';
 import 'package:edu_sync/screens/parent/modern_parent_dashboard.dart';
@@ -47,15 +49,15 @@ import 'package:edu_sync/models/staff.dart' as model;
 import 'package:edu_sync/models/student.dart' as model;
 
 // Import new exam screens
-import 'package:edu_sync/screens/admin/exam_management_screen.dart';
+import 'package:edu_sync/screens/admin/exam/exam_list_screen.dart';
 import 'package:edu_sync/screens/admin/exam/exam_overview_screen.dart';
 import 'package:edu_sync/screens/admin/exam/exam_form_screen.dart';
 import 'package:edu_sync/screens/admin/exam/exam_subject_management_screen.dart';
 import 'package:edu_sync/screens/admin/exam/subject_management_screen.dart';
 import 'package:edu_sync/screens/admin/exam/grade_management_screen.dart';
-import 'package:edu_sync/screens/admin/exam/marks_entry_screen.dart';
+import 'package:edu_sync/screens/admin/exam/unified_marks_entry_screen.dart';
+import 'package:edu_sync/screens/teacher/teacher_marks_entry_selection_screen.dart';
 import 'package:edu_sync/screens/common/report_card_screen.dart';
-import 'package:edu_sync/screens/teacher/exam/input_marks_screen.dart';
 import 'package:edu_sync/screens/admin/exam/exam_analytics_screen.dart';
 import 'package:edu_sync/screens/admin/exam/exam_calendar_screen.dart';
 import 'package:edu_sync/screens/settings/exam_notification_preferences_screen.dart';
@@ -78,10 +80,15 @@ import 'package:edu_sync/screens/admin/finance/category_management_screen.dart';
 import 'package:edu_sync/screens/admin/finance/add_edit_category_screen.dart';
 import 'package:edu_sync/models/fee_payment.dart';
 import 'package:edu_sync/models/finance_category.dart';
+import 'package:edu_sync/screens/admin/finance/financial_reports_screen.dart';
+import 'package:edu_sync/screens/admin/finance/profit_loss_report_screen.dart';
+import 'package:edu_sync/screens/admin/finance/cash_flow_report_screen.dart';
+import 'package:edu_sync/screens/admin/finance/fee_collection_report_screen.dart';
 import 'package:edu_sync/screens/donator/modern_donator_dashboard.dart';
 import 'package:edu_sync/screens/admin/staff_status_overview_screen.dart';
 import 'package:edu_sync/screens/admin/staff_attendance_summary_screen.dart';
 import 'package:edu_sync/screens/common/enhanced_student_attendance_summary.dart';
+import 'package:edu_sync/services/notification_service.dart';
 
 // A class that converts a stream into a listenable for GoRouter.
 class GoRouterRefreshStream extends ChangeNotifier {
@@ -101,11 +108,13 @@ class GoRouterRefreshStream extends ChangeNotifier {
 
 GoRouter initializeRouter() {
   return GoRouter(
+    navigatorKey: NotificationService.navigatorKey,
     refreshListenable: GoRouterRefreshStream(Supabase.instance.client.auth.onAuthStateChange),
     redirect: (BuildContext context, GoRouterState state) async {
-      final authService = Provider.of<AuthService>(context, listen: false);
-      final schoolProvider = Provider.of<SchoolProvider>(context, listen: false);
-      final connectivity = Provider.of<Connectivity>(context, listen: false);
+      try {
+        final authService = Provider.of<AuthService>(context, listen: false);
+        final schoolProvider = Provider.of<SchoolProvider>(context, listen: false);
+        final connectivity = Provider.of<Connectivity>(context, listen: false);
 
       // Handle deep links for password recovery.
       // Only check the initial link when we're on the splash route ('/') to avoid repeated async work
@@ -149,50 +158,62 @@ GoRouter initializeRouter() {
       // If logged in, but going to login or reset password, redirect to dashboard
       if (loggedIn && state.matchedLocation == '/') {
         final connectivityResult = await connectivity.checkConnectivity();
-        if (!connectivityResult.contains(ConnectivityResult.none)) {
+        final isOnline = !connectivityResult.contains(ConnectivityResult.none);
+        
+        if (isOnline) {
           await schoolProvider.fetchCurrentSchool();
-          final role = await authService.getUserRole();
-
-          if (role == UserRole.Admin.name) {
-            return '/admin';
-          } else if (role == UserRole.Teacher.name) {
-            return '/teacher-dashboard';
-          } else if (role == UserRole.Parent.name) {
-            return '/parent-dashboard';
-          } else if (role == UserRole.Manager.name) {
-            return '/manager-dashboard';
-          } else if (role == UserRole.Donator.name) {
-            return '/donator-dashboard';
-          }
         }
-        // Fallback if role is not determined or offline
-        return '/login'; // Go to login screen if offline
+        
+        final role = await authService.getUserRole();
+
+        if (role == UserRole.Admin.name) {
+          return '/admin';
+        } else if (role == UserRole.Teacher.name) {
+          return '/teacher-dashboard';
+        } else if (role == UserRole.Parent.name) {
+          return '/parent-dashboard';
+        } else if (role == UserRole.Manager.name) {
+          return '/manager-dashboard';
+        } else if (role == UserRole.Donator.name) {
+          return '/donator-dashboard';
+        }
+        
+        // If role is null (offline and no cache), stay on splash
+        return null;
       }
 
       if (loggedIn && goingToLogin) {
         final connectivityResult = await connectivity.checkConnectivity();
-        if (!connectivityResult.contains(ConnectivityResult.none)) {
+        final isOnline = !connectivityResult.contains(ConnectivityResult.none);
+        
+        if (isOnline) {
           await schoolProvider.fetchCurrentSchool();
-          final role = await authService.getUserRole();
-
-          if (role == UserRole.Admin.name) {
-            return '/admin';
-          } else if (role == UserRole.Teacher.name) {
-            return '/teacher-dashboard';
-          } else if (role == UserRole.Parent.name) {
-            return '/parent-dashboard';
-          } else if (role == UserRole.Manager.name) {
-            return '/manager-dashboard';
-          } else if (role == UserRole.Donator.name) {
-            return '/donator-dashboard';
-          }
         }
-        // Fallback if role is not determined or offline
-        return '/'; // Go to splash screen to re-evaluate
+        
+        final role = await authService.getUserRole();
+
+        if (role == UserRole.Admin.name) {
+          return '/admin';
+        } else if (role == UserRole.Teacher.name) {
+          return '/teacher-dashboard';
+        } else if (role == UserRole.Parent.name) {
+          return '/parent-dashboard';
+        } else if (role == UserRole.Manager.name) {
+          return '/manager-dashboard';
+        } else if (role == UserRole.Donator.name) {
+          return '/donator-dashboard';
+        }
+        
+        // If role is null, allow staying on login
+        return null;
       }
 
       // No redirect needed
       return null;
+      } catch (e) {
+        logger.e('Router redirect error: $e');
+        return null;
+      }
     },
     routes: [
       GoRoute(
@@ -213,7 +234,10 @@ GoRouter initializeRouter() {
       ),
       GoRoute(
         path: '/admin',
-        builder: (context, state) => const ModernAdminDashboard(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: ModernAdminDashboard(),
+          desktopScreen: DesktopAdminDashboard(),
+        ),
       ),
       GoRoute(
         path: '/teacher-dashboard',
@@ -390,7 +414,7 @@ GoRouter initializeRouter() {
       GoRoute(
         path: '/admin/exam-management',
         name: 'exam-management',
-        builder: (context, state) => const ExamManagementScreen(),
+        builder: (context, state) => const ExamListScreen(),
       ),
       GoRoute(
         path: '/admin/exam-form',
@@ -424,21 +448,31 @@ GoRouter initializeRouter() {
         },
       ),
       GoRoute(
-        path: '/input-marks/:examId',
-        builder: (context, state) {
-          final examId = state.pathParameters['examId']!;
-          return InputMarksScreen(examId: examId);
-        },
-      ),
-      GoRoute(
         path: '/admin/marks-entry/:examId',
         name: 'marks-entry',
         builder: (context, state) {
           final examId = state.pathParameters['examId']!;
           final extra = state.extra as Map<String, String>?;
-          return MarksEntryScreen(
+          return UnifiedMarksEntryScreen(
             examId: examId,
-            examName: extra?['examName'],
+            examName: extra?['examName'] ?? 'Enter Marks',
+          );
+        },
+      ),
+      GoRoute(
+        path: '/teacher/marks-entry-selection',
+        name: 'teacher-marks-entry-selection',
+        builder: (context, state) => const TeacherMarksEntrySelectionScreen(),
+      ),
+      GoRoute(
+        path: '/teacher/marks-entry/:examId',
+        name: 'teacher-marks-entry',
+        builder: (context, state) {
+          final examId = state.pathParameters['examId']!;
+          final extra = state.extra as Map<String, String>?;
+          return UnifiedMarksEntryScreen(
+            examId: examId,
+            examName: extra?['examName'] ?? 'Enter Marks',
           );
         },
       ),
@@ -552,6 +586,39 @@ GoRouter initializeRouter() {
       GoRoute(
         path: '/admin/salary-management',
         builder: (context, state) => const SalaryManagementScreen(),
+      ),
+      // Financial Reports routes
+      GoRoute(
+        path: '/admin/financial-reports',
+        name: 'financial-reports',
+        builder: (context, state) => const FinancialReportsScreen(),
+      ),
+      GoRoute(
+        path: '/admin/reports/profit-loss',
+        name: 'profit-loss-report',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return ProfitLossReportScreen(
+            startDate: extra?['startDate'] as DateTime?,
+            endDate: extra?['endDate'] as DateTime?,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/admin/reports/cash-flow',
+        name: 'cash-flow-report',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return CashFlowReportScreen(
+            startDate: extra?['startDate'] as DateTime?,
+            endDate: extra?['endDate'] as DateTime?,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/admin/reports/fee-collection',
+        name: 'fee-collection-report',
+        builder: (context, state) => const FeeCollectionReportScreen(),
       ),
       // Donator routes
       GoRoute(

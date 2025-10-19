@@ -6,13 +6,11 @@ import 'package:go_router/go_router.dart';
 
 import 'package:edu_sync/config/providers.dart';
 import 'package:edu_sync/config/router.dart';
-import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Import AppLocalizations
+import 'package:edu_sync/l10n/gen/app_localizations.dart';
 import 'package:edu_sync/theme/app_theme.dart';
 import 'package:edu_sync/providers/locale_provider.dart';
 import 'package:edu_sync/services/auth_service.dart';
-import 'package:edu_sync/providers/class_provider.dart';
-
-late final GoRouter _router;
+import 'package:edu_sync/utils/responsive.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,24 +21,23 @@ Future<void> main() async {
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjcmhrdGdma2drd3Vvc3ljbGJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY3NTMxNzIsImV4cCI6MjA2MjMyOTE3Mn0.mTD6GqRA650VinZzo5AIHLRbWUxor5GuvSjKMGtq5II',
   );
 
-  _router = initializeRouter();
   final providers = await initializeProviders();
+  final router = initializeRouter();
 
   runApp(
     ProviderScope(
       child: MultiProvider(
-        providers: [
-          ...providers,
-          ChangeNotifierProvider(create: (_) => ClassProvider()),
-        ],
-        child: const MyApp(),
+        providers: providers,
+        child: MyApp(router: router),
       ),
     ),
   );
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+  final GoRouter router;
+  
+  const MyApp({super.key, required this.router});
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -51,7 +48,12 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     // Start listening to auth changes as soon as the app starts
-    Provider.of<AuthService>(context, listen: false).listenToAuthChanges();
+    final authService = Provider.of<AuthService>(context, listen: false);
+    authService.listenToAuthChanges();
+    // Ensure subscription if user is already logged in
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await authService.ensureAnnouncementSubscription();
+    });
   }
 
   @override
@@ -59,12 +61,24 @@ class _MyAppState extends State<MyApp> {
     final localeProvider = Provider.of<LocaleProvider>(context);
 
     return MaterialApp.router(
-      title: 'EduSync Myanmar', // This could also be localized
-      locale: localeProvider.locale, // Set locale from provider
-      localizationsDelegates: AppLocalizations.localizationsDelegates, // Use generated delegates
-      supportedLocales: AppLocalizations.supportedLocales, // Use generated supported locales
-      theme: AppTheme.themeData, // Apply the custom theme
-      routerConfig: _router, // Use go_router for navigation
+      title: 'EduSync Myanmar',
+      locale: localeProvider.locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      theme: AppTheme.themeData,
+      routerConfig: widget.router,
+      builder: (context, child) {
+        if (child == null) return const SizedBox.shrink();
+        if (Responsive.isDesktop(context)) {
+          return Center(
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 1400),
+              child: child,
+            ),
+          );
+        }
+        return child;
+      },
     );
   }
 }

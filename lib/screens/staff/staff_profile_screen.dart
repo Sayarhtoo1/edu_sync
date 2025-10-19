@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../models/staff.dart';
 
 class StaffProfileScreen extends StatelessWidget {
@@ -20,9 +21,17 @@ class StaffProfileScreen extends StatelessWidget {
             flexibleSpace: FlexibleSpaceBar(
               title: Text(staff.fullName ?? 'Staff Profile'),
               background: staff.profilePhotoUrl != null
-                  ? Image.network(
-                      staff.profilePhotoUrl!,
+                  ? CachedNetworkImage(
+                      imageUrl: staff.profilePhotoUrl!,
                       fit: BoxFit.cover,
+                      placeholder: (context, url) => Container(
+                        color: Colors.grey[200],
+                        child: const Center(child: CircularProgressIndicator()),
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        color: Colors.grey[200],
+                        child: const Icon(Icons.person, size: 100, color: Colors.grey),
+                      ),
                     )
                   : Container(
                       color: Colors.grey[200],

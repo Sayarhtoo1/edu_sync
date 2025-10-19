@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../models/staff.dart';
 import '../../services/auth_service.dart';
 import '../../models/user.dart' as app_user;
@@ -201,20 +202,43 @@ class _StaffManagementScreenState extends State<StaffManagementScreen> {
                             ),
                             child: ListTile(
                               contentPadding: const EdgeInsets.all(16),
-                              leading: Container(
-                                width: 48,
-                                height: 48,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFFF9800).withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                  image: staff.profilePhotoUrl != null && staff.profilePhotoUrl!.isNotEmpty
-                                      ? DecorationImage(image: NetworkImage(staff.profilePhotoUrl!), fit: BoxFit.cover)
-                                      : null,
-                                ),
-                                child: staff.profilePhotoUrl == null || staff.profilePhotoUrl!.isEmpty
-                                    ? const Icon(Icons.badge_rounded, color: Color(0xFFFF9800))
-                                    : null,
-                              ),
+                              leading: staff.profilePhotoUrl != null && staff.profilePhotoUrl!.isNotEmpty
+                                  ? ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: CachedNetworkImage(
+                                        imageUrl: staff.profilePhotoUrl!,
+                                        width: 48,
+                                        height: 48,
+                                        fit: BoxFit.cover,
+                                        placeholder: (context, url) => Container(
+                                          width: 48,
+                                          height: 48,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFFF9800).withValues(alpha: 0.1),
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: const Icon(Icons.badge_rounded, color: Color(0xFFFF9800)),
+                                        ),
+                                        errorWidget: (context, url, error) => Container(
+                                          width: 48,
+                                          height: 48,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFFF9800).withValues(alpha: 0.1),
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: const Icon(Icons.badge_rounded, color: Color(0xFFFF9800)),
+                                        ),
+                                      ),
+                                    )
+                                  : Container(
+                                      width: 48,
+                                      height: 48,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFFF9800).withValues(alpha: 0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: const Icon(Icons.badge_rounded, color: Color(0xFFFF9800)),
+                                    ),
                               title: Text(staff.fullName ?? 'N/A', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                               subtitle: Text(staff.role ?? 'Staff', style: TextStyle(color: Colors.grey[600])),
                               trailing: Row(

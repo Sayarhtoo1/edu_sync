@@ -183,6 +183,8 @@ class _FinanceOverviewScreenState extends State<FinanceOverviewScreen> {
                               _buildQuickActionCard('Donations', Icons.volunteer_activism, const Color(0xFFFF9800), '/admin/donation-management'),
                               const SizedBox(height: 12),
                               _buildQuickActionCard('Dashboard', Icons.bar_chart, const Color(0xFF00BCD4), '/admin/finance-dashboard'),
+                              const SizedBox(height: 12),
+                              _buildQuickActionCard('Reports', Icons.assessment, const Color(0xFF2196F3), '/admin/financial-reports'),
                             ],
                           ),
                         ),

@@ -17,7 +17,7 @@ class _FeePaymentManagementScreenState extends State<FeePaymentManagementScreen>
   bool _isLoading = true;
   List<FeePayment> _payments = [];
   List<FeePayment> _filteredPayments = [];
-  String _searchQuery = '';
+  final String _searchQuery = '';
   String _statusFilter = 'All';
 
   @override

@@ -9,41 +9,56 @@ class ExamMarksService {
   Future<List<Map<String, dynamic>>> getStudentsForMarksEntry({
     required String examId,
     required String subjectId,
+    required int classId,
   }) async {
     try {
-      final examSubject = await _supabaseClient
+      final examSubjectResponse = await _supabaseClient
           .from('exam_subjects')
           .select('max_marks, passing_marks')
           .eq('exam_id', examId)
           .eq('subject_id', subjectId)
-          .single();
+          .maybeSingle();
 
-      final exam = await _supabaseClient
-          .from('exams')
-          .select('class_id')
-          .eq('id', examId)
-          .single();
+      if (examSubjectResponse == null) {
+        throw Exception('Subject not added to this exam. Please add subjects first.');
+      }
 
       final students = await _supabaseClient
           .from('students')
           .select('id, full_name')
-          .eq('class_id', exam['class_id'])
+          .eq('class_id', classId)
           .order('full_name');
 
       final marks = await _supabaseClient
           .from('student_exam_marks')
-          .select('student_id, marks_obtained')
-          .eq('exam_id', examId)
-          .eq('subject_id', subjectId);
+          .select('student_id, subject_id, marks_obtained')
+          .eq('exam_id', examId);
 
-      final marksMap = {for (var m in marks) m['student_id']: m['marks_obtained']};
+      final marksMap = <int, int>{};
+      final subSubjectMarksMap = <int, Map<String, int>>{};
+      
+      for (var m in marks) {
+        final studentId = m['student_id'] as int;
+        final markSubjectId = m['subject_id'] as String;
+        final marksObtained = m['marks_obtained'] as int;
+        
+        if (markSubjectId == subjectId) {
+          marksMap[studentId] = marksObtained;
+        } else {
+          if (!subSubjectMarksMap.containsKey(studentId)) {
+            subSubjectMarksMap[studentId] = {};
+          }
+          subSubjectMarksMap[studentId]![markSubjectId] = marksObtained;
+        }
+      }
 
       return students.map((s) => {
         'studentId': s['id'],
         'studentName': s['full_name'],
         'marksObtained': marksMap[s['id']],
-        'maxMarks': examSubject['max_marks'],
-        'passingMarks': examSubject['passing_marks'],
+        'subSubjectMarks': subSubjectMarksMap[s['id']] ?? {},
+        'maxMarks': examSubjectResponse['max_marks'],
+        'passingMarks': examSubjectResponse['passing_marks'],
       }).toList();
     } catch (e) {
       logger.e('Error fetching students for marks entry: $e');
@@ -95,18 +110,13 @@ class ExamMarksService {
   Future<Map<String, dynamic>> getMarksEntryProgress({
     required String examId,
     required String subjectId,
+    required int classId,
   }) async {
     try {
-      final exam = await _supabaseClient
-          .from('exams')
-          .select('class_id')
-          .eq('id', examId)
-          .single();
-
       final totalStudentsResponse = await _supabaseClient
           .from('students')
           .select('id')
-          .eq('class_id', exam['class_id']);
+          .eq('class_id', classId);
 
       final marksEnteredResponse = await _supabaseClient
           .from('student_exam_marks')

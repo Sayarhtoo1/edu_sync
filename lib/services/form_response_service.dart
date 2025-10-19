@@ -4,11 +4,10 @@ import 'package:edu_sync/models/form_response.dart';
 import 'package:edu_sync/models/form_response_answer.dart';
 import 'package:intl/intl.dart';
 import 'package:edu_sync/utils/logger.dart';
-import 'cache_service.dart';
 
 class FormResponseService {
   final SupabaseClient _supabaseClient = Supabase.instance.client;
-  final CacheService _cacheService = CacheService();
+  // final CacheService _cacheService = CacheService(); // TODO: Phase 2
 
   Future<bool> submitResponse(FormResponse response, List<FormResponseAnswer> answers) async {
     try {
@@ -36,7 +35,7 @@ class FormResponseService {
   Future<List<FormResponse>> getResponsesForForm(String formId) async {
     final connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
-      return await _cacheService.getFormResponses(formId);
+      return []; // await _cacheService.getFormResponses(formId);
     } else {
       try {
         final response = await _supabaseClient
@@ -45,11 +44,11 @@ class FormResponseService {
             .eq('form_id', formId)
             .order('submitted_at', ascending: false);
         final responses = response.map((data) => FormResponse.fromMap(data)).toList();
-        await _cacheService.saveFormResponses(formId, responses);
+        // await _cacheService.saveFormResponses(formId, responses);
         return responses;
       } catch (e) {
         logger.e('Error fetching responses for form $formId: $e');
-        return await _cacheService.getFormResponses(formId);
+        return []; // await _cacheService.getFormResponses(formId);
       }
     }
   }
@@ -57,7 +56,7 @@ class FormResponseService {
   Future<List<FormResponseAnswer>> getAnswersForResponse(String responseId) async {
     final connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
-      return await _cacheService.getFormResponseAnswers(responseId);
+      return []; // await _cacheService.getFormResponseAnswers(responseId);
     } else {
       try {
         final response = await _supabaseClient
@@ -65,11 +64,11 @@ class FormResponseService {
             .select()
             .eq('response_id', responseId);
         final answers = response.map((data) => FormResponseAnswer.fromMap(data)).toList();
-        await _cacheService.saveFormResponseAnswers(responseId, answers);
+        // await _cacheService.saveFormResponseAnswers(responseId, answers);
         return answers;
       } catch (e) {
         logger.e('Error fetching answers for response $responseId: $e');
-        return await _cacheService.getFormResponseAnswers(responseId);
+        return []; // await _cacheService.getFormResponseAnswers(responseId);
       }
     }
   }
