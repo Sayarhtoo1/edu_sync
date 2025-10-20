@@ -59,14 +59,15 @@ class ExamAnalyticsEnhancedService {
     required String examId,
   }) async {
     try {
-      final response = await _supabaseClient
+      final marks = await _supabaseClient
           .from('student_exam_marks')
-          .select('marks_obtained, exam_subjects!inner(total_marks)')
-          .eq('exam_subjects.exam_id', examId);
+          .select('marks_obtained, total_marks')
+          .eq('exam_id', examId);
 
       final distribution = {'A': 0, 'B': 0, 'C': 0, 'D': 0, 'F': 0};
-      for (var mark in response) {
-        final percentage = (mark['marks_obtained'] / mark['exam_subjects']['total_marks']) * 100;
+      for (var mark in marks) {
+        final totalMarks = mark['total_marks'] ?? 100;
+        final percentage = (mark['marks_obtained'] / totalMarks) * 100;
         if (percentage >= 80) {
           distribution['A'] = (distribution['A'] ?? 0) + 1;
         } else if (percentage >= 70) {
@@ -92,12 +93,43 @@ class ExamAnalyticsEnhancedService {
     int limit = 10,
   }) async {
     try {
-      final response = await _supabaseClient.rpc('get_top_performers_detailed', params: {
-        'p_exam_id': examId,
-        'p_limit': limit,
-      });
+      final marks = await _supabaseClient
+          .from('student_exam_marks')
+          .select('student_id, marks_obtained, total_marks, students(full_name, class_id, classes(name))')
+          .eq('exam_id', examId);
 
-      return List<Map<String, dynamic>>.from(response ?? []);
+      final studentTotals = <int, Map<String, dynamic>>{};
+      for (var mark in marks) {
+        final studentId = mark['student_id'] as int;
+        if (!studentTotals.containsKey(studentId)) {
+          final student = mark['students'];
+          final classData = student?['classes'];
+          studentTotals[studentId] = {
+            'student_id': studentId,
+            'student_name': student?['full_name'] ?? 'Unknown',
+            'class_name': classData?['name'] ?? 'N/A',
+            'total_obtained': 0,
+            'total_max': 0,
+          };
+        }
+        studentTotals[studentId]!['total_obtained'] += mark['marks_obtained'] as int;
+        studentTotals[studentId]!['total_max'] += (mark['total_marks'] ?? 100) as int;
+      }
+
+      final performers = studentTotals.values.map((student) {
+        final percentage = (student['total_obtained'] / student['total_max']) * 100;
+        final grade = percentage >= 80 ? 'A' : percentage >= 70 ? 'B' : percentage >= 60 ? 'C' : percentage >= 50 ? 'D' : 'F';
+        return {
+          'student_id': student['student_id'],
+          'student_name': student['student_name'],
+          'class_name': student['class_name'],
+          'percentage': percentage,
+          'grade': grade,
+        };
+      }).toList();
+
+      performers.sort((a, b) => (b['percentage'] as double).compareTo(a['percentage'] as double));
+      return performers.take(limit).toList();
     } catch (e) {
       logger.e('Error fetching top performers: $e');
       return [];

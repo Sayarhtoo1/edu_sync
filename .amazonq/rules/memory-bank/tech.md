@@ -1,223 +1,166 @@
 # Technology Stack
 
 ## Programming Languages
-- **Dart**: ^3.7.2 (primary language for Flutter application)
-- **SQL**: Database migrations and schema definitions
-- **TypeScript**: Deno-based Gemini API proxy
-- **Kotlin**: Android native code (build.gradle.kts)
-- **Swift**: iOS/macOS native code
-- **C++**: Windows/Linux native code
+- **Dart**: ^3.7.2 (Primary language for Flutter application)
+- **TypeScript**: Deno proxy service implementation
+- **C++**: Windows and Linux native platform code
+- **Swift**: iOS and macOS native platform code
+- **Kotlin**: Android native platform code
+- **SQL**: Database migrations and schema
 
-## Framework and Runtime
+## Framework & Runtime
 - **Flutter SDK**: Cross-platform UI framework
-- **Deno**: TypeScript runtime for proxy service
-
-## Backend and Database
-- **Supabase**: Backend-as-a-Service
-  - PostgreSQL database
-  - Authentication and authorization
-  - Real-time subscriptions
-  - Row Level Security (RLS)
-  - Storage for file uploads
-  - Edge Functions support
-
-- **Drift**: Local SQLite database (v2.28.1)
-  - Type-safe SQL queries
-  - Reactive streams
-  - Migration support
-  - Code generation
-
-## State Management
-- **Provider**: ^6.1.5 (primary state management)
-- **Flutter Riverpod**: ^2.5.1 (selective usage)
-- **ChangeNotifier**: Built-in Flutter state management
-
-## Navigation
-- **go_router**: ^16.2.1
-  - Declarative routing
-  - Deep linking support
-  - Route guards and redirects
-  - Named routes
+- **Deno**: TypeScript/JavaScript runtime for proxy service
 
 ## Core Dependencies
 
-### Authentication & Security
-- `supabase_flutter`: ^2.10.0 - Backend integration
-- `app_links`: ^6.4.1 - Deep linking for password reset
+### State Management
+- `provider: ^6.1.5` - Primary state management solution
+- `flutter_riverpod: ^2.5.1` - Alternative state management for specific features
+- `get_it: ^8.0.3` - Service locator for dependency injection
+
+### Backend & Database
+- `supabase_flutter: ^2.10.0` - Supabase client for authentication, database, and real-time features
+- `drift: ^2.28.1` - Type-safe SQL database for local storage
+- `sqlite3_flutter_libs: ^0.5.0` - SQLite native libraries
+- `path_provider: ^2.1.3` - File system path access
+- `path: ^1.9.0` - Path manipulation utilities
+
+### Navigation & Routing
+- `go_router: ^16.2.1` - Declarative routing with deep linking
+- `app_links: ^6.4.1` - Deep link handling
 
 ### UI & Visualization
-- `syncfusion_flutter_charts`: ^31.1.19 - Analytics charts
-- `cached_network_image`: ^3.4.1 - Image caching
-- `flutter_svg`: ^2.2.0 - SVG rendering
-- `table_calendar`: ^3.1.2 - Calendar views
-- `hijri_calendar`: ^1.0.7+7 - Islamic calendar
+- `syncfusion_flutter_charts: ^31.1.19` - Advanced charting and data visualization
+- `fl_chart: ^0.66.0` - Additional charting library
+- `table_calendar: ^3.1.2` - Calendar widget for scheduling
+- `cached_network_image: ^3.4.1` - Image caching and loading
+- `flutter_svg: ^2.2.0` - SVG rendering support
 
 ### Localization
-- `intl`: ^0.20.2 - Internationalization
-- `flutter_localizations`: SDK - Flutter localization support
+- `intl: ^0.20.2` - Internationalization and formatting
+- `flutter_localizations` (SDK) - Flutter localization support
+- `hijri_calendar: ^1.0.7+7` - Islamic calendar support
 
-### File & Media
-- `image_picker`: ^1.1.2 - Camera and gallery access
-- `file_picker`: ^8.1.6 - Document selection
-- `pdf`: ^3.11.1 - PDF generation
-- `printing`: ^5.13.4 - PDF printing and sharing
-- `share_plus`: ^10.1.3 - Native sharing
+### Notifications & Communication
+- `flutter_local_notifications: ^19.1.0` - Local push notifications
+- `connectivity_plus: ^6.0.0` - Network connectivity monitoring
 
-### Data & Storage
-- `shared_preferences`: ^2.2.0 - Key-value storage
-- `path_provider`: ^2.1.3 - File system paths
-- `sqlite3_flutter_libs`: ^0.5.0 - SQLite native libraries
+### File & Media Handling
+- `image_picker: ^1.1.2` - Image selection from camera/gallery
+- `file_picker: ^8.1.6` - File selection
+- `pdf: ^3.11.1` - PDF generation
+- `printing: ^5.13.4` - PDF printing and sharing
+- `share_plus: ^10.1.3` - Native sharing functionality
+- `open_file: ^3.5.10` - File opening with default apps
+- `csv: ^5.0.1` - CSV file parsing and generation
 
-### Networking
-- `dio`: ^5.4.3+1 - HTTP client
-- `connectivity_plus`: ^6.0.0 - Network status monitoring
+### Networking & API
+- `dio: ^5.4.3+1` - HTTP client for API requests
+- `url_launcher: ^6.3.2` - URL and external app launching
+
+### Location & Maps
+- `google_maps_flutter: ^2.6.1` - Google Maps integration
+- `geolocator: ^12.0.0` - Location services
+
+### Storage & Preferences
+- `shared_preferences: ^2.2.0` - Key-value storage
+- `flutter_dotenv: ^5.2.1` - Environment variable management
 
 ### Utilities
-- `uuid`: ^4.4.0 - UUID generation
-- `collection`: ^1.18.0 - Collection utilities
-- `logger`: ^2.3.0 - Logging framework
-- `csv`: ^5.0.1 - CSV parsing and generation
-- `open_file`: ^3.5.10 - File opening
-- `url_launcher`: ^6.3.2 - URL launching
-- `package_info_plus`: ^8.3.1 - App version info
+- `uuid: ^4.4.0` - UUID generation
+- `collection: ^1.18.0` - Collection utilities
+- `logger: ^2.3.0` - Logging framework
+- `package_info_plus: ^8.3.1` - App package information
+- `permission_handler: ^12.0.1` - Runtime permissions
 
-### Permissions & Location
-- `permission_handler`: ^12.0.1 - Runtime permissions
-- `google_maps_flutter`: ^2.6.1 - Maps integration
-- `geolocator`: ^12.0.0 - GPS location
-
-### Notifications
-- `flutter_local_notifications`: ^19.1.0 - Local notifications
-
-### Dependency Injection
-- `get_it`: ^8.0.3 - Service locator
-
-### Environment
-- `flutter_dotenv`: ^5.2.1 - Environment variable management
+### UI Components
+- `cupertino_icons: ^1.0.8` - iOS-style icons
 
 ## Development Dependencies
 
 ### Testing
-- `flutter_test`: SDK - Flutter testing framework
-- `mockito`: ^5.4.4 - Mocking library
-
-### Code Generation
-- `build_runner`: ^2.8.0 - Code generation runner
-- `drift_dev`: ^2.28.1 - Drift code generator
+- `flutter_test` (SDK) - Flutter testing framework
+- `mockito: ^5.4.4` - Mocking framework for unit tests
 
 ### Code Quality
-- `flutter_lints`: ^6.0.0 - Linting rules
+- `flutter_lints: ^6.0.0` - Recommended linting rules
 
 ### Build Tools
-- `flutter_launcher_icons`: ^0.14.4 - App icon generation
+- `build_runner: ^2.8.0` - Code generation runner
+- `drift_dev: ^2.28.1` - Drift code generation
+- `flutter_launcher_icons: ^0.14.4` - App icon generation
 
 ## Build System
-
-### Android
-- **Gradle**: 8.10.2
-- **Kotlin DSL**: build.gradle.kts
-- **Min SDK**: 21
-- **Target SDK**: Latest
-
-### iOS/macOS
-- **Xcode**: Project-based build
-- **CocoaPods**: Dependency management
-- **Swift**: Native code
-
-### Windows/Linux
-- **CMake**: Build system
-- **C++**: Native code
-
-### Web
-- **Flutter Web**: Compiled to JavaScript
+- **Gradle**: Android build system (Kotlin DSL)
+- **Xcode**: iOS/macOS build system
+- **CMake**: Windows/Linux build system
 
 ## Development Commands
 
-### Setup
+### Running the Application
 ```bash
-flutter pub get                    # Install dependencies
-flutter pub run build_runner build # Generate code
-```
-
-### Development
-```bash
-flutter run                        # Run in debug mode
-flutter run --release              # Run in release mode
-flutter run -d windows             # Run on Windows
-flutter run -d chrome              # Run on Web
+flutter run                    # Run on connected device
+flutter run -d windows         # Run on Windows
+flutter run -d chrome          # Run on web
+flutter run --release          # Release build
 ```
 
 ### Building
 ```bash
-flutter build apk --release        # Build Android APK
-flutter build appbundle            # Build Android App Bundle
-flutter build ios                  # Build iOS app
-flutter build windows              # Build Windows app
-flutter build web                  # Build web app
+flutter build apk              # Android APK
+flutter build appbundle        # Android App Bundle
+flutter build ios              # iOS build
+flutter build windows          # Windows executable
+flutter build web              # Web build
 ```
 
 ### Code Generation
 ```bash
-flutter pub run build_runner build --delete-conflicting-outputs
-flutter pub run build_runner watch # Watch mode
+flutter pub run build_runner build              # Generate code
+flutter pub run build_runner build --delete-conflicting-outputs  # Force regenerate
 ```
 
 ### Localization
 ```bash
-flutter gen-l10n                   # Generate localization files
+flutter gen-l10n               # Generate localization files
 ```
 
 ### Testing
 ```bash
-flutter test                       # Run all tests
-flutter test test/services/        # Run specific test directory
+flutter test                   # Run all tests
+flutter test test/services/    # Run specific test directory
 ```
 
-### Database Migrations
+### Maintenance
 ```bash
-# Supabase migrations
-supabase migration new <name>      # Create new migration
-supabase db push                   # Apply migrations
-supabase db reset                  # Reset database
-```
-
-### Icons
-```bash
-flutter pub run flutter_launcher_icons:main
+flutter pub get                # Install dependencies
+flutter pub upgrade            # Upgrade dependencies
+flutter clean                  # Clean build artifacts
+flutter doctor                 # Check Flutter installation
 ```
 
 ## Environment Configuration
+- `.env` file for environment variables (Supabase URL, API keys)
+- `devtools_options.yaml` for Flutter DevTools configuration
+- `analysis_options.yaml` for static analysis rules
+- `l10n.yaml` for localization configuration
 
-### Required Environment Variables (.env)
-- Supabase URL: `https://rcrhktgfkgkwuosyclbo.supabase.co`
-- Supabase Anon Key: (stored in .env)
+## Version
+- **Current Version**: 3.3.1
+- **Minimum Android SDK**: 21
+- **SDK Constraints**: ^3.7.2
 
-### Configuration Files
-- `pubspec.yaml`: Dart dependencies and assets
-- `l10n.yaml`: Localization configuration
-- `analysis_options.yaml`: Linting rules
-- `supabase/config.toml`: Supabase project config
-
-## Version Information
-- **App Version**: 3.2.0+1
-- **Dart SDK**: ^3.7.2
-- **Flutter**: Latest stable
+## Backend Services
+- **Supabase**: 
+  - URL: https://rcrhktgfkgkwuosyclbo.supabase.co
+  - Authentication, PostgreSQL database, real-time subscriptions, storage
+- **Deno Deploy**: Gemini API proxy service
 
 ## Platform Support
-- ✅ Android (API 21+)
-- ✅ iOS
-- ✅ Windows
-- ✅ Linux
-- ✅ macOS
-- ✅ Web
-
-## IDE Support
-- Android Studio
-- Visual Studio Code
-- IntelliJ IDEA
-- Xcode (for iOS/macOS)
-
-## External Services
-- **Supabase**: Backend and database
-- **Deno Deploy**: Gemini API proxy hosting
-- **Google Maps API**: Location services (requires API key)
+- Android (API 21+)
+- iOS
+- Windows
+- Linux
+- macOS
+- Web

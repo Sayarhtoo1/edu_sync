@@ -68,16 +68,7 @@ class _MyAppState extends State<MyApp> {
       theme: AppTheme.themeData,
       routerConfig: widget.router,
       builder: (context, child) {
-        if (child == null) return const SizedBox.shrink();
-        if (Responsive.isDesktop(context)) {
-          return Center(
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 1400),
-              child: child,
-            ),
-          );
-        }
-        return child;
+        return child ?? const SizedBox.shrink();
       },
     );
   }

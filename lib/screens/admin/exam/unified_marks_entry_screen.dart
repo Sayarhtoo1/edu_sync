@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../providers/exam_provider.dart';
 import '../../../providers/class_provider.dart';
 import '../../../models/exam_class.dart';
@@ -33,6 +35,11 @@ class _UnifiedMarksEntryScreenState extends State<UnifiedMarksEntryScreen> {
   ExamSubject? _examSubject;
   List<Map<String, dynamic>> _students = [];
   final Map<String, TextEditingController> _controllers = {};
+  bool _orderChanged = false;
+  List<Subject> _orderedSubSubjects = [];
+  final Map<String, bool> _isSaving = {};
+  final Map<String, Timer?> _debounceTimers = {};
+  final Set<String> _unsavedFields = {};
 
   @override
   void initState() {
@@ -42,6 +49,9 @@ class _UnifiedMarksEntryScreenState extends State<UnifiedMarksEntryScreen> {
 
   @override
   void dispose() {
+    for (var timer in _debounceTimers.values) {
+      timer?.cancel();
+    }
     for (var c in _controllers.values) {
       c.dispose();
     }
@@ -151,6 +161,21 @@ class _UnifiedMarksEntryScreenState extends State<UnifiedMarksEntryScreen> {
         classId: _selectedExamClass!.classId,
       );
 
+      final orderData = await Supabase.instance.client
+          .from('student_display_order')
+          .select('student_id, display_order')
+          .eq('class_id', _selectedExamClass!.classId)
+          .order('display_order');
+      
+      if (orderData.isNotEmpty) {
+        final orderMap = {for (var item in orderData) item['student_id']: item['display_order']};
+        students.sort((a, b) {
+          final orderA = orderMap[a['studentId']] ?? 999999;
+          final orderB = orderMap[b['studentId']] ?? 999999;
+          return orderA.compareTo(orderB);
+        });
+      }
+
       _students = students;
       
       _examSubject = examProvider.examSubjects.where((es) => es.subjectId == _selectedSubject!.id).firstOrNull;
@@ -161,6 +186,7 @@ class _UnifiedMarksEntryScreenState extends State<UnifiedMarksEntryScreen> {
       _controllers.clear();
       
       if (_selectedSubject!.hasSubSubjects) {
+        _orderedSubSubjects = List.from(_selectedSubject!.subSubjects!);
         for (var student in students) {
           final studentId = student['studentId'] as int;
           for (var subSubject in _selectedSubject!.subSubjects!) {
@@ -202,8 +228,23 @@ class _UnifiedMarksEntryScreenState extends State<UnifiedMarksEntryScreen> {
     return total;
   }
 
-  Future<void> _autoSaveMark(int studentId, String subjectId, String marks) async {
+  void _markAsUnsaved(String key) {
+    _unsavedFields.add(key);
+    _debounceTimers[key]?.cancel();
+    _debounceTimers[key] = Timer(const Duration(seconds: 2), () {
+      _saveMark(int.parse(key.split('_')[0]), key.split('_')[1], _controllers[key]?.text ?? '');
+    });
+  }
+
+  Future<void> _saveMark(int studentId, String subjectId, String marks) async {
+    final key = '${studentId}_$subjectId';
+    
     if (marks.isEmpty) return;
+    if (_isSaving[key] == true) return;
+    
+    _debounceTimers[key]?.cancel();
+    _isSaving[key] = true;
+    setState(() {});
     
     try {
       final examProvider = Provider.of<ExamProvider>(context, listen: false);
@@ -213,12 +254,31 @@ class _UnifiedMarksEntryScreenState extends State<UnifiedMarksEntryScreen> {
         subjectId: subjectId,
         marksObtained: int.parse(marks),
       );
+      _unsavedFields.remove(key);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Failed to save: $e'),
+            backgroundColor: Colors.red,
+            action: SnackBarAction(
+              label: 'Retry',
+              textColor: Colors.white,
+              onPressed: () => _saveMark(studentId, subjectId, marks),
+            ),
+          ),
         );
       }
+    } finally {
+      _isSaving[key] = false;
+      setState(() {});
+    }
+  }
+
+  Future<void> _saveAllUnsaved() async {
+    for (var key in _unsavedFields.toList()) {
+      final parts = key.split('_');
+      await _saveMark(int.parse(parts[0]), parts[1], _controllers[key]?.text ?? '');
     }
   }
 
@@ -230,6 +290,21 @@ class _UnifiedMarksEntryScreenState extends State<UnifiedMarksEntryScreen> {
       appBar: AppBar(
         title: Text(widget.examName),
         actions: [
+          if (_unsavedFields.isNotEmpty)
+            IconButton(
+              onPressed: _saveAllUnsaved,
+              icon: Badge(
+                label: Text('${_unsavedFields.length}'),
+                child: const Icon(Icons.save),
+              ),
+              tooltip: 'Save ${_unsavedFields.length} unsaved marks',
+            ),
+          if (_orderChanged)
+            IconButton(
+              onPressed: _saveStudentOrder,
+              icon: const Icon(Icons.reorder),
+              tooltip: 'Save Order',
+            ),
           IconButton(
             onPressed: _loadStudents,
             icon: const Icon(Icons.refresh),
@@ -311,10 +386,63 @@ class _UnifiedMarksEntryScreenState extends State<UnifiedMarksEntryScreen> {
     );
   }
 
+  Future<void> _saveStudentOrder() async {
+    if (_selectedExamClass == null || _students.isEmpty) return;
+    
+    setState(() => _isLoading = true);
+    
+    try {
+      final classId = _selectedExamClass!.classId;
+      
+      await Supabase.instance.client
+          .from('student_display_order')
+          .delete()
+          .eq('class_id', classId);
+      
+      final batch = <Map<String, dynamic>>[];
+      for (int i = 0; i < _students.length; i++) {
+        final studentId = _students[i]['studentId'] as int;
+        batch.add({
+          'class_id': classId,
+          'student_id': studentId,
+          'display_order': i,
+        });
+      }
+      
+      await Supabase.instance.client
+          .from('student_display_order')
+          .insert(batch);
+      
+      setState(() => _orderChanged = false);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Order saved successfully'), backgroundColor: Colors.green),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving order: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   Widget _buildSubSubjectsList() {
-    return ListView.builder(
+    return ReorderableListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: _students.length,
+      onReorder: (oldIndex, newIndex) {
+        setState(() {
+          if (newIndex > oldIndex) newIndex--;
+          final item = _students.removeAt(oldIndex);
+          _students.insert(newIndex, item);
+          _orderChanged = true;
+        });
+      },
       itemBuilder: (context, index) {
         final student = _students[index];
         final studentId = student['studentId'] as int;
@@ -323,6 +451,7 @@ class _UnifiedMarksEntryScreenState extends State<UnifiedMarksEntryScreen> {
         final passingMarks = _selectedSubject!.passingMarks ?? 0;
 
         return Card(
+          key: ValueKey(studentId),
           margin: const EdgeInsets.only(bottom: 16),
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -331,7 +460,9 @@ class _UnifiedMarksEntryScreenState extends State<UnifiedMarksEntryScreen> {
               children: [
                 Text(studentName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 12),
-                ..._selectedSubject!.subSubjects!.map((subSubject) {
+                ..._orderedSubSubjects.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final subSubject = entry.value;
                   final key = '${studentId}_${subSubject.id}';
                   final controller = _controllers[key];
                   if (controller == null) return const SizedBox.shrink();
@@ -340,7 +471,40 @@ class _UnifiedMarksEntryScreenState extends State<UnifiedMarksEntryScreen> {
                     padding: const EdgeInsets.only(bottom: 8),
                     child: Row(
                       children: [
-                        Expanded(flex: 2, child: Text(subSubject.name)),
+                        Expanded(
+                          flex: 2,
+                          child: Row(
+                            children: [
+                              if (index > 0)
+                                IconButton(
+                                  icon: const Icon(Icons.arrow_upward, size: 16),
+                                  onPressed: () {
+                                    setState(() {
+                                      final temp = _orderedSubSubjects[index];
+                                      _orderedSubSubjects[index] = _orderedSubSubjects[index - 1];
+                                      _orderedSubSubjects[index - 1] = temp;
+                                    });
+                                  },
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(),
+                                ),
+                              Expanded(child: Text(subSubject.name)),
+                              if (index < _orderedSubSubjects.length - 1)
+                                IconButton(
+                                  icon: const Icon(Icons.arrow_downward, size: 16),
+                                  onPressed: () {
+                                    setState(() {
+                                      final temp = _orderedSubSubjects[index];
+                                      _orderedSubSubjects[index] = _orderedSubSubjects[index + 1];
+                                      _orderedSubSubjects[index + 1] = temp;
+                                    });
+                                  },
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(),
+                                ),
+                            ],
+                          ),
+                        ),
                         SizedBox(
                           width: 100,
                           child: TextFormField(
@@ -355,9 +519,10 @@ class _UnifiedMarksEntryScreenState extends State<UnifiedMarksEntryScreen> {
                             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                             textAlign: TextAlign.center,
                             onChanged: (value) {
+                              _markAsUnsaved(key);
                               setState(() {});
-                              _autoSaveMark(studentId, subSubject.id, value);
                             },
+                            onFieldSubmitted: (value) => _saveMark(studentId, subSubject.id, value),
                           ),
                         ),
                       ],
@@ -388,9 +553,17 @@ class _UnifiedMarksEntryScreenState extends State<UnifiedMarksEntryScreen> {
   }
 
   Widget _buildRegularSubjectsList() {
-    return ListView.builder(
+    return ReorderableListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: _students.length,
+      onReorder: (oldIndex, newIndex) {
+        setState(() {
+          if (newIndex > oldIndex) newIndex--;
+          final item = _students.removeAt(oldIndex);
+          _students.insert(newIndex, item);
+          _orderChanged = true;
+        });
+      },
       itemBuilder: (context, index) {
         final student = _students[index];
         final studentId = student['studentId'] as int;
@@ -405,6 +578,7 @@ class _UnifiedMarksEntryScreenState extends State<UnifiedMarksEntryScreen> {
         final isPassed = marks >= passingMarks;
 
         return Card(
+          key: ValueKey(studentId),
           margin: const EdgeInsets.only(bottom: 12),
           child: ListTile(
             leading: CircleAvatar(
@@ -427,9 +601,10 @@ class _UnifiedMarksEntryScreenState extends State<UnifiedMarksEntryScreen> {
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 textAlign: TextAlign.center,
                 onChanged: (value) {
+                  _markAsUnsaved(key);
                   setState(() {});
-                  _autoSaveMark(studentId, _selectedSubject!.id, value);
                 },
+                onFieldSubmitted: (value) => _saveMark(studentId, _selectedSubject!.id, value),
               ),
             ),
           ),

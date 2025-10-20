@@ -62,6 +62,7 @@ class _ModernAdminDrawerState extends State<ModernAdminDrawer> {
                     _buildMenuItem(context, 'Students', Icons.school_rounded, '/admin/student-management'),
                     _buildMenuItem(context, 'Teachers', Icons.person_rounded, '/admin/user-management'),
                     _buildMenuItem(context, 'Staff', Icons.badge_rounded, '/admin/staff-management'),
+                    _buildMenuItem(context, 'Parents', Icons.family_restroom_rounded, '/admin/parent-management'),
                   ]),
                   const SizedBox(height: 4),
                   _buildSection(context, 'Academic', Icons.menu_book_rounded, null, children: [

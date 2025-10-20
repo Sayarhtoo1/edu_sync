@@ -17,7 +17,7 @@ import 'package:edu_sync/screens/teacher/teacher_student_management_screen.dart'
 import 'package:edu_sync/screens/staff/staff_attendance_screen.dart';
 import 'package:edu_sync/services/class_service.dart';
 import 'package:edu_sync/models/school_class.dart';
-import 'package:edu_sync/screens/admin/class_profile_screen.dart';
+
 import 'package:edu_sync/widgets/common/notification_bell_icon.dart';
 
 class ModernTeacherDashboard extends StatefulWidget {
@@ -285,10 +285,7 @@ class _ModernTeacherDashboardState extends State<ModernTeacherDashboard> with Ti
 
   Widget _buildMyClassCard() {
     return InkWell(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => ClassProfileScreen(schoolClass: _teacherClass!)),
-      ),
+      onTap: () => context.push('/admin/class-profile', extra: _teacherClass),
       borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.all(20),

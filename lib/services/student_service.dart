@@ -18,7 +18,7 @@ class StudentService {
   Future<List<Student>> getStudentsBySchool(int schoolId, {int? classId}) async {
     try {
       var query = _supabaseClient
-          .from('school_students_view')
+          .from('students')
           .select()
           .eq('school_id', schoolId);
 
@@ -175,6 +175,23 @@ class StudentService {
       logger.e('Error uploading student profile photo: $e');
     }
     return null;
+  }
+
+  // Link a parent to a student
+  Future<bool> linkParentToStudent(String parentId, int studentId, String relationType) async {
+    try {
+      await _supabaseClient
+          .from('parent_student_relations')
+          .insert({
+            'parent_id': parentId,
+            'student_id': studentId,
+            'relation_type': relationType,
+          });
+      return true;
+    } catch (e) {
+      logger.e('Error linking parent to student: $e');
+      return false;
+    }
   }
 
   // Unlink a parent from a student

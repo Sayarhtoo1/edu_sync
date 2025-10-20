@@ -1,4 +1,5 @@
 import 'package:edu_sync/screens/admin/staff_management_screen.dart';
+import 'package:edu_sync/screens/admin/parent_management_screen.dart';
 import 'package:edu_sync/screens/admin/school_profile_screen.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -15,8 +16,13 @@ import 'package:edu_sync/providers/school_provider.dart'; // Corrected import
 import 'package:edu_sync/services/auth_service.dart';
 
 import 'package:edu_sync/screens/splash_screen.dart';
+import 'package:edu_sync/screens/desktop/common/desktop_splash_screen.dart';
 import 'package:edu_sync/screens/auth/login_screen.dart';
+import 'package:edu_sync/screens/desktop/auth/desktop_login_screen.dart';
 import 'package:edu_sync/screens/auth/reset_password_screen.dart';
+import 'package:edu_sync/screens/desktop/auth/desktop_reset_password_screen.dart';
+import 'package:edu_sync/screens/auth/register_screen.dart';
+import 'package:edu_sync/screens/desktop/auth/desktop_register_screen.dart';
 import 'package:edu_sync/screens/admin/modern_admin_dashboard.dart';
 import 'package:edu_sync/screens/desktop/admin/desktop_admin_dashboard.dart';
 import 'package:edu_sync/widgets/common/platform_adaptive_screen.dart';
@@ -43,6 +49,7 @@ import 'package:edu_sync/screens/parent/daily_report_screen.dart';
 import 'package:edu_sync/screens/settings/app_settings_screen.dart';
 import 'package:edu_sync/screens/common/analytics_dashboard_screen.dart';
 import 'package:edu_sync/screens/student/exam/modern_report_card_screen.dart';
+import 'package:edu_sync/screens/desktop/student/exam/desktop_modern_report_card.dart';
 import 'package:edu_sync/screens/student/student_profile_screen.dart';
 import 'package:edu_sync/screens/staff/staff_profile_screen.dart';
 import 'package:edu_sync/models/staff.dart' as model;
@@ -66,6 +73,7 @@ import 'package:edu_sync/screens/student/student_performance_screen.dart';
 import 'package:edu_sync/screens/parent/child_exam_schedule_screen.dart';
 import 'package:edu_sync/screens/admin/exam/marks_approval_screen.dart';
 import 'package:edu_sync/screens/admin/exam/all_report_cards_screen.dart';
+import 'package:edu_sync/screens/desktop/admin/exam/desktop_all_report_cards.dart';
 import 'package:edu_sync/models/exam.dart' as exam_model;
 import 'package:edu_sync/screens/admin/fee/fee_structure_management_screen.dart';
 import 'package:edu_sync/screens/admin/finance/donation_management_screen.dart';
@@ -89,6 +97,62 @@ import 'package:edu_sync/screens/admin/staff_status_overview_screen.dart';
 import 'package:edu_sync/screens/admin/staff_attendance_summary_screen.dart';
 import 'package:edu_sync/screens/common/enhanced_student_attendance_summary.dart';
 import 'package:edu_sync/services/notification_service.dart';
+
+// Desktop screen imports
+import 'package:edu_sync/screens/desktop/admin/desktop_admin_announcements.dart';
+import 'package:edu_sync/screens/desktop/admin/desktop_admin_dashboard.dart';
+import 'package:edu_sync/screens/desktop/admin/desktop_admin_settings.dart';
+import 'package:edu_sync/screens/desktop/admin/desktop_class_management.dart';
+import 'package:edu_sync/screens/desktop/admin/desktop_donation_management.dart';
+import 'package:edu_sync/screens/desktop/admin/desktop_expense_management.dart';
+import 'package:edu_sync/screens/desktop/admin/desktop_grade_management.dart';
+import 'package:edu_sync/screens/desktop/admin/desktop_income_management.dart';
+import 'package:edu_sync/screens/desktop/admin/desktop_manage_custom_forms.dart';
+import 'package:edu_sync/screens/desktop/admin/desktop_salary_management.dart';
+import 'package:edu_sync/screens/desktop/admin/desktop_school_profile.dart';
+import 'package:edu_sync/screens/desktop/admin/desktop_staff_management.dart';
+import 'package:edu_sync/screens/desktop/admin/desktop_parent_management.dart';
+import 'package:edu_sync/screens/desktop/admin/desktop_staff_status_overview.dart';
+import 'package:edu_sync/screens/desktop/admin/desktop_student_management.dart';
+import 'package:edu_sync/screens/desktop/admin/desktop_subject_management.dart';
+import 'package:edu_sync/screens/desktop/admin/desktop_timetable_management.dart';
+import 'package:edu_sync/screens/desktop/admin/desktop_user_management.dart';
+import 'package:edu_sync/screens/desktop/admin/exam/desktop_exam_form.dart';
+import 'package:edu_sync/screens/desktop/admin/exam/desktop_exam_list.dart';
+import 'package:edu_sync/screens/desktop/admin/exam/desktop_edit_exam_basic.dart';
+import 'package:edu_sync/screens/desktop/admin/exam/desktop_edit_exam_classes.dart';
+import 'package:edu_sync/screens/desktop/admin/exam/desktop_edit_exam_subjects.dart';
+import 'package:edu_sync/screens/desktop/admin/exam/desktop_exam_calendar.dart';
+import 'package:edu_sync/screens/desktop/admin/exam/desktop_exam_analytics.dart';
+import 'package:edu_sync/screens/desktop/admin/desktop_exam_overview.dart';
+import 'package:edu_sync/screens/admin/exam/edit_exam_basic_screen.dart';
+import 'package:edu_sync/screens/admin/exam/edit_exam_classes_screen.dart';
+import 'package:edu_sync/screens/admin/exam/edit_exam_subjects_screen.dart';
+import 'package:edu_sync/screens/desktop/admin/fee/desktop_fee_structure_management.dart';
+import 'package:edu_sync/screens/desktop/admin/finance/desktop_finance_overview.dart';
+import 'package:edu_sync/screens/desktop/admin/finance/desktop_financial_reports.dart';
+import 'package:edu_sync/screens/desktop/donator/desktop_donator_dashboard.dart';
+import 'package:edu_sync/screens/desktop/manager/desktop_manager_dashboard.dart';
+import 'package:edu_sync/screens/desktop/parent/desktop_announcements.dart';
+import 'package:edu_sync/screens/desktop/parent/desktop_child_attendance.dart';
+import 'package:edu_sync/screens/desktop/parent/desktop_child_schedule.dart';
+import 'package:edu_sync/screens/desktop/parent/desktop_parent_dashboard.dart';
+import 'package:edu_sync/screens/desktop/teacher/desktop_attendance_marking.dart';
+import 'package:edu_sync/screens/desktop/teacher/desktop_lesson_plan_management.dart';
+import 'package:edu_sync/screens/desktop/teacher/desktop_teacher_dashboard.dart';
+import 'package:edu_sync/screens/desktop/teacher/desktop_teacher_student_management.dart';
+import 'package:edu_sync/screens/desktop/teacher/desktop_teacher_timetable.dart';
+import 'package:edu_sync/screens/desktop/admin/desktop_marks_entry_screen.dart';
+import 'package:edu_sync/screens/desktop/student/desktop_student_profile.dart';
+import 'package:edu_sync/screens/desktop/staff/desktop_staff_profile.dart';
+import 'package:edu_sync/screens/desktop/admin/desktop_class_profile.dart';
+import 'package:edu_sync/screens/admin/student_performance_dashboard.dart';
+import 'package:edu_sync/screens/desktop/admin/desktop_student_performance_dashboard.dart';
+import 'package:edu_sync/screens/desktop/admin/desktop_teacher_status_overview.dart';
+import 'package:edu_sync/screens/desktop/admin/desktop_whole_school_schedule.dart';
+import 'package:edu_sync/screens/desktop/admin/desktop_staff_attendance_summary.dart';
+import 'package:edu_sync/screens/admin/class_profile_screen.dart';
+import 'package:edu_sync/models/school_class.dart';
 
 // A class that converts a stream into a listenable for GoRouter.
 class GoRouterRefreshStream extends ChangeNotifier {
@@ -115,6 +179,14 @@ GoRouter initializeRouter() {
         final authService = Provider.of<AuthService>(context, listen: false);
         final schoolProvider = Provider.of<SchoolProvider>(context, listen: false);
         final connectivity = Provider.of<Connectivity>(context, listen: false);
+        
+        // Skip redirect for non-auth routes when already logged in
+        if (authService.getCurrentUser() != null && 
+            !state.matchedLocation.startsWith('/login') && 
+            !state.matchedLocation.startsWith('/reset-password') &&
+            state.matchedLocation != '/') {
+          return null;
+        }
 
       // Handle deep links for password recovery.
       // Only check the initial link when we're on the splash route ('/') to avoid repeated async work
@@ -218,19 +290,25 @@ GoRouter initializeRouter() {
     routes: [
       GoRoute(
         path: '/',
-        builder: (context, state) => const SplashScreen(), // Your initial screen
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: SplashScreen(),
+          desktopScreen: DesktopSplashScreen(),
+        ),
       ),
       GoRoute(
         path: '/login',
-        name: 'login', // Add a name to the login route
-        builder: (context, state) => const LoginScreen(),
+        name: 'login',
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: LoginScreen(),
+          desktopScreen: DesktopLoginScreen(),
+        ),
       ),
       GoRoute(
         path: '/reset-password',
-        builder: (context, state) {
-          // ResetPasswordScreen reads tokens from the current URI; no need to extract them here.
-          return ResetPasswordScreen();
-        },
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: ResetPasswordScreen(),
+          desktopScreen: DesktopResetPasswordScreen(),
+        ),
       ),
       GoRoute(
         path: '/admin',
@@ -241,15 +319,24 @@ GoRouter initializeRouter() {
       ),
       GoRoute(
         path: '/teacher-dashboard',
-        builder: (context, state) => const ModernTeacherDashboard(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: ModernTeacherDashboard(),
+          desktopScreen: DesktopTeacherDashboard(),
+        ),
       ),
       GoRoute(
         path: '/parent-dashboard',
-        builder: (context, state) => const ModernParentDashboard(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: ModernParentDashboard(),
+          desktopScreen: DesktopParentDashboard(),
+        ),
       ),
       GoRoute(
         path: '/manager-dashboard',
-        builder: (context, state) => const ManagerDashboardScreen(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: ManagerDashboardScreen(),
+          desktopScreen: DesktopManagerDashboard(),
+        ),
       ),
       GoRoute(
         path: '/admin/edit-school-profile',
@@ -257,25 +344,53 @@ GoRouter initializeRouter() {
       ),
       GoRoute(
         path: '/admin/school-profile',
-        name: 'school-profile',
-        builder: (context, state) => const SchoolProfileScreen(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: SchoolProfileScreen(),
+          desktopScreen: DesktopSchoolProfile(),
+        ),
       ),
       GoRoute(
         path: '/admin/user-management',
-        builder: (context, state) => const UserManagementScreen(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: UserManagementScreen(),
+          desktopScreen: DesktopUserManagement(),
+        ),
       ),
       GoRoute(
         path: '/admin/staff-management',
-        builder: (context, state) => const StaffManagementScreen(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: StaffManagementScreen(),
+          desktopScreen: DesktopStaffManagement(),
+        ),
+      ),
+      GoRoute(
+        path: '/admin/parent-management',
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: ParentManagementScreen(),
+          desktopScreen: DesktopParentManagement(),
+        ),
       ),
       GoRoute(
         path: '/admin/staff-status',
-        builder: (context, state) => const StaffStatusOverviewScreen(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: StaffStatusOverviewScreen(),
+          desktopScreen: DesktopStaffStatusOverview(),
+        ),
       ),
       GoRoute(
         path: '/admin/staff-attendance-summary',
         name: 'staff-attendance-summary',
         builder: (context, state) => const StaffAttendanceSummaryScreen(),
+      ),
+      GoRoute(
+        path: '/admin/teacher-status',
+        name: 'teacher-status-overview',
+        builder: (context, state) => const DesktopTeacherStatusOverview(),
+      ),
+      GoRoute(
+        path: '/admin/whole-school-schedule',
+        name: 'whole-school-schedule',
+        builder: (context, state) => const DesktopWholeSchoolSchedule(),
       ),
       GoRoute(
         path: '/admin/student-attendance-summary',
@@ -284,19 +399,31 @@ GoRouter initializeRouter() {
       ),
       GoRoute(
         path: '/admin/student-management',
-        builder: (context, state) => const StudentManagementScreen(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: StudentManagementScreen(),
+          desktopScreen: DesktopStudentManagement(),
+        ),
       ),
       GoRoute(
         path: '/admin/class-management',
-        builder: (context, state) => const ClassManagementScreen(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: ClassManagementScreen(),
+          desktopScreen: DesktopClassManagement(),
+        ),
       ),
       GoRoute(
         path: '/admin/timetable-management',
-        builder: (context, state) => const TimetableManagementScreen(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: TimetableManagementScreen(),
+          desktopScreen: DesktopTimetableManagement(),
+        ),
       ),
       GoRoute(
         path: '/admin/finance-management',
-        builder: (context, state) => const FinanceOverviewScreen(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: FinanceOverviewScreen(),
+          desktopScreen: DesktopFinanceOverview(),
+        ),
       ),
       GoRoute(
         path: '/admin/finance-dashboard',
@@ -305,15 +432,24 @@ GoRouter initializeRouter() {
       ),
       GoRoute(
         path: '/admin/income-management',
-        builder: (context, state) => const IncomeManagementScreen(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: IncomeManagementScreen(),
+          desktopScreen: DesktopIncomeManagement(),
+        ),
       ),
       GoRoute(
         path: '/admin/expense-management',
-        builder: (context, state) => const ExpenseManagementScreen(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: ExpenseManagementScreen(),
+          desktopScreen: DesktopExpenseManagement(),
+        ),
       ),
       GoRoute(
         path: '/teacher/attendance-marking',
-        builder: (context, state) => const AttendanceMarkingScreen(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: AttendanceMarkingScreen(),
+          desktopScreen: DesktopAttendanceMarking(),
+        ),
       ),
       GoRoute(
         path: '/teacher/student-attendance-summary',
@@ -322,15 +458,24 @@ GoRouter initializeRouter() {
       ),
       GoRoute(
         path: '/teacher/lesson-plan-management',
-        builder: (context, state) => const LessonPlanManagementScreen(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: LessonPlanManagementScreen(),
+          desktopScreen: DesktopLessonPlanManagement(),
+        ),
       ),
       GoRoute(
         path: '/admin/announcements',
-        builder: (context, state) => const AdminAnnouncementsScreen(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: AdminAnnouncementsScreen(),
+          desktopScreen: DesktopAdminAnnouncements(),
+        ),
       ),
       GoRoute(
         path: '/admin/manage-custom-forms',
-        builder: (context, state) => const ManageCustomFormsScreen(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: ManageCustomFormsScreen(),
+          desktopScreen: DesktopManageCustomForms(),
+        ),
       ),
       GoRoute(
         path: '/admin/view-form-responses',
@@ -338,27 +483,45 @@ GoRouter initializeRouter() {
       ),
       GoRoute(
         path: '/admin/settings',
-        builder: (context, state) => const AdminSettingsScreen(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: AdminSettingsScreen(),
+          desktopScreen: DesktopAdminSettings(),
+        ),
       ),
       GoRoute(
         path: '/teacher/timetable',
-        builder: (context, state) => const TeacherTimetableScreen(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: TeacherTimetableScreen(),
+          desktopScreen: DesktopTeacherTimetable(),
+        ),
       ),
       GoRoute(
         path: '/teacher/students',
-        builder: (context, state) => const TeacherStudentManagementScreen(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: TeacherStudentManagementScreen(),
+          desktopScreen: DesktopTeacherStudentManagement(),
+        ),
       ),
       GoRoute(
         path: '/parent/child-attendance',
-        builder: (context, state) => const ChildAttendanceScreen(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: ChildAttendanceScreen(),
+          desktopScreen: DesktopChildAttendance(),
+        ),
       ),
       GoRoute(
         path: '/parent/child-schedule',
-        builder: (context, state) => const ChildScheduleScreen(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: ChildScheduleScreen(),
+          desktopScreen: DesktopChildSchedule(),
+        ),
       ),
       GoRoute(
         path: '/parent/announcements',
-        builder: (context, state) => const AnnouncementsScreen(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: AnnouncementsScreen(),
+          desktopScreen: DesktopAnnouncements(),
+        ),
       ),
       GoRoute(
         path: '/parent/daily-report',
@@ -377,16 +540,22 @@ GoRouter initializeRouter() {
         builder: (context, state) {
           final studentId = state.pathParameters['studentId']!;
           final examId = state.pathParameters['examId']!;
-          return ModernReportCardScreen(studentId: studentId, examId: examId);
+          return PlatformAdaptiveScreen(
+            mobileScreen: ModernReportCardScreen(studentId: studentId, examId: examId),
+            desktopScreen: DesktopModernReportCard(studentId: studentId, examId: examId),
+          );
         },
       ),
       GoRoute(
         path: '/report-card/:studentId/:examId',
         name: 'report-card',
         builder: (context, state) {
-          final studentId = int.parse(state.pathParameters['studentId']!);
+          final studentId = state.pathParameters['studentId']!;
           final examId = state.pathParameters['examId']!;
-          return ReportCardScreen(studentId: studentId, examId: examId);
+          return PlatformAdaptiveScreen(
+            mobileScreen: ModernReportCardScreen(studentId: studentId, examId: examId),
+            desktopScreen: DesktopModernReportCard(studentId: studentId, examId: examId),
+          );
         },
       ),
       GoRoute(
@@ -398,28 +567,83 @@ GoRouter initializeRouter() {
               body: Center(child: Text('Student not found')),
             );
           }
-          return StudentProfileScreen(student: student);
+          return PlatformAdaptiveScreen(
+            mobileScreen: StudentProfileScreen(student: student),
+            desktopScreen: DesktopStudentProfile(student: student),
+          );
         },
       ),
       GoRoute(
         path: '/staff/profile',
-        builder: (context, state) => StaffProfileScreen(staff: state.extra as model.Staff),
+        builder: (context, state) => PlatformAdaptiveScreen(
+          mobileScreen: StaffProfileScreen(staff: state.extra as model.Staff),
+          desktopScreen: DesktopStaffProfile(staff: state.extra as model.Staff),
+        ),
+      ),
+      GoRoute(
+        path: '/admin/class-profile',
+        name: 'class-profile',
+        builder: (context, state) => PlatformAdaptiveScreen(
+          mobileScreen: ClassProfileScreen(schoolClass: state.extra as SchoolClass),
+          desktopScreen: DesktopClassProfile(schoolClass: state.extra as SchoolClass),
+        ),
+      ),
+      GoRoute(
+        path: '/admin/student-performance',
+        name: 'student-performance',
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: StudentPerformanceDashboard(),
+          desktopScreen: DesktopStudentPerformanceDashboard(),
+        ),
       ),
       // New exam module routes
       GoRoute(
         path: '/admin/exam-overview',
         name: 'exam-overview',
-        builder: (context, state) => const ExamOverviewScreen(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: ExamOverviewScreen(),
+          desktopScreen: DesktopExamOverview(),
+        ),
       ),
       GoRoute(
         path: '/admin/exam-management',
         name: 'exam-management',
-        builder: (context, state) => const ExamListScreen(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: ExamListScreen(),
+          desktopScreen: DesktopExamList(),
+        ),
       ),
       GoRoute(
         path: '/admin/exam-form',
         name: 'exam-form',
-        builder: (context, state) => ExamFormScreen(exam: state.extra as dynamic),
+        builder: (context, state) => PlatformAdaptiveScreen(
+          mobileScreen: ExamFormScreen(exam: state.extra as dynamic),
+          desktopScreen: DesktopExamForm(exam: state.extra as dynamic),
+        ),
+      ),
+      GoRoute(
+        path: '/admin/edit-exam-basic',
+        name: 'edit-exam-basic',
+        builder: (context, state) => PlatformAdaptiveScreen(
+          mobileScreen: EditExamBasicScreen(exam: state.extra as exam_model.Exam),
+          desktopScreen: DesktopEditExamBasic(exam: state.extra as exam_model.Exam),
+        ),
+      ),
+      GoRoute(
+        path: '/admin/edit-exam-classes',
+        name: 'edit-exam-classes',
+        builder: (context, state) => PlatformAdaptiveScreen(
+          mobileScreen: EditExamClassesScreen(exam: state.extra as exam_model.Exam),
+          desktopScreen: DesktopEditExamClasses(exam: state.extra as exam_model.Exam),
+        ),
+      ),
+      GoRoute(
+        path: '/admin/edit-exam-subjects',
+        name: 'edit-exam-subjects',
+        builder: (context, state) => PlatformAdaptiveScreen(
+          mobileScreen: EditExamSubjectsScreen(exam: state.extra as exam_model.Exam),
+          desktopScreen: DesktopEditExamSubjects(exam: state.extra as exam_model.Exam),
+        ),
       ),
       GoRoute(
         path: '/admin/exam-subject-management',
@@ -428,13 +652,17 @@ GoRouter initializeRouter() {
       ),
       GoRoute(
         path: '/admin/subject-management',
-        name: 'subject-management',
-        builder: (context, state) => const SubjectManagementScreen(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: SubjectManagementScreen(),
+          desktopScreen: DesktopSubjectManagement(),
+        ),
       ),
       GoRoute(
         path: '/admin/grade-management',
-        name: 'grade-management',
-        builder: (context, state) => const GradeManagementScreen(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: GradeManagementScreen(),
+          desktopScreen: DesktopGradeManagement(),
+        ),
       ),
       GoRoute(
         path: '/exam-management/create',
@@ -453,9 +681,15 @@ GoRouter initializeRouter() {
         builder: (context, state) {
           final examId = state.pathParameters['examId']!;
           final extra = state.extra as Map<String, String>?;
-          return UnifiedMarksEntryScreen(
-            examId: examId,
-            examName: extra?['examName'] ?? 'Enter Marks',
+          return PlatformAdaptiveScreen(
+            mobileScreen: UnifiedMarksEntryScreen(
+              examId: examId,
+              examName: extra?['examName'] ?? 'Enter Marks',
+            ),
+            desktopScreen: DesktopMarksEntryScreen(
+              examId: examId,
+              examName: extra?['examName'] ?? 'Enter Marks',
+            ),
           );
         },
       ),
@@ -482,9 +716,15 @@ GoRouter initializeRouter() {
         builder: (context, state) {
           final examId = state.pathParameters['examId']!;
           final extra = state.extra as Map<String, String>?;
-          return ExamAnalyticsScreen(
-            examId: examId,
-            examName: extra?['examName'] ?? 'Exam Analytics',
+          return PlatformAdaptiveScreen(
+            mobileScreen: ExamAnalyticsScreen(
+              examId: examId,
+              examName: extra?['examName'] ?? 'Exam Analytics',
+            ),
+            desktopScreen: DesktopExamAnalytics(
+              examId: examId,
+              examName: extra?['examName'] ?? 'Exam Analytics',
+            ),
           );
         },
       ),
@@ -493,7 +733,10 @@ GoRouter initializeRouter() {
         name: 'exam-calendar',
         builder: (context, state) {
           final schoolId = int.parse(state.pathParameters['schoolId']!);
-          return ExamCalendarScreen(schoolId: schoolId);
+          return PlatformAdaptiveScreen(
+            mobileScreen: ExamCalendarScreen(schoolId: schoolId),
+            desktopScreen: DesktopExamCalendar(schoolId: schoolId),
+          );
         },
       ),
       GoRoute(
@@ -511,7 +754,7 @@ GoRouter initializeRouter() {
       ),
       GoRoute(
         path: '/student-performance/:studentId/:classId',
-        name: 'student-performance',
+        name: 'student-performance-detail',
         builder: (context, state) {
           final studentId = int.parse(state.pathParameters['studentId']!);
           final classId = int.parse(state.pathParameters['classId']!);
@@ -540,9 +783,15 @@ GoRouter initializeRouter() {
         builder: (context, state) {
           final examId = state.pathParameters['examId']!;
           final extra = state.extra as Map<String, String>?;
-          return AllReportCardsScreen(
-            examId: examId,
-            examName: extra?['examName'] ?? 'Exam',
+          return PlatformAdaptiveScreen(
+            mobileScreen: AllReportCardsScreen(
+              examId: examId,
+              examName: extra?['examName'] ?? 'Exam',
+            ),
+            desktopScreen: DesktopAllReportCards(
+              examId: examId,
+              examName: extra?['examName'] ?? 'Exam',
+            ),
           );
         },
       ),
@@ -553,7 +802,10 @@ GoRouter initializeRouter() {
       // Fee Management routes
       GoRoute(
         path: '/admin/fee-management',
-        builder: (context, state) => const FeeStructureManagementScreen(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: FeeStructureManagementScreen(),
+          desktopScreen: DesktopFeeStructureManagement(),
+        ),
       ),
       GoRoute(
         path: '/admin/fee-payment-management',
@@ -581,17 +833,26 @@ GoRouter initializeRouter() {
       ),
       GoRoute(
         path: '/admin/donation-management',
-        builder: (context, state) => const DonationManagementScreen(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: DonationManagementScreen(),
+          desktopScreen: DesktopDonationManagement(),
+        ),
       ),
       GoRoute(
         path: '/admin/salary-management',
-        builder: (context, state) => const SalaryManagementScreen(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: SalaryManagementScreen(),
+          desktopScreen: DesktopSalaryManagement(),
+        ),
       ),
       // Financial Reports routes
       GoRoute(
         path: '/admin/financial-reports',
         name: 'financial-reports',
-        builder: (context, state) => const FinancialReportsScreen(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: FinancialReportsScreen(),
+          desktopScreen: DesktopFinancialReports(),
+        ),
       ),
       GoRoute(
         path: '/admin/reports/profit-loss',
@@ -623,7 +884,10 @@ GoRouter initializeRouter() {
       // Donator routes
       GoRoute(
         path: '/donator-dashboard',
-        builder: (context, state) => const ModernDonatorDashboard(),
+        builder: (context, state) => const PlatformAdaptiveScreen(
+          mobileScreen: ModernDonatorDashboard(),
+          desktopScreen: DesktopDonatorDashboard(),
+        ),
       ),
     ],
   );

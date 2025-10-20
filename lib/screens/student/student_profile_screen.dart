@@ -3,14 +3,17 @@ import 'package:provider/provider.dart' as provider;
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:go_router/go_router.dart';
 import '../../models/student.dart';
 import '../../models/school_class.dart';
 import '../../models/attendance.dart' as app_attendance;
 import '../../models/grade.dart';
+import '../../models/user.dart' as app_user;
 import '../../services/class_service.dart';
 import '../../services/attendance_service.dart';
 import '../../services/exam_service.dart';
 import '../../services/student_service.dart';
+import '../../services/parent_service.dart';
 
 class _StudentProfileData {
   final Student student;
@@ -124,6 +127,12 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showLinkParentDialog(context),
+        backgroundColor: const Color(0xFF3498DB),
+        icon: const Icon(Icons.family_restroom),
+        label: const Text('Link Parent'),
+      ),
       body: FutureBuilder<_StudentProfileData>(
         future: _profileDataFuture,
         builder: (context, snapshot) {
@@ -199,7 +208,11 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                       const SizedBox(height: 16),
                       _buildAcademicPerformanceCard(profileData),
                       const SizedBox(height: 16),
+                      _buildPerformanceDashboardButton(),
+                      const SizedBox(height: 16),
                       _buildAdditionalInfoCard(),
+                      const SizedBox(height: 16),
+                      _buildLinkedParentsCard(),
                     ],
                   ),
                 ),
@@ -209,6 +222,355 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         },
       ),
     );
+  }
+
+  Widget _buildLinkedParentsCard() {
+    return FutureBuilder<List<app_user.User>>(
+      future: _fetchLinkedParents(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const SizedBox.shrink();
+        final parents = snapshot.data!;
+        
+        return _buildInfoCard(
+          title: 'Linked Parents',
+          icon: Icons.family_restroom,
+          color: Colors.indigo,
+          children: parents.isEmpty
+              ? [const Text('No parents linked yet', style: TextStyle(color: Colors.grey))]
+              : parents.map((parent) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 20,
+                        backgroundColor: const Color(0xFF3498DB).withOpacity(0.1),
+                        child: const Icon(Icons.person, color: Color(0xFF3498DB), size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(parent.fullName ?? 'N/A', style: const TextStyle(fontWeight: FontWeight.w600)),
+                            Text(parent.email ?? '', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.remove_circle_outline, color: Colors.red, size: 20),
+                        onPressed: () => _unlinkParent(context, parent.id),
+                        tooltip: 'Unlink',
+                      ),
+                    ],
+                  ),
+                )).toList(),
+        );
+      },
+    );
+  }
+
+  Future<List<app_user.User>> _fetchLinkedParents() async {
+    final studentService = provider.Provider.of<StudentService>(context, listen: false);
+    final parentService = provider.Provider.of<ParentService>(context, listen: false);
+    
+    final parentIds = await studentService.getParentIdsForStudent(widget.student.id);
+    final allParents = await parentService.getParentsBySchool(widget.student.schoolId);
+    
+    return allParents.where((p) => parentIds.contains(p.id)).toList();
+  }
+
+  void _showLinkParentDialog(BuildContext context) async {
+    final parentService = provider.Provider.of<ParentService>(context, listen: false);
+    final studentService = provider.Provider.of<StudentService>(context, listen: false);
+    
+    final allParents = await parentService.getParentsBySchool(widget.student.schoolId);
+    final linkedParentIds = await studentService.getParentIdsForStudent(widget.student.id);
+    final availableParents = allParents.where((p) => !linkedParentIds.contains(p.id)).toList();
+    
+    if (!context.mounted) return;
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Link Parent'),
+        content: SizedBox(
+          width: 300,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _showCreateParentDialog(context);
+                },
+                icon: const Icon(Icons.add),
+                label: const Text('Create New Parent for This Student'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2ECC71),
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 48),
+                ),
+              ),
+              if (availableParents.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                const Divider(),
+                const SizedBox(height: 8),
+                const Text('Or link existing parent:', style: TextStyle(fontWeight: FontWeight.w600)),
+                const SizedBox(height: 8),
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: availableParents.length,
+                    itemBuilder: (context, index) {
+                      final parent = availableParents[index];
+                      return ListTile(
+                        leading: const CircleAvatar(
+                          backgroundColor: Color(0xFF3498DB),
+                          child: Icon(Icons.person, color: Colors.white, size: 20),
+                        ),
+                        title: Text(parent.fullName ?? 'N/A'),
+                        subtitle: Text(parent.email ?? ''),
+                        onTap: () async {
+                          Navigator.pop(context);
+                          await _linkParent(context, parent.id);
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCreateParentDialog(BuildContext context) {
+    final formKey = GlobalKey<FormState>();
+    final nameController = TextEditingController();
+    final emailController = TextEditingController();
+    final passwordController = TextEditingController();
+    final phone1Controller = TextEditingController();
+    final phone2Controller = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Create Parent for Student'),
+        content: SingleChildScrollView(
+          child: Form(
+            key: formKey,
+            child: SizedBox(
+              width: 400,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Full Name *',
+                      prefixIcon: Icon(Icons.person),
+                    ),
+                    validator: (v) => v?.isEmpty ?? true ? 'Required' : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: emailController,
+                    decoration: const InputDecoration(
+                      labelText: 'Email *',
+                      prefixIcon: Icon(Icons.email),
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (v) => v?.isEmpty ?? true ? 'Required' : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: passwordController,
+                    decoration: const InputDecoration(
+                      labelText: 'Password *',
+                      prefixIcon: Icon(Icons.lock),
+                    ),
+                    obscureText: true,
+                    validator: (v) => (v?.length ?? 0) < 6 ? 'Min 6 characters' : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: phone1Controller,
+                    decoration: const InputDecoration(
+                      labelText: 'Phone Number 1',
+                      prefixIcon: Icon(Icons.phone),
+                    ),
+                    keyboardType: TextInputType.phone,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: phone2Controller,
+                    decoration: const InputDecoration(
+                      labelText: 'Phone Number 2',
+                      prefixIcon: Icon(Icons.phone),
+                    ),
+                    keyboardType: TextInputType.phone,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (formKey.currentState!.validate()) {
+                Navigator.pop(context);
+                await _createAndLinkParent(
+                  context,
+                  nameController.text,
+                  emailController.text,
+                  passwordController.text,
+                  phone1Controller.text,
+                  phone2Controller.text,
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2ECC71)),
+            child: const Text('Create & Link'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _createAndLinkParent(
+    BuildContext context,
+    String fullName,
+    String email,
+    String password,
+    String phone1,
+    String phone2,
+  ) async {
+    final parentService = provider.Provider.of<ParentService>(context, listen: false);
+    final studentService = provider.Provider.of<StudentService>(context, listen: false);
+
+    try {
+      // Show loading
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Creating parent...'), duration: Duration(seconds: 2)),
+        );
+      }
+
+      // Create parent
+      final parentId = await parentService.createParent(
+        fullName: fullName,
+        email: email,
+        password: password,
+        phoneNumber1: phone1.isEmpty ? null : phone1,
+        phoneNumber2: phone2.isEmpty ? null : phone2,
+        schoolId: widget.student.schoolId,
+      );
+
+      // Update phone_number_2 if provided
+      if (phone2.isNotEmpty) {
+        final updatedUser = app_user.User(
+          id: parentId,
+          fullName: fullName,
+          email: email,
+          role: 'Parent',
+          schoolId: widget.student.schoolId,
+          phoneNumber1: phone1.isEmpty ? null : phone1,
+          phoneNumber2: phone2,
+        );
+        await parentService.updateParent(updatedUser);
+      }
+
+      // Link to student
+      await studentService.linkParentToStudent(parentId, widget.student.id, 'Parent');
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Parent created and linked successfully')),
+        );
+        setState(() {
+          _profileDataFuture = _fetchProfileData();
+        });
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _linkParent(BuildContext context, String parentId) async {
+    final studentService = provider.Provider.of<StudentService>(context, listen: false);
+    
+    try {
+      await studentService.linkParentToStudent(parentId, widget.student.id, 'Parent');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Parent linked successfully')),
+        );
+        setState(() {
+          _profileDataFuture = _fetchProfileData();
+        });
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error linking parent: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _unlinkParent(BuildContext context, String parentId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Unlink Parent'),
+        content: const Text('Are you sure you want to unlink this parent?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Unlink', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    
+    if (confirm == true && context.mounted) {
+      final studentService = provider.Provider.of<StudentService>(context, listen: false);
+      try {
+        await studentService.unlinkParentFromStudent(parentId, widget.student.id);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Parent unlinked successfully')),
+          );
+          setState(() {
+            _profileDataFuture = _fetchProfileData();
+          });
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error unlinking parent: $e')),
+          );
+        }
+      }
+    }
   }
 
   Widget _buildInfoCard({
@@ -618,6 +980,57 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             ],
           ),
         )).toList(),
+      ),
+    );
+  }
+
+  Widget _buildPerformanceDashboardButton() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF5B4FC4), Color(0xFF7B68EE)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF5B4FC4).withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            context.pushNamed('student-performance');
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.analytics_outlined, color: Colors.white, size: 28),
+                const SizedBox(width: 12),
+                const Text(
+                  'View Performance Dashboard',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

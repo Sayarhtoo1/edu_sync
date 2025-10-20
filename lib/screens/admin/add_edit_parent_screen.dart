@@ -1,20 +1,15 @@
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:edu_sync/models/user_role.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:edu_sync/models/user.dart' as app_user;
+import 'package:edu_sync/services/parent_service.dart';
 import 'package:edu_sync/services/auth_service.dart';
-import 'package:edu_sync/services/school_service.dart';
-import 'package:edu_sync/l10n/gen/app_localizations.dart'; // Import AppLocalizations
-import 'package:edu_sync/theme/app_theme.dart'; // Import AppTheme
 import 'package:edu_sync/utils/logger.dart';
-// import 'package:edu_sync/models/student.dart'; // Will be needed for linking
-// import 'package:edu_sync/services/student_service.dart'; // Will be needed for linking
 
 class AddEditParentScreen extends StatefulWidget {
-  final app_user.User? parent; // Existing parent to edit, null if adding new
+  final app_user.User? parent;
   final int schoolId;
 
   const AddEditParentScreen({super.key, this.parent, required this.schoolId});
@@ -25,66 +20,39 @@ class AddEditParentScreen extends StatefulWidget {
 
 class _AddEditParentScreenState extends State<AddEditParentScreen> {
   final _formKey = GlobalKey<FormState>();
+  late final ParentService _parentService;
   late final AuthService _authService;
   final ImagePicker _picker = ImagePicker();
-  // final StudentService _studentService = StudentService(); // For fetching students to link
 
   late TextEditingController _nameController;
   late TextEditingController _emailController;
-  late TextEditingController _passwordController; // Only for adding new parent
-  
+  late TextEditingController _passwordController;
+  late TextEditingController _phoneController;
+
   File? _profilePhotoFile;
   String? _currentProfilePhotoUrl;
   String _errorMessage = '';
   bool _isLoading = false;
   bool get _isEditing => widget.parent != null;
 
-  // List<app_user.Student> _availableStudents = []; // For linking
-  // List<int> _selectedStudentIds = []; // IDs of students linked to this parent
-
   @override
   void initState() {
     super.initState();
+    _parentService = Provider.of<ParentService>(context, listen: false);
     _authService = Provider.of<AuthService>(context, listen: false);
     _nameController = TextEditingController(text: widget.parent?.fullName ?? '');
-    _emailController = TextEditingController(text: widget.parent?.id != null ? _getEmailFromSupabaseUser(widget.parent!.id) : '');
+    _emailController = TextEditingController(text: widget.parent?.email ?? '');
     _passwordController = TextEditingController();
+    _phoneController = TextEditingController(text: widget.parent?.phoneNumber1 ?? '');
     _currentProfilePhotoUrl = widget.parent?.profilePhotoUrl;
-
-    // if (_isEditing && widget.parent != null) {
-    //   _loadLinkedStudents(widget.parent!.id);
-    // }
-    // _loadAvailableStudents();
   }
-
-  String _getEmailFromSupabaseUser(String userId) {
-    // Placeholder - similar to AddEditTeacherScreen
-    return widget.parent?.id ?? ''; 
-  }
-
-  // Helper method to get school name by ID
-  Future<String> _getSchoolName(int schoolId) async {
-    final schoolService = Provider.of<SchoolService>(context, listen: false);
-    final school = await schoolService.getSchoolById(schoolId);
-    return school?.name ?? 'Unknown School';
-  }
-
-  // Future<void> _loadAvailableStudents() async {
-  //   // _availableStudents = await _studentService.getStudentsBySchool(widget.schoolId);
-  //   // setState(() {});
-  // }
-
-  // Future<void> _loadLinkedStudents(String parentId) async {
-  //   // _selectedStudentIds = await _studentService.getStudentIdsForParent(parentId);
-  //   // setState(() {});
-  // }
 
   Future<void> _pickProfilePhoto() async {
     final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
         _profilePhotoFile = File(pickedFile.path);
-        _currentProfilePhotoUrl = null; 
+        _currentProfilePhotoUrl = null;
       });
     }
   }
@@ -98,85 +66,63 @@ class _AddEditParentScreenState extends State<AddEditParentScreen> {
     String? photoUrl = _currentProfilePhotoUrl;
 
     try {
-      app_user.User? resultUser;
-      // String userIdToUpdate = _isEditing ? widget.parent!.id : ''; // Removed unused variable
-
-      if (_profilePhotoFile != null) {
-        String tempUserIdForPhoto = _isEditing ? widget.parent!.id : DateTime.now().millisecondsSinceEpoch.toString();
-        final fileName = 'profile.${_profilePhotoFile!.path.split('.').last}';
-        photoUrl = await _authService.uploadProfilePhoto(tempUserIdForPhoto, _profilePhotoFile!.path, fileName);
-      }
-
       if (_isEditing) {
-        final updatedParent = widget.parent!.copyWith(
+        if (_profilePhotoFile != null) {
+          final fileName = 'profile.${_profilePhotoFile!.path.split('.').last}';
+          photoUrl = await _authService.uploadProfilePhoto(widget.parent!.id, _profilePhotoFile!.path, fileName);
+        }
+        final updatedUser = app_user.User(
+          id: widget.parent!.id,
           fullName: _nameController.text,
+          email: _emailController.text,
+          role: 'Parent',
           profilePhotoUrl: photoUrl,
+          schoolId: widget.parent!.schoolId,
+          phoneNumber1: _phoneController.text.isEmpty ? null : _phoneController.text,
         );
-        final success = await _authService.updateUser(updatedParent);
-        if (!success) throw Exception(AppLocalizations.of(context)?.failedToUpdateParentError ?? 'Failed to update parent.');
-        resultUser = updatedParent;
+        final success = await _parentService.updateParent(updatedUser);
+        if (!success) throw Exception('Failed to update parent.');
       } else {
         if (_passwordController.text.isEmpty) {
-           setState(() { _isLoading = false; _errorMessage = AppLocalizations.of(context)?.passwordRequiredForNewParentError ?? 'Password is required for a new parent.'; });
-           return;
-        }
-        // Adding new parent
-        if (_passwordController.text.isEmpty) {
-           setState(() { _isLoading = false; _errorMessage = AppLocalizations.of(context)?.passwordRequiredForNewParentError ?? 'Password is required for a new parent.'; });
-           return;
+          setState(() { _isLoading = false; _errorMessage = 'Password is required.'; });
+          return;
         }
 
-        // Get school name for the given school ID
-        final schoolName = await _getSchoolName(widget.schoolId);
-        
-        // Create user via Edge Function
-        final newParent = await _authService.createUserViaEdgeFunction(
+        final newParentId = await _parentService.createParent(
           email: _emailController.text,
           password: _passwordController.text,
-          role: UserRole.Parent.name,
           schoolId: widget.schoolId,
-          schoolName: schoolName,
           fullName: _nameController.text,
-          profilePhotoUrl: photoUrl, // This might be null if photo is uploaded after user creation
+          profilePhotoUrl: photoUrl,
+          phoneNumber1: _phoneController.text.isEmpty ? null : _phoneController.text,
         );
 
-        if (newParent == null) {
-          throw Exception(AppLocalizations.of(context)?.failedToCreateParentError ?? 'Failed to create parent.');
+        if (_profilePhotoFile != null) {
+          final fileName = 'profile.${_profilePhotoFile!.path.split('.').last}';
+          final uploadedUrl = await _authService.uploadProfilePhoto(newParentId, _profilePhotoFile!.path, fileName);
+          if (uploadedUrl != null) {
+            final updatedUser = app_user.User(
+              id: newParentId,
+              fullName: _nameController.text,
+              email: _emailController.text,
+              role: 'Parent',
+              profilePhotoUrl: uploadedUrl,
+              schoolId: widget.schoolId,
+              phoneNumber1: _phoneController.text.isEmpty ? null : _phoneController.text,
+            );
+            await _parentService.updateParent(updatedUser);
+          }
         }
-        resultUser = newParent;
+      }
 
-        // If a new photo was picked and initial photoUrl was null (or based on temp ID),
-        // and now we have the actual user ID, upload/update the photo URL.
-        if (_profilePhotoFile != null && photoUrl == null) { // Only if photo wasn't uploaded with temp ID
-             final correctFileName = 'profile.${_profilePhotoFile!.path.split('.').last}';
-             final correctPhotoUrl = await _authService.uploadProfilePhoto(resultUser.id, _profilePhotoFile!.path, correctFileName);
-             if (correctPhotoUrl != null) {
-                resultUser = resultUser.copyWith(profilePhotoUrl: correctPhotoUrl);
-                // Update the user record in public.users with the correct photo URL
-                await _authService.updateUser(resultUser);
-             } else {
-                logger.e("Photo upload failed for new user ${resultUser.id} after creation, during explicit photo step.");
-             }
-        }
-      }
-      
-      // TODO: Implement logic to save/update linked students (_selectedStudentIds) for this parent (resultUser.id)
       setState(() => _isLoading = false);
-      Navigator.of(context).pop(true); // Indicate success for both edit and new
-      
+      if (mounted) Navigator.of(context).pop(true);
+
     } catch (e) {
-      final l10n = AppLocalizations.of(context);
-      String specificError = e.toString();
-      if (e.toString().contains('Profile photo upload failed')) {
-        specificError = l10n?.profilePhotoUploadFailedError ?? 'Profile photo upload failed.';
-      } else if (e.toString().contains(l10n?.failedToUpdateParentError ?? 'Failed to update parent')) { 
-        specificError = l10n?.failedToUpdateParentError ?? 'Failed to update parent.';
-      } else if (e.toString().contains(l10n?.failedToCreateParentError ?? 'Failed to create parent') || e.toString().contains('Failed to create user')) {
-        specificError = l10n?.failedToCreateParentError ?? 'Failed to create parent.';
-      }
+      logger.e('Error saving parent: $e');
       setState(() {
         _isLoading = false;
-        _errorMessage = '${l10n?.errorOccurredPrefix ?? 'Error'}: $specificError';
+        _errorMessage = 'Error: ${e.toString()}';
       });
     }
   }
@@ -186,17 +132,14 @@ class _AddEditParentScreenState extends State<AddEditParentScreen> {
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final Color contextualAccentColor = AppTheme.getAccentColorForContext('parents');
-
     return Scaffold(
-      appBar: AppBar(title: Text(_isEditing ? l10n?.editParentTitle ?? 'Edit Parent' : l10n?.addParentTitle ?? 'Add Parent')), // Theme applied globally
+      appBar: AppBar(title: Text(_isEditing ? 'Edit Parent' : 'Add Parent')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -205,26 +148,32 @@ class _AddEditParentScreenState extends State<AddEditParentScreen> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: InputDecoration(labelText: l10n?.fullNameLabel ?? 'Full Name'),
-                validator: (value) => (value == null || value.isEmpty) ? l10n?.fullNameValidator ?? 'Full name cannot be empty.' : null,
+                decoration: const InputDecoration(labelText: 'Full Name'),
+                validator: (value) => (value == null || value.isEmpty) ? 'Full name is required.' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _emailController,
-                decoration: InputDecoration(labelText: l10n?.emailLabel ?? 'Email'),
+                decoration: const InputDecoration(labelText: 'Email'),
                 keyboardType: TextInputType.emailAddress,
-                validator: (value) => (value == null || value.isEmpty) ? l10n?.emailValidator ?? 'Email cannot be empty.' : null,
+                validator: (value) => (value == null || value.isEmpty) ? 'Email is required.' : null,
                 readOnly: _isEditing,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _phoneController,
+                decoration: const InputDecoration(labelText: 'Phone Number'),
+                keyboardType: TextInputType.phone,
               ),
               const SizedBox(height: 16),
               if (!_isEditing)
                 TextFormField(
                   controller: _passwordController,
-                  decoration: InputDecoration(labelText: l10n?.passwordLabel ?? 'Password'),
+                  decoration: const InputDecoration(labelText: 'Password'),
                   obscureText: true,
                   validator: (value) {
-                    if (!_isEditing && (value == null || value.isEmpty)) return l10n?.passwordRequiredValidator ?? 'Password is required.';
-                    if (value != null && value.isNotEmpty && value.length < 6) return l10n?.passwordTooShortValidator ?? 'Password is too short.';
+                    if (!_isEditing && (value == null || value.isEmpty)) return 'Password is required.';
+                    if (value != null && value.isNotEmpty && value.length < 6) return 'Password must be at least 6 characters.';
                     return null;
                   },
                 ),
@@ -236,9 +185,9 @@ class _AddEditParentScreenState extends State<AddEditParentScreen> {
                       height: 100,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: theme.inputDecorationTheme.fillColor ?? cardBackgroundColor.withAlpha(200),
+                        color: Colors.grey.withAlpha(50),
                         borderRadius: BorderRadius.circular(12.0),
-                        border: Border.all(color: theme.inputDecorationTheme.enabledBorder?.borderSide.color ?? textLightGrey.withOpacity(0.5))
+                        border: Border.all(color: Colors.grey.withValues(alpha: 0.5))
                       ),
                       child: _profilePhotoFile != null
                           ? Image.file(_profilePhotoFile!, height: 90, fit: BoxFit.contain)
@@ -247,41 +196,36 @@ class _AddEditParentScreenState extends State<AddEditParentScreen> {
                                   imageUrl: _currentProfilePhotoUrl!,
                                   height: 90,
                                   fit: BoxFit.contain,
-                                  placeholder: (context, url) => CircularProgressIndicator(),
-                                  errorWidget: (context, url, error) => Text(l10n?.couldNotLoadImage ?? 'Could not load image.', style: theme.textTheme.bodySmall),
+                                  placeholder: (context, url) => const CircularProgressIndicator(),
+                                  errorWidget: (context, url, error) => const Text('Could not load image.'),
                                 )
-                              : Text(l10n?.noProfilePhoto ?? 'No profile photo.', style: theme.textTheme.bodyMedium?.copyWith(color: textLightGrey))),
+                              : const Text('No profile photo.', style: TextStyle(color: Colors.grey))),
                     )
                   ),
                   const SizedBox(width: 16),
                   TextButton.icon(
-                    style: TextButton.styleFrom(foregroundColor: contextualAccentColor),
+                    style: TextButton.styleFrom(foregroundColor: const Color(0xFF3498DB)),
                     icon: const Icon(Icons.image),
-                    label: Text(l10n?.selectPhotoButton ?? 'Select Photo'),
+                    label: const Text('Select Photo'),
                     onPressed: _pickProfilePhoto,
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              // TODO: Implement UI for linking students to parent
-              // This could be a multi-select dropdown or a list of checkboxes
-              // Text('Link Students:', style: theme.textTheme.titleMedium),
-              // ... UI for student selection ...
               const SizedBox(height: 24),
               _isLoading
-                  ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(contextualAccentColor)))
+                  ? const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF3498DB))))
                   : ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: contextualAccentColor,
+                        backgroundColor: const Color(0xFF3498DB),
                         foregroundColor: Colors.white,
                       ),
                       onPressed: _saveParent,
-                      child: Text(_isEditing ? l10n?.updateParentButton ?? 'Update Parent' : l10n?.addParentButton ?? 'Add Parent'),
+                      child: Text(_isEditing ? 'Update Parent' : 'Add Parent'),
                     ),
               if (_errorMessage.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0),
-                  child: Text(_errorMessage, style: TextStyle(color: theme.colorScheme.error)),
+                  child: Text(_errorMessage, style: const TextStyle(color: Colors.red)),
                 ),
             ],
           ),

@@ -21,7 +21,9 @@ import 'package:edu_sync/utils/responsive.dart';
 import 'dart:async';
 
 class ModernAdminDashboard extends StatefulWidget {
-  const ModernAdminDashboard({super.key});
+  final bool isDesktopWrapper;
+  
+  const ModernAdminDashboard({super.key, this.isDesktopWrapper = false});
 
   @override
   State<ModernAdminDashboard> createState() => _ModernAdminDashboardState();
@@ -120,6 +122,9 @@ class _ModernAdminDashboardState extends State<ModernAdminDashboard>
 
   @override
   Widget build(BuildContext context) {
+    if (widget.isDesktopWrapper) {
+      return _buildBody();
+    }
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
@@ -172,7 +177,23 @@ class _ModernAdminDashboardState extends State<ModernAdminDashboard>
         ],
       ),
       drawer: const ModernAdminDrawer(),
-      body: isLoading
+      body: _buildBody(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AdminAnnouncementsScreen()),
+          );
+        },
+        tooltip: 'New Announcement',
+        backgroundColor: const Color(0xFF1976D2),
+        child: const Icon(Icons.campaign_outlined),
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    return isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: () async {
@@ -223,19 +244,7 @@ class _ModernAdminDashboardState extends State<ModernAdminDashboard>
                   );
                 },
               ),
-            ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const AdminAnnouncementsScreen()),
-          );
-        },
-        tooltip: 'New Announcement',
-        backgroundColor: const Color(0xFF1976D2),
-        child: const Icon(Icons.campaign_outlined),
-      ),
-    );
+            );
   }
 
   Widget _buildMetricsSection() {
@@ -389,12 +398,17 @@ class _ModernAdminDashboardState extends State<ModernAdminDashboard>
           color: const Color(0xFFFF9800),
           actions: [
             ActionItem(
+              title: 'Parent Management',
+              subtitle: 'Manage parents',
+              icon: Icons.family_restroom_outlined,
+              onTap: () => context.push('/admin/parent-management'),
+            ),
+            ActionItem(
               title: 'Timetable',
               subtitle: 'View schedule',
               icon: Icons.schedule_outlined,
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeacherTimetableScreen())),
             ),
-
           ],
         ),
       ],

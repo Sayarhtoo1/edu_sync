@@ -3,193 +3,166 @@
 ## Directory Organization
 
 ### `/lib` - Main Application Code
-Core Flutter application with feature-based organization:
+Core Flutter application source code organized by functionality.
 
-- **`/config`**: Application configuration
-  - `providers.dart`: Dependency injection setup
-  - `router.dart`: GoRouter navigation configuration with role-based routing
+#### `/lib/config`
+- `providers.dart` - Dependency injection and provider initialization
+- `router.dart` - GoRouter configuration with role-based navigation and deep linking
 
-- **`/database`**: Local persistence layer
-  - `app_database.dart`: Drift database schema definitions
-  - `app_database.g.dart`: Generated Drift code
-  - `migration_service.dart`: Database migration management
+#### `/lib/models`
+Data models representing business entities:
+- User management: `user.dart`, `user_role.dart`, `parent.dart`, `teacher.dart`, `staff.dart`, `student.dart`
+- Academic: `school.dart`, `school_class.dart`, `subject.dart`, `grade.dart`, `lesson_plan.dart`
+- Exam system: `exam.dart`, `exam_class.dart`, `exam_subject.dart`, `exam_template.dart`, `exam_status.dart`, `student_exam_mark.dart`, `marks_approval.dart`
+- Attendance: `attendance.dart`, `attendance_report.dart`
+- Finance: `fee_structure.dart`, `fee_payment.dart`, `income.dart`, `expense.dart`, `donation.dart`, `salary_payment.dart`, `finance_category.dart`, `financial_report.dart`
+- Scheduling: `timetable.dart`, `timetable_status.dart`, `schedule_summary.dart`
+- Communication: `announcement.dart`, `custom_form.dart`, `form_field_item.dart`, `form_field_type.dart`, `form_response.dart`, `form_response_answer.dart`
 
-- **`/l10n`**: Internationalization
-  - `/gen`: Generated localization files
-  - `app_en.arb`: English translations
-  - `app_my.arb`: Myanmar language translations
+#### `/lib/services`
+Business logic and API integration (45+ services):
+- Authentication: `auth_service.dart`, `role_service.dart`
+- Core services: `api_service.dart`, `cache_service.dart`, `error_handling_service.dart`, `notification_service.dart`
+- Academic services: `student_service.dart`, `staff_service.dart`, `class_service.dart`, `subject_crud_service.dart`, `grade_crud_service.dart`
+- Exam services: `exam_service.dart`, `exam_crud_service.dart`, `exam_marks_service.dart`, `exam_analytics_service.dart`, `exam_analytics_enhanced_service.dart`, `exam_report_service.dart`, `exam_scheduler_service.dart`, `exam_template_service.dart`, `exam_notification_service.dart`, `exam_csv_service.dart`, `marks_approval_service.dart`, `student_exam_mark_service.dart`
+- Finance services: `finance_service.dart`, `fee_structure_service.dart`, `fee_payment_service.dart`, `donation_service.dart`, `salary_service.dart`, `finance_category_service.dart`, `financial_report_service.dart`
+- Attendance: `attendance_service.dart`
+- Scheduling: `timetable_service.dart`, `lesson_plan_service.dart`, `schedule_summary_service.dart`
+- Communication: `announcement_service.dart`, `custom_form_service.dart`, `form_response_service.dart`
+- Utilities: `pdf_service.dart`, `validation_service.dart`, `update_service.dart`, `performance_monitor_service.dart`
 
-- **`/models`**: Data models (30+ models)
-  - Core entities: `user.dart`, `school.dart`, `student.dart`, `teacher.dart`, `staff.dart`, `parent.dart`
-  - Academic: `exam.dart`, `exam_subject.dart`, `grade.dart`, `subject.dart`, `student_exam_mark.dart`
-  - Operations: `attendance.dart`, `timetable.dart`, `lesson_plan.dart`, `announcement.dart`
-  - Finance: `fee_structure.dart`, `fee_payment.dart`, `donation.dart`, `salary_payment.dart`, `income.dart`, `expense.dart`
-  - Forms: `custom_form.dart`, `form_field_item.dart`, `form_response.dart`
-  - Enums: `user_role.dart`, `exam_status.dart`, `timetable_status.dart`
+#### `/lib/providers`
+State management providers using Provider pattern:
+- `locale_provider.dart` - Language/localization state
+- `school_provider.dart` - Current school context
+- `class_provider.dart` - Class selection and management
+- `exam_provider.dart` - Exam state management
+- `admin_panel_provider.dart` - Admin UI state
+- `analytics_provider.dart` - Analytics data state
+- `school_settings_provider.dart` - School configuration
+- `staff_attendance_provider.dart` - Staff attendance state
 
-- **`/providers`**: State management (Provider pattern)
-  - `locale_provider.dart`: Language switching
-  - `school_provider.dart`: School context management
-  - `class_provider.dart`: Class data management
-  - `exam_provider.dart`: Exam state management
-  - `analytics_provider.dart`: Analytics data aggregation
-  - `admin_panel_provider.dart`: Admin dashboard state
-  - `staff_attendance_provider.dart`: Staff attendance tracking
+#### `/lib/screens`
+UI screens organized by user role:
+- `/admin` - Administrative screens (40+ screens including exam, finance, staff, student management)
+- `/teacher` - Teacher-specific screens (dashboard, attendance, marks entry, lesson plans)
+- `/parent` - Parent portal screens (child info, attendance, schedule, announcements)
+- `/student` - Student screens (profile, performance, report cards)
+- `/staff` - Staff screens (profile)
+- `/manager` - Manager dashboard
+- `/donator` - Donor dashboard
+- `/auth` - Authentication screens (login, reset password)
+- `/settings` - Application settings
+- `/common` - Shared screens (analytics, report cards)
+- `/desktop` - Desktop-optimized versions of all screens
 
-- **`/screens`**: UI screens organized by role
-  - `/admin`: 20+ admin screens (dashboards, management, finance, exams)
-  - `/teacher`: Teacher-specific screens (dashboard, attendance, lesson plans, marks entry)
-  - `/parent`: Parent portal screens (child monitoring, schedules, reports)
-  - `/student`: Student screens (profile, performance, report cards)
-  - `/staff`: Staff member screens (profile, attendance)
-  - `/manager`: Manager dashboard and analytics
-  - `/donator`: Donator dashboard and donation tracking
-  - `/auth`: Authentication screens (login, reset password)
-  - `/common`: Shared screens (analytics, report cards)
-  - `/settings`: Application settings screens
-  - `splash_screen.dart`: Initial loading screen
+#### `/lib/widgets`
+Reusable UI components:
+- `/admin` - Admin-specific widgets
+- `/teacher` - Teacher-specific widgets
+- `/parent` - Parent-specific widgets
+- `/donator` - Donator-specific widgets
+- `/common` - Shared widgets
+- `/app_drawer_components` - Navigation drawer components
+- Root-level widgets: `app_drawer.dart`, `dashboard_screen.dart`, `announcement_popup_dialog.dart`, `in_app_notification_popup.dart`, etc.
 
-- **`/services`**: Business logic layer (40+ services)
-  - **Auth & Users**: `auth_service.dart`, `user_service.dart`, `role_service.dart`
-  - **Academic**: `exam_service.dart`, `exam_crud_service.dart`, `exam_marks_service.dart`, `exam_analytics_service.dart`, `grade_crud_service.dart`, `subject_crud_service.dart`
-  - **Operations**: `attendance_service.dart`, `timetable_service.dart`, `lesson_plan_service.dart`, `announcement_service.dart`
-  - **Finance**: `finance_service.dart`, `fee_payment_service.dart`, `fee_structure_service.dart`, `donation_service.dart`, `salary_service.dart`
-  - **School Management**: `school_service.dart`, `class_service.dart`, `student_service.dart`, `staff_service.dart`
-  - **Forms**: `custom_form_service.dart`, `form_response_service.dart`
-  - **Utilities**: `notification_service.dart`, `pdf_service.dart`, `cache_service.dart`, `validation_service.dart`, `error_handling_service.dart`, `api_service.dart`
+#### `/lib/theme`
+- `app_theme.dart` - Application-wide theme configuration
 
-- **`/widgets`**: Reusable UI components
-  - `/admin`: Admin-specific widgets
-  - `/teacher`: Teacher-specific widgets
-  - `/parent`: Parent-specific widgets
-  - `/donator`: Donator-specific widgets
-  - `/common`: Shared widgets across roles
-  - `/app_drawer_components`: Navigation drawer components
-  - Common widgets: `app_drawer.dart`, `dashboard_screen.dart`, `language_toggle.dart`, `hijri_calendar_card.dart`
+#### `/lib/utils`
+Utility functions and helpers:
+- `logger.dart` - Logging utilities
+- `responsive.dart` - Responsive design helpers
+- `pdf_generator.dart` - PDF generation utilities
+- `timetable_status_helper.dart` - Timetable status management
 
-- **`/theme`**: UI theming
-  - `app_theme.dart`: Material Design 3 theme configuration
+#### `/lib/l10n`
+Internationalization and localization:
+- `/gen` - Generated localization files
+- `app_en.arb` - English translations
+- `app_my.arb` - Myanmar (Burmese) translations
 
-- **`/utils`**: Utility functions
-  - `logger.dart`: Logging infrastructure
-  - `timetable_status_helper.dart`: Timetable status utilities
+#### `/lib/database`
+Local database using Drift:
+- `app_database.dart` - Database schema and DAOs
+- `app_database.g.dart` - Generated database code
+- `migration_service.dart` - Database migration management
 
 ### `/supabase` - Backend Configuration
-- **`/migrations`**: Database migration SQL files (12+ migrations)
-  - Schema definitions for all tables
-  - RLS policies and security rules
-  - Database functions and triggers
-- `config.toml`: Supabase project configuration
-- `schema.sql`: Complete database schema
-- `seed.sql`: Initial data seeding
+- `/migrations` - Database migration SQL files (14+ migrations)
+- `schema.sql` - Complete database schema
+- `seed.sql` - Initial data seeding
+- `config.toml` - Supabase configuration
+
+### `/deno-gemini-proxy` - Proxy Service
+- Deno-based proxy service for Gemini API integration
+- `main.ts` - Proxy server implementation
+
+### Platform-Specific Directories
+- `/android` - Android platform configuration and build files
+- `/ios` - iOS platform configuration
+- `/windows` - Windows platform configuration
+- `/linux` - Linux platform configuration
+- `/macos` - macOS platform configuration
+- `/web` - Web platform assets and configuration
 
 ### `/docs` - Documentation
-- Implementation plans and design documents
-- Phase completion reports (Phase 2 & 3)
-- Feature-specific documentation (exam module, finance, attendance)
-- Task completion reports
+Comprehensive project documentation including:
+- Implementation plans and completion reports
+- Feature enhancement documentation
+- Phase completion reports (Phases 1-5)
+- Module-specific documentation (exam, finance, attendance)
 
 ### `/plan` - Planning Documents
-- Architecture and design plans
-- Feature enhancement roadmaps
-- Analytics dashboard specifications
-- State management optimization plans
+Architecture and design documents:
+- Analytics dashboard architecture
+- Exam module planning
+- Feature enhancement plans
+- RPC design and optimization plans
+- State management optimization
 
-### `/test` - Testing
-- Unit tests for services (auth, role, attendance, exam)
-- Screen tests for admin features
-- Mock utilities for testing
-
-### `/android`, `/ios`, `/windows`, `/linux`, `/macos`, `/web` - Platform-Specific Code
-- Native platform configurations
-- Platform-specific build files
-- Generated plugin registrants
-
-### `/deno-gemini-proxy` - External Service
-- Deno-based proxy for Gemini API integration
-- Deployment configuration for Deno Deploy
+### `/test` - Test Suite
+- Unit tests for services (auth, attendance, exam, role)
+- Screen tests
+- Test utilities and mocks
 
 ### `/assets` - Static Assets
-- `/icon`: Application icons (EduSync.png, EduSync.svg)
-- Application branding assets
+- Application icons and images
+- SVG assets
 
-## Core Components and Relationships
+## Core Architectural Patterns
 
-### Authentication Flow
-1. `SplashScreen` → checks auth state
-2. `AuthService` → validates user with Supabase
-3. `router.dart` → redirects based on `UserRole`
-4. Role-specific dashboard loads
+### State Management
+- **Provider Pattern**: Primary state management using `provider` package
+- **Riverpod**: Used alongside Provider for specific features
+- Centralized provider initialization in `config/providers.dart`
 
-### Data Flow Architecture
-```
-UI (Screens/Widgets)
-    ↓
-Providers (State Management)
-    ↓
-Services (Business Logic)
-    ↓
-Models (Data Structures)
-    ↓
-Data Sources (Supabase + Drift)
-```
-
-### Key Architectural Patterns
-
-**Provider Pattern**: State management using `provider` package
-- Providers wrap services and expose state to UI
-- ChangeNotifier for reactive updates
-- Context-based dependency injection
-
-**Service Layer**: Business logic separation
-- Services handle all data operations
-- Services communicate with Supabase and Drift
-- Error handling and validation in service layer
-
-**Repository Pattern**: Data access abstraction
-- Drift for local caching
-- Supabase for remote persistence
-- Automatic sync between local and remote
-
-**Role-Based Access Control**:
-- `UserRole` enum defines all roles
-- `RoleService` manages role assignments
-- Router guards routes based on roles
-- UI components conditionally render based on roles
-
-### Navigation Architecture
+### Navigation
 - **GoRouter**: Declarative routing with deep linking support
-- **Role-based redirects**: Automatic navigation to appropriate dashboard
-- **Deep linking**: Password reset and app links support
-- **Route guards**: Authentication and connectivity checks
+- Role-based route guards and redirects
+- Platform-adaptive screen routing (mobile/desktop)
 
-### Offline-First Strategy
-- Drift database caches all critical data
-- `CacheService` manages sync state
-- Connectivity checks before network operations
-- Graceful degradation when offline
+### Backend Integration
+- **Supabase**: Backend-as-a-Service for authentication, database, and real-time features
+- RESTful API patterns through Supabase client
+- Real-time subscriptions for announcements and notifications
 
-## Module Dependencies
+### Local Storage
+- **Drift**: Type-safe SQL database for offline support
+- **SharedPreferences**: Simple key-value storage for settings
+- **Cache Service**: Intelligent caching layer for API responses
 
-### Core Dependencies
-- `flutter`: UI framework
-- `supabase_flutter`: Backend and authentication
-- `provider`: State management
-- `go_router`: Navigation
-- `drift`: Local database
+### Platform Adaptation
+- **PlatformAdaptiveScreen**: Widget wrapper for mobile/desktop variants
+- Responsive design utilities for different screen sizes
+- Platform-specific implementations where needed
 
-### Feature Dependencies
-- `syncfusion_flutter_charts`: Analytics visualizations
-- `pdf` + `printing`: Report card generation
-- `table_calendar`: Exam calendar views
-- `hijri_calendar`: Islamic calendar support
-- `image_picker`: Profile photo uploads
-- `file_picker`: Document uploads
-- `csv`: Data export functionality
+### Service Layer Architecture
+- Clear separation between UI (screens/widgets) and business logic (services)
+- Services handle all API communication and data transformation
+- Error handling centralized in `error_handling_service.dart`
 
-### Platform Dependencies
-- `google_maps_flutter`: Location features
-- `geolocator`: GPS tracking
-- `permission_handler`: Runtime permissions
-- `connectivity_plus`: Network status monitoring
-- `app_links`: Deep linking support
+### Localization
+- Flutter's built-in localization support
+- ARB files for translations (English and Myanmar)
+- Runtime locale switching via `LocaleProvider`

@@ -2,504 +2,232 @@
 
 ## Code Quality Standards
 
-### File Organization
-- **Consistent imports ordering**: Standard library imports first, then package imports, then local imports
-- **Import aliasing**: Use aliases to avoid naming conflicts (e.g., `import 'package:edu_sync/models/user.dart' as app_user;`)
-- **Separation of concerns**: Services handle business logic, providers manage state, screens handle UI
-- **Single responsibility**: Each file/class has one clear purpose
-
-### Naming Conventions
-- **Files**: snake_case (e.g., `auth_service.dart`, `user_management_screen.dart`)
-- **Classes**: PascalCase (e.g., `AuthService`, `UserManagementScreen`)
-- **Variables/Functions**: camelCase (e.g., `getCurrentUser`, `isLoading`)
-- **Constants**: camelCase with const keyword (e.g., `const appBackgroundColor`)
-- **Private members**: Prefix with underscore (e.g., `_supabaseClient`, `_isLoading`)
-- **Enums**: PascalCase with PascalCase values (e.g., `UserRole.Admin`)
+### File Headers and Copyright
+- Platform-specific native code (C++, C) includes copyright headers: `// Copyright 2013 The Flutter Authors. All rights reserved.`
+- License references included in native platform files
+- Dart files do not require copyright headers
 
 ### Code Formatting
-- **Line length**: Keep reasonable (no strict limit enforced)
-- **Indentation**: 2 spaces (Dart standard)
-- **Braces**: Opening brace on same line
-- **Trailing commas**: Use for multi-line parameter lists and collections
-- **String literals**: Use single quotes for strings, double quotes for interpolation when needed
-- **Comments**: Use `//` for single-line, `///` for documentation comments
-- **Blank lines**: Separate logical sections within methods
+- **Dart**: Follow standard Dart formatting conventions
+  - Use `dart format` for consistent formatting
+  - 2-space indentation
+  - Line length typically 80-120 characters
+  - Trailing commas for better formatting and diffs
+- **C++**: Follow Flutter's C++ style guide
+  - Include guards with full path: `#ifndef FLUTTER_SHELL_PLATFORM_...`
+  - Namespace usage for organization
+  - `constexpr` for compile-time constants
+- **TypeScript/Deno**: Standard TypeScript conventions
+  - 2-space indentation
+  - Semicolons required
+  - Explicit type annotations where beneficial
+
+### Naming Conventions
+- **Dart Classes**: PascalCase (e.g., `AuthService`, `UserRole`, `EncodableValue`)
+- **Dart Files**: snake_case (e.g., `auth_service.dart`, `user_role.dart`)
+- **Dart Variables/Functions**: camelCase (e.g., `getCurrentUser`, `schoolId`)
+- **Dart Private Members**: Prefix with underscore (e.g., `_supabaseClient`, `_prefs`, `_cache`)
+- **Constants**: 
+  - Dart: lowerCamelCase for const variables (e.g., `kWindowClassName`)
+  - C++: SCREAMING_SNAKE_CASE for macros (e.g., `DWMWA_USE_IMMERSIVE_DARK_MODE`)
+- **Type Aliases**: PascalCase (e.g., `EncodableList`, `EncodableMap`)
 
 ### Documentation Standards
-- **Class documentation**: Brief description of purpose and responsibility
-- **Method documentation**: Document public methods with purpose, parameters, and return values
-- **Inline comments**: Explain complex logic, business rules, and non-obvious decisions
-- **TODO comments**: Mark incomplete features or known issues
-- **Warning comments**: Use `// IMPORTANT:` or `// CRITICAL:` for critical information
+- **Dart**: Use `///` for public API documentation
+- **C++**: Use `//` for inline comments, multi-line `/* */` for block comments
+- **Function Documentation**: Describe purpose, parameters, and return values
+- **Complex Logic**: Add inline comments explaining non-obvious behavior
+- Example from C++ header:
+  ```cpp
+  /// Window attribute that enables dark mode window decorations.
+  ///
+  /// Redefined in case the developer's machine has a Windows SDK older than
+  /// version 10.0.22000.0.
+  ```
 
 ## Architectural Patterns
 
 ### Service Layer Pattern
-**Frequency: Used in 40+ service files**
-
-Services encapsulate all business logic and data access:
-
-```dart
-class AuthService {
-  final SupabaseClient _supabaseClient;
-  final SharedPreferences _prefs;
-  final Connectivity _connectivity;
-  final NotificationService _notificationService;
-
-  AuthService({
-    required SupabaseClient supabaseClient,
-    required SharedPreferences sharedPreferences,
-    required Connectivity connectivity,
-    required NotificationService notificationService,
-  })  : _supabaseClient = supabaseClient,
-        _prefs = sharedPreferences,
-        _connectivity = connectivity,
-        _notificationService = notificationService;
-
-  Future<User?> signIn(String email, String password) async {
-    final AuthResponse response = await _supabaseClient.auth.signInWithPassword(
-      email: email,
-      password: password,
-    );
-    return response.user;
-  }
-}
-```
-
-**Key principles:**
-- Constructor dependency injection with named parameters
-- Private fields for dependencies
-- Async methods return Future<T>
-- Error handling with try-catch and logger
-- No direct UI dependencies
-
-### Provider Pattern for State Management
-**Frequency: Used in 8+ provider files**
-
-Providers extend ChangeNotifier for reactive state:
-
-```dart
-class SchoolProvider with ChangeNotifier {
-  School? _currentSchool;
-  bool _isLoading = false;
-  final SchoolService _schoolService;
-  final AuthService _authService;
-
-  SchoolProvider(this._schoolService, this._authService);
-
-  School? get currentSchool => _currentSchool;
-  bool get isLoading => _isLoading;
-
-  Future<void> fetchCurrentSchool() async {
-    _isLoading = true;
-    notifyListeners();
+- All business logic encapsulated in service classes
+- Services injected via dependency injection (GetIt or Provider)
+- Services are stateless; state managed by providers
+- Example structure:
+  ```dart
+  class AuthService {
+    final SupabaseClient _supabaseClient;
+    final SharedPreferences _prefs;
+    final NotificationService _notificationService;
+    CacheService? _cache;
     
-    // Business logic here
-    
-    _isLoading = false;
-    notifyListeners();
+    AuthService({
+      required SupabaseClient supabaseClient,
+      required SharedPreferences sharedPreferences,
+      required NotificationService notificationService,
+    }) : _supabaseClient = supabaseClient,
+         _prefs = sharedPreferences,
+         _notificationService = notificationService;
   }
-}
-```
+  ```
 
-**Key principles:**
-- Private state variables with public getters
-- Call `notifyListeners()` after state changes
-- Loading states for async operations
-- Inject services via constructor
-- Clear separation from UI logic
-
-### Model Pattern
-**Frequency: Used in 30+ model files**
-
-Immutable data classes with factory constructors:
-
-```dart
-class User {
-  final String id;
-  final String role;
-  final String? profilePhotoUrl;
-  final String? fullName;
-  final int? schoolId;
-
-  User({
-    required this.id,
-    required this.role,
-    this.profilePhotoUrl,
-    this.fullName,
-    this.schoolId,
-  });
-
-  factory User.fromJson(Map<String, dynamic> map) {
-    return User(
-      id: map['id'] ?? '',
-      role: map['role'] ?? 'user',
-      profilePhotoUrl: map['profile_photo_url'],
-      fullName: map['full_name'],
-      schoolId: map['school_id'],
-    );
+### Dependency Injection
+- Constructor injection for required dependencies
+- Named parameters with `required` keyword
+- Optional dependencies can be set via setter methods
+- Initializer lists for field assignment
+- Example:
+  ```dart
+  void setCacheService(CacheService cache) {
+    _cache = cache;
   }
+  ```
 
-  User copyWith({
-    String? id,
-    String? role,
-    String? profilePhotoUrl,
-  }) {
-    return User(
-      id: id ?? this.id,
-      role: role ?? this.role,
-      profilePhotoUrl: profilePhotoUrl ?? this.profilePhotoUrl,
-    );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'role': role,
-      'profile_photo_url': profilePhotoUrl,
-    };
-  }
-}
-```
-
-**Key principles:**
-- Final fields for immutability
-- Named constructors for different sources (fromJson, fromMap)
-- copyWith method for creating modified copies
-- toMap/toJson for serialization
-- Null safety with nullable types (?)
-
-### Router Pattern with GoRouter
-**Frequency: Single router configuration**
-
-Declarative routing with guards and redirects:
-
-```dart
-GoRouter initializeRouter() {
-  return GoRouter(
-    refreshListenable: GoRouterRefreshStream(Supabase.instance.client.auth.onAuthStateChange),
-    redirect: (BuildContext context, GoRouterState state) async {
-      final authService = Provider.of<AuthService>(context, listen: false);
-      final loggedIn = authService.getCurrentUser() != null;
-      
-      if (!loggedIn && !goingToLogin) {
-        return '/login';
-      }
-      
-      if (loggedIn && state.matchedLocation == '/') {
-        final role = await authService.getUserRole();
-        if (role == UserRole.Admin.name) {
-          return '/admin';
-        }
-      }
-      
-      return null;
-    },
-    routes: [
-      GoRoute(
-        path: '/admin',
-        builder: (context, state) => const ModernAdminDashboard(),
-      ),
-    ],
-  );
-}
-```
-
-**Key principles:**
-- Centralized route configuration
-- Role-based redirects
-- Authentication guards
-- Named routes for type-safe navigation
-- Deep linking support
-
-## Common Implementation Patterns
-
-### Error Handling Pattern
-**Frequency: Used throughout services**
-
-```dart
-Future<List<User>> getUsersByRole(UserRole role, int schoolId) async {
+### Error Handling
+- Try-catch blocks for all async operations
+- Logging errors with context using `logger.e()`
+- Graceful degradation (e.g., fallback to cache on network failure)
+- User-friendly error messages
+- Example pattern:
+  ```dart
   try {
-    final response = await _supabaseClient
-        .from('users')
-        .select()
-        .eq('role', role.name)
-        .eq('school_id', schoolId)
-        .order('created_at', ascending: false);
-
-    return response.map((userData) => User.fromJson(userData)).toList();
+    final response = await _supabaseClient.from('users').select();
+    return users;
   } catch (e) {
-    logger.e('Error fetching users by role: $e');
+    logger.e('Error fetching users: $e');
+    if (_cache != null) {
+      return await _cache!.getCachedUsers(schoolId);
+    }
     return [];
   }
-}
-```
+  ```
 
-**Key principles:**
-- Try-catch blocks for all async operations
-- Log errors with context using logger
-- Return safe defaults (empty lists, null) on error
-- Don't expose raw exceptions to UI
+### Null Safety
+- Strict null safety enabled (Dart 3.7.2+)
+- Use `?` for nullable types
+- Use `!` sparingly and only when certain value is non-null
+- Prefer null-aware operators: `??`, `?.`, `??=`
+- Example:
+  ```dart
+  final schoolId = response['school_id'] as int?;
+  if (schoolId != null) {
+    await _prefs.setInt('school_id', schoolId);
+  }
+  ```
 
-### Caching Pattern
-**Frequency: Used in auth and data services**
+### Async/Await Pattern
+- All I/O operations are async
+- Use `Future<T>` return types for async methods
+- Await async calls sequentially when dependent
+- Use `Future.wait()` for parallel independent operations
+- Always handle errors in async code
 
-```dart
-Future<String?> getUserRole() async {
-  final currentUser = _supabaseClient.auth.currentUser;
-  if (currentUser == null) return null;
+## Data Management Patterns
 
+### Model Classes
+- Immutable data classes with final fields
+- Factory constructors for JSON deserialization: `factory User.fromJson(Map<String, dynamic> map)`
+- `copyWith` method for creating modified copies
+- `toMap()` method for serialization
+- Example structure:
+  ```dart
+  class User {
+    final String id;
+    final String role;
+    final String? fullName;
+    
+    User({required this.id, required this.role, this.fullName});
+    
+    factory User.fromJson(Map<String, dynamic> map) {
+      return User(
+        id: map['id'] ?? '',
+        role: map['role'] ?? 'user',
+        fullName: map['full_name'],
+      );
+    }
+    
+    User copyWith({String? id, String? role, String? fullName}) {
+      return User(
+        id: id ?? this.id,
+        role: role ?? this.role,
+        fullName: fullName ?? this.fullName,
+      );
+    }
+    
+    Map<String, dynamic> toMap() {
+      return {'id': id, 'role': role, 'full_name': fullName};
+    }
+  }
+  ```
+
+### Caching Strategy
+- Two-tier caching: SharedPreferences for simple values, CacheService for complex data
+- Cache-first approach with network fallback
+- Cache invalidation on data updates
+- Offline-first architecture
+- Example:
+  ```dart
   // Try cache first
   String? cachedRole = _prefs.getString('user_role');
-  if (cachedRole != null) {
-    return cachedRole;
-  }
-
-  // Fetch from network
-  try {
-    final response = await _supabaseClient
-        .from('users')
-        .select('role')
-        .eq('id', currentUser.id)
-        .single();
-
-    final role = response['role'] as String?;
-    if (role != null) {
-      await _prefs.setString('user_role', role);
-    }
-    return role;
-  } catch (e) {
-    logger.e('Error fetching user role: $e');
-    return null;
-  }
-}
-```
-
-**Key principles:**
-- Check cache before network requests
-- Update cache after successful fetch
-- Use SharedPreferences for simple key-value caching
-- Use Drift for complex data caching
-
-### Offline-First Pattern
-**Frequency: Used in critical data services**
-
-```dart
-Future<int?> getCurrentUserSchoolId() async {
-  final currentUser = _supabaseClient.auth.currentUser;
-  if (currentUser == null) return null;
-
-  final cachedSchoolId = _prefs.getInt('school_id');
-  final connectivityResult = await Connectivity().checkConnectivity();
+  if (cachedRole != null) return cachedRole;
   
-  if (connectivityResult.contains(ConnectivityResult.none) && cachedSchoolId != null) {
-    return cachedSchoolId;
+  // Fetch from network and cache
+  final role = response['role'] as String?;
+  if (role != null) {
+    await _prefs.setString('user_role', role);
   }
+  ```
 
-  try {
-    final response = await _supabaseClient
-        .from('users')
-        .select('school_id')
-        .eq('id', currentUser.id)
-        .single();
-    
-    final schoolId = response['school_id'] as int?;
-    if (schoolId != null) {
-      await _prefs.setInt('school_id', schoolId);
-    }
-    return schoolId;
-  } catch (e) {
-    logger.e('Error fetching school_id: $e');
-    return cachedSchoolId;
-  }
-}
-```
-
-**Key principles:**
-- Check connectivity before network operations
-- Return cached data when offline
-- Fallback to cache on network errors
-- Update cache when online
-
-### Edge Function Invocation Pattern
-**Frequency: Used for admin operations**
-
-```dart
-Future<User?> createUserViaEdgeFunction({
-  required String email,
-  required String password,
-  required String role,
-  required int schoolId,
-  String? fullName,
-}) async {
-  try {
-    final response = await _supabaseClient.functions.invoke(
-      'create-user-admin',
-      body: {
-        'email': email,
-        'password': password,
-        'role': role,
-        'school_id': schoolId,
-        'full_name': fullName,
-      },
-    );
-
-    if (response.data == null) {
-      logger.e('Edge Function returned no data.');
-      throw Exception('Failed to create user: Edge function returned no data.');
-    }
-
-    final responseData = response.data as Map<String, dynamic>;
-    if (responseData.containsKey('error')) {
-      logger.e('Error from Edge Function: ${responseData['error']}');
-      throw Exception('Failed to create user: ${responseData['error']}');
-    }
-    
-    return User.fromJson(responseData);
-  } catch (e) {
-    logger.e('Exception calling edge function: $e');
-    throw Exception('Failed to create user: ${e.toString()}');
-  }
-}
-```
-
-**Key principles:**
-- Use Edge Functions for privileged operations
-- Check for null response data
-- Handle error responses from functions
-- Throw exceptions with context
-- Log all errors
-
-### Theme and Styling Pattern
-**Frequency: Centralized theme configuration**
-
-```dart
-class AppTheme {
-  static ThemeData get themeData {
-    return ThemeData(
-      primaryColor: defaultAccentColor,
-      scaffoldBackgroundColor: appBackgroundColor,
-      colorScheme: ColorScheme.light(
-        primary: defaultAccentColor,
-        secondary: accentTeachers,
-        surface: cardBackgroundColor,
-      ),
-      textTheme: const TextTheme(
-        headlineLarge: TextStyle(color: textDarkGrey, fontWeight: FontWeight.bold),
-        bodyLarge: TextStyle(color: textDarkGrey),
-      ).apply(
-        fontFamily: 'Poppins',
-      ),
-      cardTheme: CardThemeData(
-        color: cardBackgroundColor,
-        elevation: 1.0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20.0),
-        ),
-      ),
-    );
-  }
-
-  static Color getAccentColorForContext(String context) {
-    switch (context.toLowerCase()) {
-      case 'student':
-        return iconColorStudents;
-      case 'teacher':
-        return iconColorTeachers;
-      default:
-        return defaultAccentColor;
-    }
-  }
-}
-```
-
-**Key principles:**
-- Centralized theme configuration
-- Consistent color palette with semantic names
-- Context-specific accent colors
-- Rounded corners (12-20px) for modern look
-- Subtle elevations (1.0-8.0)
-- Poppins font family throughout
+### Database Queries
+- Use Supabase client for all database operations
+- Chain query methods: `.select()`, `.eq()`, `.order()`, `.single()`
+- Handle both list and single responses appropriately
+- Always specify columns in select when possible
+- Example:
+  ```dart
+  final response = await _supabaseClient
+      .from('users')
+      .select('role')
+      .eq('id', currentUser.id)
+      .single();
+  ```
 
 ## Platform-Specific Patterns
 
-### Windows Native Code
-**Pattern: Win32 window management with DPI awareness**
-
-```cpp
-bool Win32Window::Create(const std::wstring& title,
-                         const Point& origin,
-                         const Size& size) {
-  Destroy();
-
-  const wchar_t* window_class =
-      WindowClassRegistrar::GetInstance()->GetWindowClass();
-
-  const POINT target_point = {static_cast<LONG>(origin.x),
-                              static_cast<LONG>(origin.y)};
-  HMONITOR monitor = MonitorFromPoint(target_point, MONITOR_DEFAULTTONEAREST);
-  UINT dpi = FlutterDesktopGetDpiForMonitor(monitor);
-  double scale_factor = dpi / 96.0;
-
-  HWND window = CreateWindow(
-      window_class, title.c_str(), WS_OVERLAPPEDWINDOW,
-      Scale(origin.x, scale_factor), Scale(origin.y, scale_factor),
-      Scale(size.width, scale_factor), Scale(size.height, scale_factor),
-      nullptr, nullptr, GetModuleHandle(nullptr), this);
-
-  if (!window) {
-    return false;
-  }
-
-  UpdateTheme(window);
-  return OnCreate();
-}
-```
-
-**Key principles:**
-- DPI-aware scaling for high-DPI displays
-- Theme detection from Windows registry
-- Singleton pattern for window class registration
-- Resource cleanup in destructors
-- Virtual methods for subclass customization
-
-### Android Plugin Registration
-**Pattern: Auto-generated plugin registration with error handling**
-
-```java
-@Keep
-public final class GeneratedPluginRegistrant {
-  private static final String TAG = "GeneratedPluginRegistrant";
+### Native Platform Code (C++)
+- Use opaque pointers for cross-boundary types: `typedef struct FlutterDesktopEngine* FlutterDesktopEngineRef;`
+- Extern "C" blocks for C compatibility
+- RTTI detection with preprocessor directives
+- Platform-specific includes guarded by defines
+- Resource management with RAII principles
+- Example:
+  ```cpp
+  #if defined(__cplusplus)
+  extern "C" {
+  #endif
   
-  public static void registerWith(@NonNull FlutterEngine flutterEngine) {
-    try {
-      flutterEngine.getPlugins().add(new AppLinksPlugin());
-    } catch (Exception e) {
-      Log.e(TAG, "Error registering plugin app_links", e);
+  typedef struct FlutterDesktopViewController* FlutterDesktopViewControllerRef;
+  
+  #if defined(__cplusplus)
+  }
+  #endif
+  ```
+
+### Flutter-Native Bridge
+- Use method channels for platform communication
+- Encodable values for data serialization
+- Plugin registrar pattern for native plugins
+- Lifecycle management with callbacks
+
+### Proxy Services (Deno/TypeScript)
+- Simple request forwarding pattern
+- Health check endpoints: `/health`
+- Error handling with JSON responses
+- CORS and header management
+- Example:
+  ```typescript
+  async function handler(req: Request): Promise<Response> {
+    if (url.pathname === "/health") {
+      return new Response("OK", { status: 200 });
     }
-  }
-}
-```
-
-**Key principles:**
-- @Keep annotation to prevent ProGuard removal
-- Try-catch for each plugin registration
-- Logging with specific error context
-- Static registration method
-
-### TypeScript Proxy Service
-**Pattern: Simple HTTP proxy with error handling**
-
-```typescript
-async function handler(req: Request): Promise<Response> {
-  const url = new URL(req.url);
-  
-  if (url.pathname === "/health") {
-    return new Response("OK", { status: 200 });
-  }
-  
-  if (url.pathname.startsWith("/v1beta/")) {
-    const targetUrl = `${GEMINI_API_BASE}${url.pathname}${url.search}`;
     
     try {
       const response = await fetch(targetUrl, {
@@ -507,7 +235,6 @@ async function handler(req: Request): Promise<Response> {
         headers,
         body: req.body,
       });
-      
       return new Response(response.body, {
         status: response.status,
         headers: response.headers,
@@ -519,64 +246,123 @@ async function handler(req: Request): Promise<Response> {
       );
     }
   }
-  
-  return new Response("Not Found", { status: 404 });
-}
-```
+  ```
 
-**Key principles:**
-- Health check endpoint for monitoring
-- Path-based routing
-- Error responses with JSON format
-- Proper HTTP status codes
+## Common Code Idioms
+
+### Import Aliasing
+- Use aliases to avoid naming conflicts
+- Convention: `as app_<type>` for application models
+- Example:
+  ```dart
+  import 'package:edu_sync/models/user.dart' as app_user;
+  import 'package:supabase_flutter/supabase_flutter.dart';
+  
+  // Now can use both app_user.User and supabase User
+  ```
+
+### Logging Pattern
+- Use centralized logger utility
+- Log levels: `logger.i()` (info), `logger.w()` (warning), `logger.e()` (error)
+- Include context in log messages
+- Example:
+  ```dart
+  logger.i('User signed in, subscribing to announcements.');
+  logger.w('Cannot subscribe: role=$role, schoolId=$schoolId');
+  logger.e('Error fetching user role: $e');
+  ```
+
+### Connectivity Checking
+- Check connectivity before network operations
+- Graceful offline handling
+- Example:
+  ```dart
+  final connectivityResult = await Connectivity().checkConnectivity();
+  if (connectivityResult.contains(ConnectivityResult.none) && cachedData != null) {
+    return cachedData;
+  }
+  ```
+
+### Edge Function Invocation
+- Use Supabase Functions for server-side operations
+- Pass data as body object
+- Check for error in response data
+- Example:
+  ```dart
+  final response = await _supabaseClient.functions.invoke(
+    'create-user-admin',
+    body: {
+      'email': email,
+      'password': password,
+      'role': role,
+    },
+  );
+  
+  if (response.data == null) {
+    throw Exception('Edge function returned no data.');
+  }
+  
+  final responseData = response.data as Map<String, dynamic>;
+  if (responseData.containsKey('error')) {
+    throw Exception('Failed: ${responseData['error']}');
+  }
+  ```
+
+### File Upload Pattern
+- Use Supabase Storage for file uploads
+- Organize by entity type and ID
+- Set cache control and upsert options
+- Return public URL
+- Example:
+  ```dart
+  final file = File(filePath);
+  final storagePath = 'users/profile_photos/$userId/$fileName';
+  await _supabaseClient.storage
+      .from('edusync')
+      .upload(storagePath, file, 
+        fileOptions: const FileOptions(cacheControl: '3600', upsert: true));
+  
+  final publicUrl = _supabaseClient.storage
+      .from('edusync')
+      .getPublicUrl(storagePath);
+  ```
 
 ## Best Practices
 
-### Null Safety
-- Use nullable types (?) for optional values
-- Provide default values in fromJson constructors
-- Use null-aware operators (?., ??, ??=)
-- Check for null before accessing properties
-
-### Async/Await
-- Always use async/await for asynchronous operations
-- Return Future<T> for async methods
-- Handle errors with try-catch
-- Use FutureBuilder in UI for async data
-
-### Dependency Injection
-- Constructor injection for all dependencies
-- Use Provider for dependency access in widgets
-- Initialize dependencies in main.dart
-- Keep dependencies immutable (final)
-
-### Logging
-- Use logger package for all logging
-- Log errors with context (logger.e)
-- Log info for important events (logger.i)
-- Log warnings for potential issues (logger.w)
-
-### State Management
-- Use Provider for app-wide state
-- Use StatefulWidget for local UI state
-- Minimize state scope
-- Call notifyListeners() after state changes
-
-### Code Reusability
-- Extract common widgets into separate files
-- Create utility functions for repeated logic
-- Use mixins for shared behavior
-- Leverage inheritance sparingly
+### Security
+- Never expose service role keys in client code
+- Use Edge Functions for privileged operations
+- Validate all user inputs
+- Use RLS (Row Level Security) policies in Supabase
+- Store sensitive data in environment variables
 
 ### Performance
 - Cache frequently accessed data
-- Use const constructors where possible
-- Lazy load data when appropriate
-- Optimize list rendering with keys
+- Use pagination for large datasets
+- Lazy load data when possible
+- Optimize database queries with proper indexes
+- Use const constructors where applicable
 
-### Security
-- Never hardcode credentials
-- Use environment variables for secrets
-- Validate all user inputs
-- Use RLS policies in Supabase
-- Call Edge Functions for privileged operations
+### Testing
+- Write unit tests for services
+- Use mockito for mocking dependencies
+- Test error scenarios and edge cases
+- Maintain test utilities for common patterns
+
+### Code Organization
+- One class per file
+- Group related files in directories
+- Keep files focused and under 500 lines when possible
+- Use barrel files (index exports) sparingly
+
+### State Management
+- Use Provider for app-wide state
+- Keep state immutable
+- Notify listeners on state changes
+- Separate UI state from business logic
+
+### Responsive Design
+- Use PlatformAdaptiveScreen for mobile/desktop variants
+- Implement responsive layouts with MediaQuery
+- Test on multiple screen sizes
+- Consider platform-specific UI patterns

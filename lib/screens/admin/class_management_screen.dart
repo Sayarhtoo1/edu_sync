@@ -4,9 +4,9 @@ import 'package:edu_sync/services/class_service.dart';
 import 'package:edu_sync/services/auth_service.dart';
 import 'package:edu_sync/models/user.dart' as app_user;
 import 'add_edit_class_screen.dart';
-import 'class_profile_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:edu_sync/l10n/gen/app_localizations.dart';
+import 'package:go_router/go_router.dart';
 
 class ClassManagementScreen extends StatefulWidget {
   const ClassManagementScreen({super.key});
@@ -168,10 +168,7 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
                             boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 8, offset: const Offset(0, 2))],
                           ),
                           child: InkWell(
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => ClassProfileScreen(schoolClass: classItem)),
-                            ),
+                            onTap: () => context.push('/admin/class-profile', extra: classItem),
                             borderRadius: BorderRadius.circular(16),
                             child: Padding(
                               padding: const EdgeInsets.all(16),

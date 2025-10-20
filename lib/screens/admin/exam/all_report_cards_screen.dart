@@ -109,52 +109,76 @@ class _AllReportCardsScreenState extends State<AllReportCardsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Report Cards - ${widget.examName}'),
+        title: Text(widget.examName),
+        elevation: 0,
       ),
       body: Column(
         children: [
-          Padding(
+          Container(
             padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).primaryColor.withOpacity(0.05),
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(24),
+                bottomRight: Radius.circular(24),
+              ),
+            ),
             child: Column(
               children: [
                 Consumer<ClassProvider>(
                   builder: (context, classProvider, _) {
-                    return DropdownButtonFormField<int>(
-                      value: _selectedExamClass?.classId,
-                      decoration: InputDecoration(
-                        labelText: 'Filter by Class',
-                        prefixIcon: const Icon(Icons.class_),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8)],
                       ),
-                      items: _examClasses.map((ec) {
-                        final schoolClass = classProvider.classes
-                            .where((c) => c.id == ec.classId)
-                            .firstOrNull;
-                        final className = schoolClass?.name ?? 'Class ${ec.classId}';
-                        return DropdownMenuItem(
-                          value: ec.classId,
-                          child: Text(className),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        if (value != null) {
-                          final examClass = _examClasses.where((ec) => ec.classId == value).firstOrNull;
-                          if (examClass != null) {
-                            setState(() => _selectedExamClass = examClass);
-                            _loadStudents();
+                      child: DropdownButtonFormField<int>(
+                        value: _selectedExamClass?.classId,
+                        decoration: const InputDecoration(
+                          labelText: 'Class',
+                          prefixIcon: Icon(Icons.class_),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        ),
+                        items: _examClasses.map((ec) {
+                          final schoolClass = classProvider.classes
+                              .where((c) => c.id == ec.classId)
+                              .firstOrNull;
+                          final className = schoolClass?.name ?? 'Class ${ec.classId}';
+                          return DropdownMenuItem(
+                            value: ec.classId,
+                            child: Text(className),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          if (value != null) {
+                            final examClass = _examClasses.where((ec) => ec.classId == value).firstOrNull;
+                            if (examClass != null) {
+                              setState(() => _selectedExamClass = examClass);
+                              _loadStudents();
+                            }
                           }
-                        }
-                      },
+                        },
+                      ),
                     );
                   },
                 ),
                 const SizedBox(height: 12),
-                TextField(
-                  onChanged: (value) => setState(() => _searchQuery = value),
-                  decoration: InputDecoration(
-                    hintText: 'Search students...',
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8)],
+                  ),
+                  child: TextField(
+                    onChanged: (value) => setState(() => _searchQuery = value),
+                    decoration: const InputDecoration(
+                      hintText: 'Search students...',
+                      prefixIcon: Icon(Icons.search),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    ),
                   ),
                 ),
               ],
@@ -164,7 +188,16 @@ class _AllReportCardsScreenState extends State<AllReportCardsScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _filteredStudents.isEmpty
-                    ? const Center(child: Text('No students found'))
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.people_outline, size: 64, color: Colors.grey[400]),
+                            const SizedBox(height: 16),
+                            Text('No students found', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+                          ],
+                        ),
+                      )
                     : ListView.builder(
                         padding: const EdgeInsets.all(16),
                         itemCount: _filteredStudents.length,
@@ -174,35 +207,98 @@ class _AllReportCardsScreenState extends State<AllReportCardsScreen> {
                           final reportCard = data['reportCard'];
                           final rank = data['rank'];
                           final percentage = data['percentage'];
+                          final hasPassed = reportCard != null && reportCard['result'] == 'PASSED';
                           
                           return Card(
                             margin: const EdgeInsets.only(bottom: 12),
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: _getRankColor(rank),
-                                child: Text('${rank > 0 ? rank : '-'}'),
-                              ),
-                              title: Text(student.fullName),
-                              subtitle: reportCard != null
-                                  ? Text('${percentage.toStringAsFixed(1)}% - ${reportCard['result']}')
-                                  : const Text('No marks entered'),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (reportCard != null)
-                                    IconButton(
-                                      icon: const Icon(Icons.visibility),
-                                      onPressed: () => context.push(
-                                        '/report-card/${student.id}/${widget.examId}',
+                            elevation: 2,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            child: InkWell(
+                              onTap: reportCard != null ? () => context.push('/report-card/${student.id}/${widget.examId}') : null,
+                              borderRadius: BorderRadius.circular(16),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 48,
+                                      height: 48,
+                                      decoration: BoxDecoration(
+                                        color: _getRankColor(rank),
+                                        shape: BoxShape.circle,
                                       ),
-                                      tooltip: 'View Report Card',
+                                      child: Center(
+                                        child: rank == 1
+                                            ? const Icon(Icons.emoji_events, color: Colors.white, size: 24)
+                                            : Text(
+                                                '${rank > 0 ? rank : '-'}',
+                                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+                                              ),
+                                      ),
                                     ),
-                                  IconButton(
-                                    icon: const Icon(Icons.edit),
-                                    onPressed: () => _navigateToMarksEntry(student.id),
-                                    tooltip: 'Edit Marks',
-                                  ),
-                                ],
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            student.fullName,
+                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          if (reportCard != null)
+                                            Row(
+                                              children: [
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                  decoration: BoxDecoration(
+                                                    color: hasPassed ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                                                    borderRadius: BorderRadius.circular(8),
+                                                  ),
+                                                  child: Text(
+                                                    '${percentage.toStringAsFixed(1)}%',
+                                                    style: TextStyle(
+                                                      color: hasPassed ? Colors.green : Colors.red,
+                                                      fontWeight: FontWeight.bold,
+                                                      fontSize: 14,
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Icon(
+                                                  hasPassed ? Icons.check_circle : Icons.cancel,
+                                                  color: hasPassed ? Colors.green : Colors.red,
+                                                  size: 18,
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  reportCard['result'],
+                                                  style: TextStyle(
+                                                    color: hasPassed ? Colors.green : Colors.red,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ],
+                                            )
+                                          else
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                              decoration: BoxDecoration(
+                                                color: Colors.grey.withOpacity(0.1),
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                              child: const Text(
+                                                'No marks entered',
+                                                style: TextStyle(color: Colors.grey, fontSize: 12),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                    if (reportCard != null)
+                                      Icon(Icons.chevron_right, color: Colors.grey[400]),
+                                  ],
+                                ),
                               ),
                             ),
                           );

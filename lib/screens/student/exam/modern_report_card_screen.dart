@@ -249,432 +249,438 @@ class _ModernReportCardScreenState extends State<ModernReportCardScreen>
     final overallResult = _calculateOverallResult(subjectResults, grades);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeaderCard(studentName, examName),
-          const SizedBox(height: 24),
-          _buildOverallSummaryCard(overallResult),
-          const SizedBox(height: 24),
+          _buildHeader(studentName, examName, overallResult),
+          const SizedBox(height: 16),
           _buildSubjectsCard(subjectResults),
-          const SizedBox(height: 24),
-          _buildPerformanceChart(overallResult),
+          const SizedBox(height: 80),
         ],
       ),
     );
   }
 
-  Widget _buildHeaderCard(String studentName, String examName) {
-    return Card(
-      elevation: 8,
-      shadowColor: Theme.of(context).primaryColor.withOpacity(0.2),
-      shape: RoundedRectangleBorder(
+  Widget _buildHeader(String studentName, String examName, Map<String, dynamic> overallResult) {
+    final percentage = overallResult['overallPercentage'] as double;
+    final passed = overallResult['overallPassed'] as bool;
+    final grade = overallResult['overallGrade'];
+    
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 20)],
       ),
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          gradient: LinearGradient(
-            colors: [
-              Theme.of(context).primaryColor,
-              Theme.of(context).colorScheme.secondary,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF3498DB).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.person, color: Color(0xFF3498DB), size: 28),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      studentName,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      examName,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 60,
-                  height: 60,
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.2),
+                    color: const Color(0xFF3498DB).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(
-                    Icons.person,
-                    color: Colors.white,
-                    size: 30,
+                  child: Column(
+                    children: [
+                      Text(
+                        '${overallResult['totalMarksObtained']}/${overallResult['totalMaxMarks']}',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF3498DB),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Total Marks',
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 16),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: passed ? const Color(0xFF2ECC71).withOpacity(0.1) : const Color(0xFFE74C3C).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        '${percentage.toStringAsFixed(1)}%',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: passed ? const Color(0xFF2ECC71) : const Color(0xFFE74C3C),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Percentage',
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF39C12).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        grade,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFF39C12),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Grade',
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: passed ? const Color(0xFF2ECC71) : const Color(0xFFE74C3C),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  passed ? Icons.check_circle : Icons.cancel,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  passed ? 'PASSED' : 'FAILED',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+
+  Widget _buildSubjectsCard(List<Map<String, dynamic>> subjectResults) {
+    final groupedSubjects = _groupSubjectsByParent(subjectResults);
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Subjects',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[800],
+            ),
+          ),
+          const SizedBox(height: 12),
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: groupedSubjects.length,
+            itemBuilder: (context, index) {
+              final group = groupedSubjects[index];
+              return _buildSubjectGroup(group);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Map<String, dynamic>> _groupSubjectsByParent(List<Map<String, dynamic>> subjectResults) {
+    final Map<String, Map<String, dynamic>> parentMap = {};
+
+    for (var subject in subjectResults) {
+      final parentId = subject['parent_subject_id'];
+      final parentName = subject['parent_subject_name'];
+      
+      if (parentId == null) {
+        if (!parentMap.containsKey(subject['subject_id'])) {
+          parentMap[subject['subject_id']] = {
+            'parent': subject,
+            'parent_name': subject['subject_name'],
+            'children': [],
+          };
+        }
+      } else {
+        if (!parentMap.containsKey(parentId)) {
+          parentMap[parentId] = {
+            'parent': null,
+            'parent_name': parentName,
+            'children': [],
+          };
+        }
+        parentMap[parentId]!['children'].add(subject);
+      }
+    }
+
+    return parentMap.values.toList();
+  }
+
+  Widget _buildSubjectGroup(Map<String, dynamic> group) {
+    final parent = group['parent'] as Map<String, dynamic>?;
+    final parentName = group['parent_name'] as String?;
+    final children = (group['children'] as List).cast<Map<String, dynamic>>();
+    
+    if (children.isEmpty && parent != null) {
+      return _buildSubjectItem(parent, false);
+    }
+    
+    if (children.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    int totalMarks = 0;
+    int totalMaxMarks = 0;
+    bool allPassed = true;
+
+    for (var child in children) {
+      totalMarks += child['marks_obtained'] as int;
+      totalMaxMarks += child['max_marks'] as int;
+      if (!(child['passed'] as bool)) allPassed = false;
+    }
+
+    final percentage = totalMaxMarks > 0 ? (totalMarks / totalMaxMarks) * 100 : 0.0;
+    
+    String parentGrade = 'N/A';
+    final examProvider = Provider.of<ExamProvider>(context, listen: false);
+    if (examProvider.grades.isNotEmpty) {
+      for (var grade in examProvider.grades) {
+        if (percentage >= grade.minPercentage && percentage <= grade.maxPercentage) {
+          parentGrade = grade.gradeName ?? 'N/A';
+          break;
+        }
+      }
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  allPassed ? const Color(0xFF2ECC71) : const Color(0xFFE74C3C),
+                  allPassed ? const Color(0xFF27AE60) : const Color(0xFFC0392B),
+                ],
+              ),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            child: Row(
+              children: [
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        studentName,
+                        parentName ?? 'N/A',
                         style: const TextStyle(
-                          fontSize: 24,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Student Report Card',
+                        '${percentage.toStringAsFixed(1)}%',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 14,
                           color: Colors.white.withOpacity(0.9),
                         ),
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                examName,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildOverallSummaryCard(Map<String, dynamic> overallResult) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.analytics,
-                  color: Theme.of(context).primaryColor,
-                  size: 24,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Overall Summary',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '$totalMarks/$totalMaxMarks',
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        parentGrade,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildSummaryItem(
-                    'Total Score',
-                    '${overallResult['totalMarksObtained']}/${overallResult['totalMaxMarks']}',
-                    Icons.score,
-                    Colors.blue,
-                  ),
-                ),
-                Expanded(
-                  child: _buildSummaryItem(
-                    'Percentage',
-                    '${overallResult['overallPercentage'].toStringAsFixed(1)}%',
-                    Icons.percent,
-                    Colors.green,
-                  ),
-                ),
-                Expanded(
-                  child: _buildSummaryItem(
-                    'Grade',
-                    overallResult['overallGrade'],
-                    Icons.grade,
-                    Colors.orange,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Container(
-              width: double.infinity,
+          ),
+          ...children.asMap().entries.map((entry) {
+            final index = entry.key;
+            final child = entry.value;
+            return Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: (overallResult['overallPassed'] as bool)
-                    ? Colors.green.shade50
-                    : Colors.red.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: (overallResult['overallPassed'] as bool)
-                      ? Colors.green.shade200
-                      : Colors.red.shade200,
-                ),
+                color: index % 2 == 0 ? Colors.grey[50] : Colors.white,
+                borderRadius: index == children.length - 1
+                    ? const BorderRadius.vertical(bottom: Radius.circular(16))
+                    : null,
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    (overallResult['overallPassed'] as bool)
-                        ? Icons.check_circle
-                        : Icons.cancel,
-                    color: (overallResult['overallPassed'] as bool)
-                        ? Colors.green
-                        : Colors.red,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    (overallResult['overallPassed'] as bool) ? 'PASSED' : 'FAILED',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: (overallResult['overallPassed'] as bool)
-                          ? Colors.green
-                          : Colors.red,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+              child: _buildSubjectItem(child, true),
+            );
+          }),
+        ],
       ),
     );
   }
 
-  Widget _buildSummaryItem(String title, String value, IconData icon, Color color) {
-    return Column(
+  Widget _buildSubjectItem(Map<String, dynamic> subject, bool isChild) {
+    final double percentage = subject['percentage'] as double;
+    final bool passed = subject['passed'] as bool;
+
+    return Row(
       children: [
-        Icon(icon, color: color, size: 28),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: color,
+        if (isChild)
+          Container(
+            margin: const EdgeInsets.only(right: 12),
+            width: 4,
+            height: 40,
+            decoration: BoxDecoration(
+              color: passed ? const Color(0xFF2ECC71) : const Color(0xFFE74C3C),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                subject['subject_name'] ?? 'Unknown Subject',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[800],
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${percentage.toStringAsFixed(1)}%',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 4),
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey.shade600,
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: passed ? const Color(0xFF2ECC71).withOpacity(0.1) : const Color(0xFFE74C3C).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            '${subject['marks_obtained']}/${subject['max_marks']}',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: passed ? const Color(0xFF2ECC71) : const Color(0xFFE74C3C),
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildSubjectsCard(List<Map<String, dynamic>> subjectResults) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.subject,
-                  color: Theme.of(context).primaryColor,
-                  size: 24,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Subject-wise Performance',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: subjectResults.length,
-              itemBuilder: (context, index) {
-                final subject = subjectResults[index];
-                return _buildSubjectItem(subject);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
-  Widget _buildSubjectItem(Map<String, dynamic> subject) {
-    final double percentage = subject['percentage'] as double;
-    final bool passed = subject['passed'] as bool;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: passed ? Colors.green.shade50 : Colors.red.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: passed ? Colors.green.shade200 : Colors.red.shade200,
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  subject['subject_name'] ?? 'Unknown Subject',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: passed ? Colors.green.shade800 : Colors.red.shade800,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${subject['marks_obtained']}/${subject['max_marks']} marks',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '${percentage.toStringAsFixed(1)}%',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: passed ? Colors.green.shade600 : Colors.red.shade600,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: passed ? Colors.green.shade100 : Colors.red.shade100,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  subject['grade'] ?? 'N/A',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: passed ? Colors.green.shade700 : Colors.red.shade700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPerformanceChart(Map<String, dynamic> overallResult) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.trending_up,
-                  color: Theme.of(context).primaryColor,
-                  size: 24,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Performance Overview',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              height: 200,
-              child: _buildPerformanceGauge(overallResult['overallPercentage'] as double),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPerformanceGauge(double percentage) {
-    return Center(
-      child: SizedBox(
-        width: 150,
-        height: 150,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            SizedBox(
-              width: 150,
-              height: 150,
-              child: CircularProgressIndicator(
-                value: percentage / 100,
-                strokeWidth: 12,
-                backgroundColor: Colors.grey.shade200,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  percentage >= 80 ? Colors.green :
-                  percentage >= 60 ? Colors.orange :
-                  percentage >= 40 ? Colors.yellow : Colors.red,
-                ),
-              ),
-            ),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  '${percentage.toStringAsFixed(0)}%',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).primaryColor,
-                  ),
-                ),
-                Text(
-                  'Overall',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   List<Map<String, dynamic>> _calculateSubjectResults(
     ExamProvider examProvider,

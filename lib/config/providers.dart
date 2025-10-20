@@ -22,6 +22,7 @@ import 'package:edu_sync/services/lesson_plan_service.dart';
 import 'package:edu_sync/services/role_service.dart';
 import 'package:edu_sync/services/school_service.dart';
 import 'package:edu_sync/services/student_service.dart';
+import 'package:edu_sync/services/parent_service.dart';
 import 'package:edu_sync/services/timetable_service.dart';
 import 'package:edu_sync/services/user_service.dart';
 import 'package:edu_sync/services/schedule_summary_service.dart';
@@ -31,6 +32,7 @@ import 'package:edu_sync/services/donation_service.dart';
 import 'package:edu_sync/services/salary_service.dart';
 import 'package:edu_sync/services/finance_category_service.dart';
 import 'package:edu_sync/services/financial_report_service.dart';
+import 'package:edu_sync/services/exam_service.dart';
 import 'package:edu_sync/providers/admin_panel_provider.dart';
 import 'package:edu_sync/providers/exam_provider.dart';
 import 'package:edu_sync/providers/class_provider.dart';
@@ -72,6 +74,9 @@ Future<List<SingleChildWidget>> initializeProviders() async {
     ),
     Provider<SchoolService>(create: (_) => SchoolService(cacheService)),
     Provider<StudentService>(create: (_) => StudentService(appDatabase, cacheService)),
+    ProxyProvider2<SupabaseClient, CacheService, ParentService>(
+      update: (_, supabase, cache, __) => ParentService(supabase, cache),
+    ),
     Provider<ClassService>(create: (_) => ClassService(cacheService)),
     ProxyProvider2<SupabaseClient, CacheService, TimetableService>(
       update: (_, supabase, cache, __) => TimetableService(supabase, cache),
@@ -103,6 +108,7 @@ Future<List<SingleChildWidget>> initializeProviders() async {
       update: (_, supabase, __) => FinanceCategoryService(supabase),
     ),
     Provider<FinancialReportService>(create: (_) => FinancialReportService()),
+    Provider<ExamService>(create: (_) => ExamService()),
     ProxyProvider<AuthService, RoleService>(
       update: (_, authService, _) => RoleService(authService),
     ),
